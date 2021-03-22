@@ -123,14 +123,26 @@ def _walk_forward_validation(data, n_test, config):
     return error, predictions, test
 
 
-def _plot_actual_vs_pred(y_true, y_pred, rmse, repeat):
+def _plot_actual_vs_pred(y_true, y_pred, rmse=None, repeat=None, name=None):
     fig, ax = plt.subplots(figsize=(16, 12))
     ax.plot(y_true, 'b', label='Test data')
     ax.plot(y_pred, 'r', label='Preds')
     ax.legend()
+
+    if rmse is not None and repeat is not None:
+        fig_title = f'Actuals vs. Preds - RMSE {rmse:.3f} - Repeat #{repeat}'
+        log_title = f'Actuals vs. Preds #{repeat}'
+    elif rmse is not None and repeat:
+        raise Exception('Must give both rmse and repeat or give neither')
+    elif rmse and repeat is not None:
+        raise Exception('Must give both rmse and repeat or give neither')
+    else:
+        fig_title = f'Actuals vs. Preds - {name}'
+        log_title = fig_title
+
     ax.set(xlabel='Hours', ylabel='BTC Price ($)',
-           title=f'Actuals vs. Preds - RMSE {rmse:.3f} - Repeat #{repeat}')
-    wandb.log({f'Actuals vs. Preds #{repeat}': wandb.Image(fig)})
+           title=fig_title)
+    wandb.log({log_title: wandb.Image(fig)})
     plt.show()
 
 
@@ -190,3 +202,29 @@ def summarize_scores(name, scores):
     wandb.log({log_title: wandb.Image(fig)})
     plt.show()
 
+
+def plot_losses(history, scaling='log', ylim=None):
+    fig, ax = plt.subplots()
+    num_epochs_trained = len(history.history['loss'])
+    epochs = range(1, num_epochs_trained + 1)
+    if scaling is None:
+        title = 'Loss - Training and Validation - Unscaled'
+        loss = history.history['loss']
+        val_loss = history.history['val_loss']
+    elif scaling.lower() == 'log':
+        title = 'Loss - Training and Validation - Scaled'
+        loss = np.exp(history.history['loss'])
+        val_loss = np.exp(history.history['val_loss'])
+    else:
+        raise Exception("Scaling must be either 'log' or 'None'"  )
+    
+    ax.plot(epochs, loss, 'b', label='Training')
+    ax.plot(epochs, val_loss, 'r', label='Validation')
+        
+    ax.set(title=title,
+           xlabel='Epoch',
+           ylabel='Loss',
+           ylim=ylim)
+    ax.legend()
+    wandb.log({title: wandb.Image(fig)})
+    plt.show()
