@@ -76,7 +76,9 @@ def _model_fit(train, config):
                     input_dim=config.n_input))
     model.add(Dense(1))
     # compile
-    model.compile(loss=config.loss, optimizer=config.optimizer)
+    model.compile(loss=config.loss, 
+                  optimizer=config.optimizer,
+                  metrics=[RootMeanSquaredError()])
     # fit
     history = model.fit(
                 X_train, 
@@ -123,25 +125,58 @@ def _walk_forward_validation(data, n_test, config):
     return error, predictions, test
 
 
-def _plot_actual_vs_pred(y_true, y_pred, rmse=None, repeat=None, name=None):
+def _plot_actual_vs_pred(y_true, y_pred, rmse=None, repeat=None, name=None,
+                         logy=False):
     fig, ax = plt.subplots(figsize=(16, 12))
     ax.plot(y_true, 'b', label='Test data')
     ax.plot(y_pred, 'r', label='Preds')
     ax.legend()
 
     if rmse is not None and repeat is not None:
-        fig_title = f'Actuals vs. Preds - RMSE {rmse:.3f} - Repeat #{repeat}'
+        fig_title = f'Actuals vs. Preds - RMSE {rmse:.5f} - Repeat #{repeat}'
         log_title = f'Actuals vs. Preds #{repeat}'
-    elif rmse is not None and repeat:
-        raise Exception('Must give both rmse and repeat or give neither')
-    elif rmse and repeat is not None:
-        raise Exception('Must give both rmse and repeat or give neither')
+    elif rmse is not None and repeat is None:
+        fig_title = f'Actuals vs. Preds - {name} - RMSE {rmse:.5f}'
+        log_title = f'Actuals vs. Preds - {name}'
+    elif rmse is None and repeat is not None:
+        raise Exception('Cannot enter repeat on its own')
     else:
         fig_title = f'Actuals vs. Preds - {name}'
         log_title = fig_title
 
-    ax.set(xlabel='Hours', ylabel='BTC Price ($)',
+    ylabel = 'BTC Price ($)'
+    if logy:
+        ylabel = 'log(BTC Price USD)'
+
+    ax.set(xlabel='Hours', ylabel=ylabel,
            title=fig_title)
+    wandb.log({log_title: wandb.Image(fig)})
+    plt.show()
+
+
+def _plot_preds_grid(y_true, y_pred, rmse):
+    """
+    Built to make a 2x4 grid of preds vs actuals for X_train
+    """
+    fig = plt.figure(figsize=(20, 10))
+    # Plot full predictions
+    plt.subplot(241)
+    plt.plot(y_true, 'b', label='Actual')
+    plt.plot(y_pred, 'r', label='Preds')
+    plt.legend()
+    plt.xticks(np.arange(0, 84000, 14000))
+    # Plot predictions for each 10k hours
+    for i in range(len(y_true) // 10000 + 1):
+        plt.subplot(241+i+1)
+        plt.plot(y_true[i * 10000: (i+1) * 10000], 'b')
+        plt.plot(y_pred[i * 10000: (i+1) * 10000], 'r')
+        plt.xticks(ticks=np.arange(0, 12000, 2000),
+                   labels=np.arange(i * 10000, (i+1) * 10000 + 2000, 2000))
+        if i == 0:
+            title = f'X_train predictions (broken down) - X_train RMSE {rmse:.5f}'
+            plt.title(title)
+    plt.tight_layout()
+    log_title = 'X_train predictions (broken down)'
     wandb.log({log_title: wandb.Image(fig)})
     plt.show()
 
@@ -203,27 +238,47 @@ def summarize_scores(name, scores):
     plt.show()
 
 
-def plot_losses(history, scaling='log', ylim=None):
+def plot_metric(history, metric='loss', ylim=None, start_epoch=0):
+    """
+    * Given a Keras history, plot the specific metric given. 
+    * Can also plot '1-metric'
+    * Set the y-axis limits with ylim
+    * Since you cannot know what the optimal y-axis limits will be ahead of time,
+      set the epoch you will start plotting from (start_epoch) to avoid plotting
+      the massive spike that these curves usually have at the start and thus rendering
+      the plot useless to read.
+    """
+    # Define here because we need to remove '1-' to calculate the right
+    title = f'{metric.title()} - Training and Validation'
+    ylabel = f'{metric.title()}'
+    is_one_minus_metric = False
+
+    if metric.startswith('1-'):
+        # i.e. we calculate and plot 1 - metric rather than just metric
+        is_one_minus_metric = True
+        metric = metric[2:]
+    metric = metric.lower()
+
     fig, ax = plt.subplots()
-    num_epochs_trained = len(history.history['loss'])
+    num_epochs_trained = len(history.history[metric])
     epochs = range(1, num_epochs_trained + 1)
-    if scaling is None:
-        title = 'Loss - Training and Validation - Unscaled'
-        loss = history.history['loss']
-        val_loss = history.history['val_loss']
-    elif scaling.lower() == 'log':
-        title = 'Loss - Training and Validation - Scaled'
-        loss = np.exp(history.history['loss'])
-        val_loss = np.exp(history.history['val_loss'])
+
+    values = history.history[metric]
+    val_values = history.history[f'val_{metric}']
+
+    if is_one_minus_metric:
+        values = 1 - np.array(history.history[metric])
+        val_values = 1 - np.array(history.history[f'val_{metric}'])
     else:
-        raise Exception("Scaling must be either 'log' or 'None'"  )
-    
-    ax.plot(epochs, loss, 'b', label='Training')
-    ax.plot(epochs, val_loss, 'r', label='Validation')
+        values = history.history[metric]
+        val_values = history.history[f'val_{metric}']
+
+    ax.plot(epochs[start_epoch:], values[start_epoch:], 'b', label='Training')
+    ax.plot(epochs[start_epoch:], val_values[start_epoch:], 'r', label='Validation')
         
     ax.set(title=title,
            xlabel='Epoch',
-           ylabel='Loss',
+           ylabel=ylabel,
            ylim=ylim)
     ax.legend()
     wandb.log({title: wandb.Image(fig)})
