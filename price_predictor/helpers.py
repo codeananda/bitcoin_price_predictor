@@ -160,19 +160,28 @@ def _plot_preds_grid(y_true, y_pred, rmse):
     """
     fig = plt.figure(figsize=(20, 10))
     # Plot full predictions
-    plt.subplot(241)
+    if len(y_true) > 80000:
+        plt.subplot(2, 5, 1)
+    else:
+        plt.subplot(2, 4, 1)
     plt.plot(y_true, 'b', label='Actual')
     plt.plot(y_pred, 'r', label='Preds')
     plt.legend()
-    plt.xticks(np.arange(0, 84000, 14000))
+    if len(y_true) > 80000:
+        plt.xticks(np.arange(0, 100000, 20000))
+    else:
+        plt.xticks(np.arange(0, 84000, 14000))
     # Plot predictions for each 10k hours
-    for i in range(len(y_true) // 10000 + 1):
-        plt.subplot(241+i+1)
+    for i in range(0, len(y_true) // 10000 + 1):
+        if len(y_true) > 80000:
+            plt.subplot(2, 5, 2+i)
+        else:
+            plt.subplot(2, 4, 2+i)
         plt.plot(y_true[i * 10000: (i+1) * 10000], 'b')
         plt.plot(y_pred[i * 10000: (i+1) * 10000], 'r')
         plt.xticks(ticks=np.arange(0, 12000, 2000),
                    labels=np.arange(i * 10000, (i+1) * 10000 + 2000, 2000))
-        if i == 0:
+        if i == 1:
             title = f'X_train predictions (broken down) - X_train RMSE {rmse:.5f}'
             plt.title(title)
     plt.tight_layout()
