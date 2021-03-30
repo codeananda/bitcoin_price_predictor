@@ -173,25 +173,39 @@ def scale_train_val_test(train, val, test=None, scaler='log'):
     return train, val, test
 
 
+# Scaling just on train and val sets (since test is unnecessary for training)
+def scale_train_val(train, val, scaler='log'):
+    if scaler.lower() == 'log':
+        train, val = _scale_log(train, val)
+    elif scaler.lower() == 'log_and_divide_20':
+        train, val = _scale_log_and_divide(train, val, divisor=20)
+    elif scaler.lower() == 'log_and_divide_15':
+        train, val = _scale_log_and_divide(train, val, divisor=15)
+    elif scaler.lower().startswith('log_and_range'):
+        train, val = _scale_log_and_range(train, val, scaler)
+    else:
+        raise Exception('''Please enter a supported scaling type: log, log_and_divide_20
+                        log_and_divide_15, log_and_range_a_b (where [a, b] is the range
+                        you want to scale to.''')
+    return train, val
+
+
 def _scale_log(train, val, test=None):
     train = np.log(train)
     val = np.log(val)
     if test is not None:
         test = np.log(test)
-    return train, val, test
+        return train, val, test
+    return train, val
 
 
-def _scale_log_and_divide(train, val, test=None, divisor=20):
+def _scale_log_and_divide(train, val, divisor=20):
     # Take log
-    train = np.log(train)
-    val = np.log(val)
+    train, val = _scale_log(train, val)
     # Divide by divisor
     train /= divisor
     val /= divisor
-    if test is not None:
-        test = np.log(test)
-        test /= divisor
-    return train, val, test
+    return train, val
 
 
 
@@ -228,8 +242,8 @@ def _scale_to_range(seq, a, b, min=None, max=None):
     return scaled_seq
 
 
-def _scale_log_and_range(train, val, test, scaler):
-    train, val, test = _scale_log(train, val, test)
+def _scale_log_and_range(train, val, scaler):
+    train, val, _ = _scale_log(train, val)
     # Split scaler on underscores to extract the min and max values for the range
     elements = scaler.split('_')
     # Calc args for _scale_to_range
@@ -239,9 +253,8 @@ def _scale_log_and_range(train, val, test, scaler):
     max_value = max(val)
     args = [range_bottom, range_top, min_value, max_value]
     train = _scale_to_range(train, *args)
-    val = _scale_to_range(val, *args)
-    test = _scale_to_range(test, *args)    
-    return train, val, test  
+    val = _scale_to_range(val, *args)  
+    return train, val  
 
 
 def inverse_scale(data, scaler='log'):
@@ -553,7 +566,7 @@ def train_and_validate(config, dataset=1):
     else:
         raise Exception('Only two datasets are available: 1 or 2')
     # Scale data
-    train_scaled, val_scaled, _ = scale_train_val_test(train, val, scaler=config.scaler)
+    train_scaled, val_scaled = scale_train_val(train, val, scaler=config.scaler)
     # Get data into form Keras needs
     X_train, X_val, y_train, y_val = transform_to_keras_input(train_scaled,
                                                               val_scaled,
@@ -569,16 +582,20 @@ def train_and_validate(config, dataset=1):
     upload_history_to_wandb(history)
 
     # Calc preds and pred rmse on train and val datasets
-    y_pred_train, y_pred_val, rmse_train, rmse_val = get_preds_and_rmse(model, 
-                                                                        X_train, 
-                                                                        X_val, 
-                                                                        y_train, 
-                                                                        y_val)
-
+    preds_and_rmse = get_preds_and_rmse(model, 
+                                        X_train, 
+                                        X_val, 
+                                        y_train, 
+                                        y_val)
+    # y_pred_train, y_pred_val, rmse_train, rmse_val
+     
     # Turn all predictions and rmse into a log scale (for easy comparison
-    # between different scalings
-    y_pred_train_log, y_pred_val_log, rmse_train_log, rmse_val_log
+    # between different scalings)
+    if config.scaler.lower() != 'log':
+        y_pred_train_log, y_pred_val_log, \
+            rmse_train_log, rmse_val_log = convert_to_log(*preds_and_rmse)
 
+    # EVERYTHING IN HERE NEEDS TO BE CONVERTED TO LOG.
     # Plot predictions for train and val data
     _plot_actual_vs_pred(y_train, y_pred_train, rmse=rmse_train,
                          name='X_train preds', logy=True)
@@ -586,3 +603,9 @@ def train_and_validate(config, dataset=1):
                          name='X_val preds', logy=True)
     _plot_preds_grid(y_train, y_pred_train, rmse_train)
     return history
+
+
+# Log - do nothing
+# 
+    def convert_to_log(values, scaler):
+        pac
