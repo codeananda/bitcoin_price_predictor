@@ -183,10 +183,8 @@ def scale_train_val_test(train, val, test=None, scaler='log'):
 def scale_train_val(train, val, scaler='log'):
     if scaler.lower() == 'log':
         train, val = _scale_log(train, val)
-    elif scaler.lower() == 'log_and_divide_20':
-        train, val = _scale_log_and_divide(train, val, divisor=20)
-    elif scaler.lower() == 'log_and_divide_15':
-        train, val = _scale_log_and_divide(train, val, divisor=15)
+    elif scaler.lower().startswith('log_and_divide'):
+        train, val = _scale_log_and_divide(train, val, scaler)
     elif scaler.lower().startswith('log_and_range'):
         train, val = _scale_log_and_range(train, val, scaler)
     else:
@@ -205,9 +203,11 @@ def _scale_log(train, val, test=None):
     return train, val
 
 
-def _scale_log_and_divide(train, val, divisor=20):
+def _scale_log_and_divide(train, val, scaler):
     # Take log
     train, val = _scale_log(train, val)
+    # Get divisor (last elt of str)
+    divisor = scaler.split('_')[-1]
     # Divide by divisor
     train /= divisor
     val /= divisor
