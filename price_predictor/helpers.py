@@ -158,6 +158,12 @@ def transform_to_keras_input(train, val, n_in):
 # other functions like min_max_scale_train_val_test()
 # and add them under each 'if scaler == 'min_max': 
 def scale_train_val_test(train, val, test=None, scaler='log'):
+    """
+    WARNING: MAY NOT WORK
+    Written when I thought I would want to scale train, val and test datasets at the same time.
+    Turned out, I just wanted to scale train and val all the time, so I wrote scale_train_val
+    instead.
+    """
     if scaler.lower() == 'log':
         train, val, test = _scale_log(train, val, test)
     elif scaler.lower() == 'log_and_divide_20':
