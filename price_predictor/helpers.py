@@ -10,6 +10,8 @@ from tensorflow.keras import Input, Model
 from tensorflow.keras.layers import Dense, LSTM
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.metrics import RootMeanSquaredError
+from tensorflow.keras.optimizers.schedules import InverseTimeDecay
+from tensorflow.keras.optimizers import Adam
 
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.metrics import mean_squared_error
@@ -39,10 +41,87 @@ run = wandb.init(project='bitcoin_price_predictor',
 config = wandb.config # use this to configure experiment
 """
 
+DOWNLOAD_DIR = Path('../download')
+DATA_DIR = Path('../data')
+
+
+"""########## LOAD DATA ##########"""
+
+def load_close_data(DOWNLOAD_DIR, dropna=False):
+    price = pd.read_csv(DOWNLOAD_DIR / 'price.csv', parse_dates=[0])
+    price = price.set_index('timestamp')
+    close = price.loc[:, 'c']
+    if dropna:
+        close = close.dropna()
+    data = close.values
+    return data
+
+
+def load_dataset_1():
+    with open(DATA_DIR / 'train_1.pkl', 'rb') as f:
+        train_1 = pickle.load(f)
+
+    with open(DATA_DIR / 'val_1.pkl', 'rb') as f:
+        val_1 = pickle.load(f)
+
+    with open(DATA_DIR / 'test_1.pkl', 'rb') as f:
+        test_1 = pickle.load(f)
+
+    return train_1, val_1, test_1
+
+
+def load_dataset_2():
+    with open(DATA_DIR / 'train_2.pkl', 'rb') as f:
+        train_2 = pickle.load(f)
+
+    with open(DATA_DIR / 'val_2.pkl', 'rb') as f:
+        val_2 = pickle.load(f)
+
+    return train_2, val_2
+
+def get_training_data():
+    """
+    Convenience function to quickly load in train and val data to train models on.
+    """
+    # Load in data
+    data = load_close_data(DOWNLOAD_DIR, dropna=True)
+    # Convert val/test percentages to numbers
+    n_val, n_test = get_n_val_and_n_test(data, 0.12, 0.12)
+    # Split data
+    tvt = train_val_test_split(data, n_val, n_test)
+    # Scale data
+    train, val, test = scale_train_val_test(*tvt, scaler='log')
+    # Get data into form Keras needs
+    X_train, X_val, y_train, y_val = transform_to_keras_input(train, val, 168)
+    return (X_train, X_val, y_train, y_val)
+
+"""########## SPLIT DATA #############"""
+
+def get_n_test_samples(data, test_size):
+    # # data split
+    n_test = int(len(data) * test_size)
+    return n_test
+
+
+def get_n_val_and_n_test(data, val_size, test_size):
+    n_val = int(len(data) * val_size)
+    n_test = int(len(data) * test_size)  
+    return n_val, n_test
+
+
+def train_val_test_split(data, n_val, n_test):
+    test = data[-n_test:]
+    val = data[-n_test - n_val : -n_test]
+    train = data[:-n_test - n_val]
+    return train, val, test
+
 
 def _train_test_split(data, n_test):
     return data[:-n_test], data[-n_test:]
 
+
+
+"""########## RESHAPE ##########"""
 
 def _series_to_supervised(data, n_in=1, n_out=1):
     df = pd.DataFrame(data)
@@ -59,71 +138,82 @@ def _series_to_supervised(data, n_in=1, n_out=1):
     agg.dropna(inplace=True)
     return agg.values
 
-# root mean squared error, or rmse
-def _measure_rmse(actual, predicted):
-    return np.sqrt(mean_squared_error(actual, predicted))
 
-
-# Define, compile and fit a model on train and val data
-def _model_fit(train, config):
-    # prepare data
-    train_data = _series_to_supervised(train, n_in=config.n_input)
+# Create train and val sets to input into Keras model
+# we do not need test sets at this stage, just care about 
+# validation, not testing
+def transform_to_keras_input(train, val, n_in):
+    # Transform to keras input
+    train_data = _series_to_supervised(train, n_in=n_in)
+    val_data = _series_to_supervised(val, n_in=n_in)
+    # Create X and y variables
     X_train, y_train = train_data[:, :-1], train_data[:, -1]
-    # define model
-    model = Sequential()
-    model.add(Dense(config.n_nodes, 
-                    activation=config.activation, 
-                    input_dim=config.n_input))
-    model.add(Dense(1))
-    # compile
-    model.compile(loss=config.loss, 
-                  optimizer=config.optimizer,
-                  metrics=[RootMeanSquaredError()])
-    # fit
-    history = model.fit(
-                X_train, 
-                y_train, 
-                epochs=config.n_epochs,
-                batch_size=config.n_batch, 
-                verbose=config.verbose,
-                shuffle=False, 
-                validation_split=config.val_split,
-                callbacks=[WandbCallback()]
-                )
-    return (model, history)
+    X_val, y_val = val_data[:, :-1], val_data[:, -1]
+    return X_train, X_val, y_train, y_val
 
-# forecast with a pre-fit model
-def _model_predict(model, history, config):
-    # unpack config
-    # n_input, _, _, _ = config
-    # prepare data
-    x_input = np.array(history[-config.n_input:]).reshape(1, config.n_input)
-    # forecast, one at a time
-    yhat = model.predict(x_input, verbose=0)
-    return yhat[0]
+"""########## SCALE ##########"""
 
-# walk-forward validation for univariate data
-def _walk_forward_validation(data, n_test, config):
-    predictions = []
-    # split dataset
-    train, test = _train_test_split(data, n_test)
-    # fit model
-    model = _model_fit(train, config)
-    # seed history with training dataset
-    history = [x for x in train]
-    # step over each time-step in the test dataset
-    for i in trange(len(test)):
-        # use fitted model to make forecast
-        yhat = _model_predict(model, history, config)
-        # store forecaxst in the list of predictions
-        predictions.append(yhat)
-        # add actual observation to history for the next loop
-        history.append(test[i])
-    # estimate prediction error
-    error = _measure_rmse(test, predictions)
-    print(' > %.3f' % error)
-    return error, predictions, test
+# I can easily add more functionality to this by writing
+# other functions like min_max_scale_train_val_test()
+# and add them under each 'if scaler == 'min_max': 
+def scale_train_val_test(train, val, test=None, scaler='log'):
+    if scaler.lower() == 'log':
+        train, val, test = _scale_log(train, val, test)
+    elif scaler.lower() == 'log_and_divide_20':
+        train, val, test = _scale_log_and_divide(train, val, test, 20)
+    elif scaler.lower() == 'log_and_divide_15':
+        train, val, test = _scale_log_and_divide(train, val, test, 15)
+    elif scaler.lower() == 'log_and_scale_neg1_0':
+        train, val, test = _scale_log_and_squash(train, val, test, range=(-1, 0))
+    elif scaler.lower() == 'log_and_scale_neg05_05':
+        train, val, test = _scale_log_and_squash(train, val, test, range=(-0.5, 0.5))
+    else:
+        raise Exception('''Please enter a supported scaling type: log, log_and_divide_20
+                        log_and_divide_15, log_and_scale_neg1_0, or log_and_scale_neg05_05''')
+    return train, val, test
 
+
+def _scale_log(train, val, test=None):
+    train = np.log(train)
+    val = np.log(val)
+    if test is not None:
+        test = np.log(test)
+    return train, val, test
+
+
+def _scale_log_and_divide(train, val, test=None, divisor=20):
+    # Take log
+    train = np.log(train)
+    val = np.log(val)
+    # Divide by divisor
+    train /= divisor
+    val /= divisor
+    if test is not None:
+        test = np.log(test)
+        test /= divisor
+    return train, val, test
+
+
+def _scale_log_and_squash(train, val, test=None, range=(-1, 0)):
+    train, val, test = _scale_log(train, val, test)
+    # Scale to range
+    min_max = MinMaxScaler(feature_range=range)
+    train = min_max.fit_transform(train)
+    val = min_max.transform(val)
+    if test is not None:
+        test = min_max.transform(test)
+    return train, val, test
+
+
+def inverse_scale(data, scaler='log'):
+    if scaler.lower() != 'log':
+        raise TypeError("Only 'log' scaling supported at this time." )
+    # Inverse log scale
+    inverse_scaled_data = [np.exp(d) for d in data]
+    return inverse_scaled_data
+
+
+"""########## PLOT ##########""""
 
 def _plot_actual_vs_pred(y_true, y_pred, rmse=None, repeat=None, name=None,
                          logy=False):
@@ -202,51 +292,6 @@ def _plot_actual_vs_all_preds(y_true, y_preds, rmse_scores):
     plt.show()
 
 
-def load_close_data(DOWNLOAD_DIR, dropna=False):
-    price = pd.read_csv(DOWNLOAD_DIR / 'price.csv', parse_dates=[0])
-    price = price.set_index('timestamp')
-    close = price.loc[:, 'c']
-    if dropna:
-        close = close.dropna()
-    data = close.values
-    return data
-
-
-def get_n_test_samples(data, test_size):
-    # # data split
-    n_test = int(len(data) * test_size)
-    return n_test
-
-# repeat evaluation of a config
-def repeat_evaluate(data, config, n_test, n_repeats=30, plot=True):
-    scores = []
-    predictions = []
-    for i in range(n_repeats):
-        print(f'Repeat #{i}')
-        score, pred, test = _walk_forward_validation(data, n_test, config)
-        scores.append(score)
-        predictions.append(pred)
-        if plot:
-            _plot_actual_vs_pred(test, pred, score, i)
-    if plot:
-        _plot_actual_vs_all_preds(test, predictions, scores)
-    wandb.log({'Repeated walk-forward validation scores': scores})
-    return scores
-
-# Summarize model performance
-def summarize_scores(name, scores):
-    # print a summary
-    scores_m, scores_std = np.mean(scores), np.std(scores)
-    ax_title = f'{name}: {scores_m:.3f} RMSE (+/- {scores_std:.3f})'
-    print(ax_title)
-    log_title = 'RMSE Walk-Forward Validation Scores Distribution'
-    fig, ax = plt.subplots()
-    sns.boxplot(x=scores, ax=ax)
-    ax.set(xlabel='RMSE', title=ax_title)
-    wandb.log({log_title: wandb.Image(fig)})
-    plt.show()
-
-
 def plot_metric(history, metric='loss', ylim=None, start_epoch=0):
     """
     * Given a Keras history, plot the specific metric given. 
@@ -292,3 +337,219 @@ def plot_metric(history, metric='loss', ylim=None, start_epoch=0):
     ax.legend()
     wandb.log({title: wandb.Image(fig)})
     plt.show()
+
+
+def plot_train_val_test(train, val, test):
+    fig, ax = plt.subplots()
+    ax.plot(train, 'b', label='Train')
+    ax.plot([None for x in train] + [x for x in val], 'r', label='Val')
+    ax.plot([None for x in train] + [None for x in val] + [x for x in test],
+            'g', label='Test')
+    ax.legend()
+    plt.show()
+
+
+"""########## MEASURE ##########"""
+# root mean squared error, or rmse
+def _measure_rmse(actual, predicted):
+    return np.sqrt(mean_squared_error(actual, predicted))
+
+# Summarize model performance
+def summarize_scores(name, scores):
+    # print a summary
+    scores_m, scores_std = np.mean(scores), np.std(scores)
+    ax_title = f'{name}: {scores_m:.3f} RMSE (+/- {scores_std:.3f})'
+    print(ax_title)
+    log_title = 'RMSE Walk-Forward Validation Scores Distribution'
+    fig, ax = plt.subplots()
+    sns.boxplot(x=scores, ax=ax)
+    ax.set(xlabel='RMSE', title=ax_title)
+    wandb.log({log_title: wandb.Image(fig)})
+    plt.show()
+
+
+"""########## MODEL BUILD AND FIT ##########"""
+
+def build_model(config):
+    model = Sequential([
+        Dense(config.n_nodes, activation=config.activation,
+              input_dim=config.n_input),
+        Dense(config.n_nodes, activation=config.activation),
+        Dense(config.n_nodes, activation=config.activation),
+        Dense(1)
+    ])
+    learning_rate_schedule = InverseTimeDecay(config.initial_lr,
+                                              config.decay_steps,
+                                              config.decay_rate)
+    optimizer = Adam(learning_rate_schedule)
+    model.compile(loss=config.loss, 
+                  optimizer=optimizer,
+                  metrics=[RootMeanSquaredError()])
+    return model
+
+
+def fit_model(model, config, X_train, X_val, y_train, y_val):
+    history = model.fit(
+                X_train, 
+                y_train, 
+                epochs=config.n_epochs,
+                batch_size=config.n_batch, 
+                verbose=config.verbose,
+                shuffle=False, 
+                validation_data=(X_val, y_val),
+                callbacks=[WandbCallback()])
+    return history
+
+
+# Define, compile and fit a model on train and val data
+def _model_fit(train, config):
+    # prepare data
+    train_data = _series_to_supervised(train, n_in=config.n_input)
+    X_train, y_train = train_data[:, :-1], train_data[:, -1]
+    # define model
+    model = Sequential()
+    model.add(Dense(config.n_nodes, 
+                    activation=config.activation, 
+                    input_dim=config.n_input))
+    model.add(Dense(1))
+    # compile
+    model.compile(loss=config.loss, 
+                  optimizer=config.optimizer,
+                  metrics=[RootMeanSquaredError()])
+    # fit
+    history = model.fit(
+                X_train, 
+                y_train, 
+                epochs=config.n_epochs,
+                batch_size=config.n_batch, 
+                verbose=config.verbose,
+                shuffle=False, 
+                validation_split=config.val_split,
+                callbacks=[WandbCallback()]
+                )
+    return (model, history)
+
+# forecast with a pre-fit model
+def _model_predict(model, history, config):
+    # unpack config
+    # n_input, _, _, _ = config
+    # prepare data
+    x_input = np.array(history[-config.n_input:]).reshape(1, config.n_input)
+    # forecast, one at a time
+    yhat = model.predict(x_input, verbose=0)
+    return yhat[0]
+
+
+"""########### EVALUATE ##########"""
+# walk-forward validation for univariate data
+def _walk_forward_validation(data, n_test, config):
+    predictions = []
+    # split dataset
+    train, test = _train_test_split(data, n_test)
+    # fit model
+    model = _model_fit(train, config)
+    # seed history with training dataset
+    history = [x for x in train]
+    # step over each time-step in the test dataset
+    for i in trange(len(test)):
+        # use fitted model to make forecast
+        yhat = _model_predict(model, history, config)
+        # store forecaxst in the list of predictions
+        predictions.append(yhat)
+        # add actual observation to history for the next loop
+        history.append(test[i])
+    # estimate prediction error
+    error = _measure_rmse(test, predictions)
+    print(' > %.3f' % error)
+    return error, predictions, test
+
+
+# repeat evaluation of a config
+def repeat_evaluate(data, config, n_test, n_repeats=30, plot=True):
+    scores = []
+    predictions = []
+    for i in range(n_repeats):
+        print(f'Repeat #{i}')
+        score, pred, test = _walk_forward_validation(data, n_test, config)
+        scores.append(score)
+        predictions.append(pred)
+        if plot:
+            _plot_actual_vs_pred(test, pred, score, i)
+    if plot:
+        _plot_actual_vs_all_preds(test, predictions, scores)
+    wandb.log({'Repeated walk-forward validation scores': scores})
+    return scores
+
+
+def get_preds_and_rmse(model, X_train, X_val, y_train, y_val):
+    # Calculate predictions
+    y_pred_train = model.predict(X_train)
+    y_pred_val = model.predict(X_val)
+
+    # Calculate rmse for train and val data
+    eval_results_train = model.evaluate(X_train, y_train, verbose=0)
+    eval_results_val = model.evaluate(X_val, y_val, verbose=0)
+    rmse_train = eval_results_train[1]
+    rmse_val = eval_results_val[1]
+
+    return y_pred_train, y_pred_val, rmse_train, rmse_val
+
+"""########## WANDB ##########"""
+def upload_history_to_wandb(history):
+    # Turn into df
+    history_df = pd.DataFrame.from_dict(history.history)
+    # Turn into wandb Table
+    history_table = wandb.Table(dataframe=history_df)
+    # Log
+    wandb.log({'history': history_table})
+
+
+"""########## FULL PROCESS ##########"""
+def train_and_validate(config, dataset=1):
+    # Load data
+    if dataset == 1:
+        train, val, _ = load_dataset_1()
+    elif dataset == 2:
+        train, val = load_dataset_2()
+    else:
+        raise Exception('Only two datasets are available: 1 or 2')
+    # Scale data
+    train, val, _ = scale_train_val_test(train, val, scaler=config.scaler)
+    # Get data into form Keras needs
+    X_train, X_val, y_train, y_val = transform_to_keras_input(train,
+                                                              val,
+                                                              config.n_input)
+    # Build and fit model
+    model = build_model(config)
+    history = fit_model(model, config, X_train, X_val, y_train, y_val)
+    # Plot loss, rmse, and 1-rmse curves
+    plot_metric(history, metric='loss', start_epoch=20)
+    plot_metric(history, metric='root_mean_squared_error', start_epoch=20)
+    plot_metric(history, metric='1-root_mean_squared_error', start_epoch=20)
+    # Store history on wandb
+    upload_history_to_wandb(history)
+
+    # Calculate predictions
+    y_pred_train = model.predict(X_train)
+    y_pred_val = model.predict(X_val)
+
+    # Calculate rmse for train and val data
+    eval_results_train = model.evaluate(X_train, y_train, verbose=0)
+    eval_results_val = model.evaluate(X_val, y_val, verbose=0)
+    rmse_train = eval_results_train[1]
+    rmse_val = eval_results_val[1]
+
+    # Calc preds and pred rmse on train and val datasets
+    y_pred_train, y_pred_val, rmse_train, rmse_val = get_preds_and_rmse(model, 
+                                                                        X_train, 
+                                                                        X_val, 
+                                                                        y_train, 
+                                                                        y_val)
+
+    # Plot predictions for train and val data
+    _plot_actual_vs_pred(y_train, y_pred_train, rmse=rmse_train,
+                         name='X_train preds', logy=True)
+    _plot_actual_vs_pred(y_val, y_pred_val, rmse=rmse_val,
+                         name='X_val preds', logy=True)
+    _plot_preds_grid(y_train, y_pred_train, rmse_train)
+    return history
