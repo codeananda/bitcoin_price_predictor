@@ -213,7 +213,7 @@ def inverse_scale(data, scaler='log'):
     return inverse_scaled_data
 
 
-"""########## PLOT ##########""""
+"""########## PLOT ##########"""
 
 def _plot_actual_vs_pred(y_true, y_pred, rmse=None, repeat=None, name=None,
                          logy=False):
