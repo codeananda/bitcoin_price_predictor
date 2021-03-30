@@ -214,6 +214,14 @@ def _scale_log_and_divide(train, val, scaler):
     return train, val
 
 
+def _scale_val(val, a, b, minimum, maximum):
+    # Scale val into [a, b] given the max and min values of the seq
+    # it belongs to.
+    # Taken from this SO answer: https://tinyurl.com/j5rppewr
+    numerator = (b - a) * (val - minimum)
+    denominator = maximum - minimum
+    return (numerator / denominator) + a
+
 
 # Taken from this SO answer: https://tinyurl.com/j5rppewr
 def _scale_to_range(seq, a, b, min=None, max=None):
@@ -234,15 +242,7 @@ def _scale_to_range(seq, a, b, min=None, max=None):
     if min is None:
         min = min(seq)
     assert min < max
-    def scaled_val(val, a, b, minimum, maximum):
-        # Scale val into [a, b] given the max and min values of the seq
-        # it belongs to.
-        # Taken from this SO answer: https://tinyurl.com/j5rppewr
-        numerator = (b - a) * (val - minimum)
-        denominator = maximum - minimum
-        return (numerator / denominator) + a
-
-    scaled_seq = np.array([scaled_val(val, a, b, min, max) \
+    scaled_seq = np.array([_scale_val(val, a, b, min, max) \
                            for val in seq])
 
     return scaled_seq
@@ -270,6 +270,32 @@ def inverse_scale(data, scaler='log'):
     inverse_scaled_data = [np.exp(d) for d in data]
     return inverse_scaled_data
 
+
+
+def convert_to_log(values, scaler):
+    if scaler.lower().startswith('log_and_divide'):
+        divisor = scaler.split('_')[-1]
+        values_scaled = [divisor * v for v in values]
+    elif scaler.lower().startswith('log_and_range'):
+        # Split scaler on underscores to extract the min and max values for the range
+        elements = scaler.split('_')
+        # Calc args for _scale_to_range
+        min_value = float(elements[-2])
+        max_value = float(elements[-1])
+        range_bottom = min(train)
+        range_top = max(val)
+        # Change name
+        scale_to_range_args = [range_bottom, range_top, min_value, max_value]
+        # may make sense to do this as a for loop (since first 2 will be iteratbvles)
+        # and next two are just values
+        values_scaled = [_scale_to_range(v, *scale_to_range_args) for v in values \
+                        # if v.isiterable() else \
+                        _scale_val(v, *scale_to_range_args) ]
+    else:
+        raise Exception('''Please enter a supported scaling type: log, log_and_divide_a
+                        (first take log, then divide by a), or log_and_range_a_b (first take 
+                        log then scale to range [a, b]).''')
+    return values_scaled
 
 """########## PLOT ##########"""
 
@@ -611,7 +637,3 @@ def train_and_validate(config, dataset=1):
     return history
 
 
-# Log - do nothing
-# 
-    def convert_to_log(values, scaler):
-        pac
