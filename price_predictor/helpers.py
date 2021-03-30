@@ -79,6 +79,7 @@ def load_dataset_2():
 
     return train_2, val_2
 
+
 def get_training_data():
     """
     Convenience function to quickly load in train and val data to train models on.
@@ -163,13 +164,12 @@ def scale_train_val_test(train, val, test=None, scaler='log'):
         train, val, test = _scale_log_and_divide(train, val, test, 20)
     elif scaler.lower() == 'log_and_divide_15':
         train, val, test = _scale_log_and_divide(train, val, test, 15)
-    elif scaler.lower() == 'log_and_scale_neg1_0':
-        train, val, test = _scale_log_and_squash(train, val, test, range=(-1, 0))
-    elif scaler.lower() == 'log_and_scale_neg05_05':
-        train, val, test = _scale_log_and_squash(train, val, test, range=(-0.5, 0.5))
+    elif scaler.lower().startswith('log_and_range'):
+        train, val, test = _scale_log_and_range(train, val, test, scaler)
     else:
         raise Exception('''Please enter a supported scaling type: log, log_and_divide_20
-                        log_and_divide_15, log_and_scale_neg1_0, or log_and_scale_neg05_05''')
+                        log_and_divide_15, log_and_range_a_b (where [a, b] is the range
+                        you want to scale to.''')
     return train, val, test
 
 
@@ -194,15 +194,54 @@ def _scale_log_and_divide(train, val, test=None, divisor=20):
     return train, val, test
 
 
-def _scale_log_and_squash(train, val, test=None, range=(-1, 0)):
+
+# Taken from this SO answer: https://tinyurl.com/j5rppewr
+def _scale_to_range(seq, a, b, min=None, max=None):
+    """
+    Given a sequence of numbers - seq - scale all of its values to the 
+    range [a, b]. 
+
+    Default behaviour will map min(seq) to a and max(seq) to b.
+    To override this, set max and min yourself.
+    """
+    assert a < b
+    # Default is to use the max of the seq as the min/max
+    # Can override this and input custom min and max values
+    # if, for example, want to scale to ranges not necesarily included
+    # in the data (as in our case with the train and val data)
+    if max is None:
+        max = max(seq)
+    if min is None:
+        min = min(seq)
+    assert min < max
+    def scaled_val(val, a, b, minimum, maximum):
+        # Scale val into [a, b] given the max and min values of the seq
+        # it belongs to.
+        # Taken from this SO answer: https://tinyurl.com/j5rppewr
+        numerator = (b - a) * (val - minimum)
+        denominator = maximum - minimum
+        return (numerator / denominator) + a
+
+    scaled_seq = np.array([scaled_val(val, a, b, min, max) \
+                           for val in seq])
+
+    return scaled_seq
+
+
+def _scale_log_and_range(train, val, test, scaler):
     train, val, test = _scale_log(train, val, test)
-    # Scale to range
-    min_max = MinMaxScaler(feature_range=range)
-    train = min_max.fit_transform(train)
-    val = min_max.transform(val)
-    if test is not None:
-        test = min_max.transform(test)
-    return train, val, test
+    # Split scaler on underscores to extract the min and max values for the range
+    elements = scaler.split('_')
+    # Calc args for _scale_to_range
+    range_bottom = float(elements[-2])
+    range_top = float(elements[-1])
+    min_value = min(train)
+    max_value = max(val)
+    args = [range_bottom, range_top, min_value, max_value]
+    train = _scale_to_range(train, *args)
+    val = _scale_to_range(val, *args)
+    test = _scale_to_range(test, *args)    
+    return train, val, test  
 
 
 def inverse_scale(data, scaler='log'):
@@ -514,30 +553,20 @@ def train_and_validate(config, dataset=1):
     else:
         raise Exception('Only two datasets are available: 1 or 2')
     # Scale data
-    train, val, _ = scale_train_val_test(train, val, scaler=config.scaler)
+    train_scaled, val_scaled, _ = scale_train_val_test(train, val, scaler=config.scaler)
     # Get data into form Keras needs
-    X_train, X_val, y_train, y_val = transform_to_keras_input(train,
-                                                              val,
+    X_train, X_val, y_train, y_val = transform_to_keras_input(train_scaled,
+                                                              val_scaled,
                                                               config.n_input)
     # Build and fit model
     model = build_model(config)
     history = fit_model(model, config, X_train, X_val, y_train, y_val)
     # Plot loss, rmse, and 1-rmse curves
-    plot_metric(history, metric='loss', start_epoch=20)
-    plot_metric(history, metric='root_mean_squared_error', start_epoch=20)
-    plot_metric(history, metric='1-root_mean_squared_error', start_epoch=20)
+    plot_metric(history, metric='loss', start_epoch=10)
+    plot_metric(history, metric='root_mean_squared_error', start_epoch=10)
+    plot_metric(history, metric='1-root_mean_squared_error', start_epoch=10)
     # Store history on wandb
     upload_history_to_wandb(history)
-
-    # Calculate predictions
-    y_pred_train = model.predict(X_train)
-    y_pred_val = model.predict(X_val)
-
-    # Calculate rmse for train and val data
-    eval_results_train = model.evaluate(X_train, y_train, verbose=0)
-    eval_results_val = model.evaluate(X_val, y_val, verbose=0)
-    rmse_train = eval_results_train[1]
-    rmse_val = eval_results_val[1]
 
     # Calc preds and pred rmse on train and val datasets
     y_pred_train, y_pred_val, rmse_train, rmse_val = get_preds_and_rmse(model, 
@@ -545,6 +574,10 @@ def train_and_validate(config, dataset=1):
                                                                         X_val, 
                                                                         y_train, 
                                                                         y_val)
+
+    # Turn all predictions and rmse into a log scale (for easy comparison
+    # between different scalings
+    y_pred_train_log, y_pred_val_log, rmse_train_log, rmse_val_log
 
     # Plot predictions for train and val data
     _plot_actual_vs_pred(y_train, y_pred_train, rmse=rmse_train,
