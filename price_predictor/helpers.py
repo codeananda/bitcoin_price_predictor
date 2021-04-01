@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import pickle
 from pathlib import Path
 import seaborn as sns
 from tqdm.notebook import trange, tqdm
@@ -262,7 +263,7 @@ def _scale_log_and_range(train, val, scaler):
     val = _scale_to_range(val, *args)  
     return train, val  
 
-
+# Delete if unused in train_and_validate()
 def inverse_scale(data, scaler='log'):
     if scaler.lower() != 'log':
         raise TypeError("Only 'log' scaling supported at this time." )
@@ -272,7 +273,7 @@ def inverse_scale(data, scaler='log'):
 
 
 
-def convert_to_log(values, scaler):
+def convert_to_log(values, scaler, train, val):
     if scaler.lower().startswith('log_and_divide'):
         divisor = scaler.split('_')[-1]
         values_scaled = [divisor * v for v in values]
@@ -285,12 +286,13 @@ def convert_to_log(values, scaler):
         range_bottom = min(train)
         range_top = max(val)
         # Change name
-        scale_to_range_args = [range_bottom, range_top, min_value, max_value]
+        args = [range_bottom, range_top, min_value, max_value]
         # may make sense to do this as a for loop (since first 2 will be iteratbvles)
         # and next two are just values
-        values_scaled = [_scale_to_range(v, *scale_to_range_args) for v in values \
-                        # if v.isiterable() else \
-                        _scale_val(v, *scale_to_range_args) ]
+                        # Scale the values to values
+        values_scaled = [_scale_val(v, *args) for v in values if isinstance(v, (int, float)) \
+                        # Scale the iterables to iterables
+                        else _scale_to_range(v, *args) ]
     else:
         raise Exception('''Please enter a supported scaling type: log, log_and_divide_a
                         (first take log, then divide by a), or log_and_range_a_b (first take 
@@ -619,19 +621,30 @@ def train_and_validate(config, dataset=1):
                                         X_val, 
                                         y_train, 
                                         y_val)
-    # y_pred_train, y_pred_val, rmse_train, rmse_val
+    # y_pred_train, y_pred_val, rmse_train, rmse_val = preds_and_rmse
      
     # Turn all predictions and rmse into a log scale (for easy comparison
     # between different scalings)
     if config.scaler.lower() != 'log':
         y_pred_train_log, y_pred_val_log, \
-            rmse_train_log, rmse_val_log = convert_to_log(*preds_and_rmse)
+            rmse_train_log, rmse_val_log = convert_to_log(*preds_and_rmse, 
+                                                          config.scaler, 
+                # THESE MUST BE TRAIN_LOG AND VAL_LOG, I NEED TO CREATE THEM...
+                                                          train, 
+                                                          val)
+
+    # Get y_train and y_val into log for comparable plotting between different scales
+    train_log, val_log = scale_train_val(train, val, scaler='log')
+
+    _, _, y_train_log, y_val_log = transform_to_keras_input(train_log,
+                                                            val_log,
+                                                            config.n_input)    
 
     # EVERYTHING IN HERE NEEDS TO BE CONVERTED TO LOG.
     # Plot predictions for train and val data
-    _plot_actual_vs_pred(y_train, y_pred_train, rmse=rmse_train,
+    _plot_actual_vs_pred(y_train_log, y_pred_train, rmse=rmse_train,
                          name='X_train preds', logy=True)
-    _plot_actual_vs_pred(y_val, y_pred_val, rmse=rmse_val,
+    _plot_actual_vs_pred(y_val_log, y_pred_val, rmse=rmse_val,
                          name='X_val preds', logy=True)
     _plot_preds_grid(y_train, y_pred_train, rmse_train)
     return history
