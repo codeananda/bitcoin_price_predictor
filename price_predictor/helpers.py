@@ -290,9 +290,9 @@ def convert_to_log(values, scaler, train, val):
         # may make sense to do this as a for loop (since first 2 will be iteratbvles)
         # and next two are just values
                         # Scale the values to values
-        values_scaled = [_scale_val(v, *args) for v in values if isinstance(v, (int, float)) \
-                        # Scale the iterables to iterables
-                        else _scale_to_range(v, *args) ]
+        values_scaled = [_scale_val(v, *args) if isinstance(v, (int, float)) \
+                        else _scale_to_range(v, *args) \
+                        for v in values]
     elif scaler.lower() == 'log':
         values_scaled = values
     else:
