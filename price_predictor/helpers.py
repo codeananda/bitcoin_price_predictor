@@ -293,6 +293,8 @@ def convert_to_log(values, scaler, train, val):
         values_scaled = [_scale_val(v, *args) for v in values if isinstance(v, (int, float)) \
                         # Scale the iterables to iterables
                         else _scale_to_range(v, *args) ]
+    elif scaler.lower() == 'log':
+        values_scaled = values
     else:
         raise Exception('''Please enter a supported scaling type: log, log_and_divide_a
                         (first take log, then divide by a), or log_and_range_a_b (first take 
@@ -615,38 +617,42 @@ def train_and_validate(config, dataset=1):
     # Store history on wandb
     upload_history_to_wandb(history)
 
-    # Calc preds and pred rmse on train and val datasets
+    # Calc preds and pred rmse on train and val datasets (in config.scaler scale)
     preds_and_rmse = get_preds_and_rmse(model, 
                                         X_train, 
                                         X_val, 
                                         y_train, 
                                         y_val)
+    # Just so you know what's inside preds_and_rmse                                    
     # y_pred_train, y_pred_val, rmse_train, rmse_val = preds_and_rmse
+
+    # NOW TRANSFORM EVERYTHING TO LOG SCALE FOR PLOTTING AND COMPARISON BETWEEN SCALING TECHNIQUES
+    # Could be fancy and not perform these steps if scaler.lower() == 'log' but 
+    # it was too much effort and this won't cost that much
      
-    # Turn all predictions and rmse into a log scale (for easy comparison
-    # between different scalings)
-    if config.scaler.lower() != 'log':
-        y_pred_train_log, y_pred_val_log, \
-            rmse_train_log, rmse_val_log = convert_to_log(*preds_and_rmse, 
-                                                          config.scaler, 
-                # THESE MUST BE TRAIN_LOG AND VAL_LOG, I NEED TO CREATE THEM...
-                                                          train, 
-                                                          val)
 
-    # Get y_train and y_val into log for comparable plotting between different scales
+    # Goal 1: Transform preds_and_rmse to log scale
+    # First, get train and val datasets in log scale
     train_log, val_log = scale_train_val(train, val, scaler='log')
-
+    # Second, use train_log and val_log to convert preds_and_rmse to log scale
+    preds_and_rmse_log = convert_to_log(*preds_and_rmse, 
+                                        config.scaler, 
+                                        train_log, 
+                                        val_log)
+    # Finally, unpack preds_and_rmse_log to use in plots below
+    y_pred_train_log, y_pred_val_log, \
+        rmse_train_log, rmse_val_log = preds_and_rmse_log  
+    # Goal 2: get y_train and y_val in log scale for plotting
     _, _, y_train_log, y_val_log = transform_to_keras_input(train_log,
                                                             val_log,
                                                             config.n_input)    
 
-    # EVERYTHING IN HERE NEEDS TO BE CONVERTED TO LOG.
-    # Plot predictions for train and val data
-    _plot_actual_vs_pred(y_train_log, y_pred_train, rmse=rmse_train,
+    # Plot predictions for train and val data (all log scaled)
+    _plot_actual_vs_pred(y_train_log, y_pred_train_log, rmse=rmse_train_log,
                          name='X_train preds', logy=True)
-    _plot_actual_vs_pred(y_val_log, y_pred_val, rmse=rmse_val,
+    _plot_actual_vs_pred(y_val_log, y_pred_val_log, rmse=rmse_val_log,
                          name='X_val preds', logy=True)
-    _plot_preds_grid(y_train, y_pred_train, rmse_train)
+    _plot_preds_grid(y_train_log, y_pred_train_log, rmse_train_log)
     return history
 
 
