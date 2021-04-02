@@ -42,8 +42,8 @@ run = wandb.init(project='bitcoin_price_predictor',
 config = wandb.config # use this to configure experiment
 """
 
-DOWNLOAD_DIR = Path('../download')
-DATA_DIR = Path('../data')
+DOWNLOAD_DIR = Path('/content/drive/MyDrive/1 Projects/bitcoin_price_predictor/download')
+DATA_DIR = Path('/content/drive/MyDrive/1 Projects/bitcoin_price_predictor/data')
 
 
 """########## LOAD DATA ##########"""
@@ -250,7 +250,7 @@ def _scale_to_range(seq, a, b, min=None, max=None):
 
 
 def _scale_log_and_range(train, val, scaler):
-    train, val, _ = _scale_log(train, val)
+    train, val = _scale_log(train, val)
     # Split scaler on underscores to extract the min and max values for the range
     elements = scaler.split('_')
     # Calc args for _scale_to_range
@@ -611,12 +611,13 @@ def train_and_validate(config, dataset=1):
     model = build_model(config)
     history = fit_model(model, config, X_train, X_val, y_train, y_val)
     # Plot loss, rmse, and 1-rmse curves
-    plot_metric(history, metric='loss', start_epoch=10)
-    plot_metric(history, metric='root_mean_squared_error', start_epoch=10)
-    plot_metric(history, metric='1-root_mean_squared_error', start_epoch=10)
+    plot_metric(history, metric='loss', start_epoch=15)
+    plot_metric(history, metric='root_mean_squared_error', start_epoch=15)
+    plot_metric(history, metric='1-root_mean_squared_error', start_epoch=15)
     # Store history on wandb
     upload_history_to_wandb(history)
 
+    """Are we getting values we expect from preds_and_rmse?"""
     # Calc preds and pred rmse on train and val datasets (in config.scaler scale)
     preds_and_rmse = get_preds_and_rmse(model, 
                                         X_train, 
@@ -635,7 +636,7 @@ def train_and_validate(config, dataset=1):
     # First, get train and val datasets in log scale
     train_log, val_log = scale_train_val(train, val, scaler='log')
     # Second, use train_log and val_log to convert preds_and_rmse to log scale
-    preds_and_rmse_log = convert_to_log(*preds_and_rmse, 
+    preds_and_rmse_log = convert_to_log(preds_and_rmse, 
                                         config.scaler, 
                                         train_log, 
                                         val_log)
@@ -656,3 +657,64 @@ def train_and_validate(config, dataset=1):
     return history
 
 
+"""########## DEBUGGING ##########"""
+
+def train_and_valiate_manual(config, dataset=1):
+    # Load data
+    if dataset == 1:
+        train, val, _ = load_dataset_1()
+    elif dataset == 2:
+        train, val = load_dataset_2()
+    else:
+        raise Exception('Only two datasets are available: 1 or 2')
+    # Scale data
+    train_scaled, val_scaled = scale_train_val(train, val, scaler=config.scaler)
+    # Get data into form Keras needs
+    X_train, X_val, y_train, y_val = transform_to_keras_input(train_scaled,
+                                                              val_scaled,
+                                                              168)
+    # Build and fit model
+    model = build_model(config)
+    history = fit_model(model, config, X_train, X_val, y_train, y_val)
+    # Plot loss, rmse, and 1-rmse curves
+    plot_metric(history, metric='loss', start_epoch=15)
+    plot_metric(history, metric='root_mean_squared_error', start_epoch=15)
+    plot_metric(history, metric='1-root_mean_squared_error', start_epoch=15)
+    # Store history on wandb
+    upload_history_to_wandb(history)
+
+    """Are we getting values we expect from preds_and_rmse?"""
+    # Calc preds and pred rmse on train and val datasets (in config.scaler scale)
+    preds_and_rmse = get_preds_and_rmse(model, 
+                                        X_train, 
+                                        X_val, 
+                                        y_train, 
+                                        y_val)
+
+
+if __name__ == '__main__':
+    run = wandb.init(project='bitcoin_price_predictor',
+                    config={
+                        'dataset': 1,
+                        # log, log_and_divide_a, log_and_range_a_b
+                        'scaler': 'log_and_range_0_1',
+                        'n_input': 168, # num lag observations
+                        'n_nodes': 300, # num nodes per lauyer
+                        'n_epochs': 150, # num training epochs
+                        'n_batch': 168 * 20, # batch size
+                        'num_layers': 3, # num layers used in MLP
+                        'model_type': 'MLP',
+                        'activation': 'relu',
+                        'loss': 'mse',
+                        # Model LR scheduler and optimizer
+                        'use_lr_scheduler': True,
+                        'lr_scheduler': 'InverseTimeDecay',
+                        'initial_lr': 0.1,
+                        'decay_steps': 1.0,
+                        'decay_rate': 0.5,
+                        'optimizer': 'adam',
+                        # Other
+                        'verbose': 2, # control verbosity of Keras fit
+                        'dropna': True # whether to drop missing values from data
+                            })
+    config = wandb.config # we use this to configure our experiment
