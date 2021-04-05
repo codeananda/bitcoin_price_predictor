@@ -459,13 +459,10 @@ def summarize_scores(name, scores):
 """########## MODEL BUILD AND FIT ##########"""
 
 def build_model(config):
-    model = Sequential([
-        Dense(config.n_nodes, activation=config.activation,
-              input_dim=config.n_input),
-        Dense(config.n_nodes, activation=config.activation),
-        Dense(config.n_nodes, activation=config.activation),
-        Dense(1)
-    ])
+    # Do we need to put input_dim=config.n_input in first layer?
+    dense_list = [Dense(config.n_nodes, activation=config.activation) for _ in range(config.num_layers)]
+    dense_list.append(Dense(1))
+    model = Sequential(dense_list)
     if config.lr_scheduler == 'InverseTimeDecay':
         learning_rate_schedule = InverseTimeDecay(config.initial_lr,
                                                   config.decay_steps,
