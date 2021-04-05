@@ -11,7 +11,7 @@ from tensorflow.keras import Input, Model
 from tensorflow.keras.layers import Dense, LSTM
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.metrics import RootMeanSquaredError
-from tensorflow.keras.optimizers.schedules import InverseTimeDecay
+from tensorflow.keras.optimizers.schedules import InverseTimeDecay, ExponentialDecay
 from tensorflow.keras.optimizers import Adam
 
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
@@ -466,9 +466,17 @@ def build_model(config):
         Dense(config.n_nodes, activation=config.activation),
         Dense(1)
     ])
-    learning_rate_schedule = InverseTimeDecay(config.initial_lr,
-                                              config.decay_steps,
-                                              config.decay_rate)
+    if config.scaler == 'InverseTimeDecay':
+        learning_rate_schedule = InverseTimeDecay(config.initial_lr,
+                                                  config.decay_steps,
+                                                  config.decay_rate)
+    elif config.scaler == 'ExponentialDecay':
+        learning_rate_schedule = ExponentialDecay(config.initial_lr,
+                                                  config.decay_steps,
+                                                  config.decay_rate)
+    else:
+        raise Exception('''Please enter supported learning rate scheduler: 
+                        InverseTimeDecay or ExponentialDecay''')
     optimizer = Adam(learning_rate_schedule)
     model.compile(loss=config.loss, 
                   optimizer=optimizer,
