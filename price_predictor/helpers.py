@@ -250,18 +250,18 @@ def _scale_to_range(seq, a, b, min=None, max=None):
 
 
 def _scale_log_and_range(train, val, scaler):
-    train, val = _scale_log(train, val)
+    train_log, val_log = _scale_log(train, val)
     # Split scaler on underscores to extract the min and max values for the range
     elements = scaler.split('_')
     # Calc args for _scale_to_range
-    range_bottom = float(elements[-2])
-    range_top = float(elements[-1])
-    min_value = min(train)
-    max_value = max(val)
-    args = [range_bottom, range_top, min_value, max_value]
-    train = _scale_to_range(train, *args)
-    val = _scale_to_range(val, *args)  
-    return train, val  
+    a = float(elements[-2])
+    b = float(elements[-1])
+    min_value = min(train_log)
+    max_value = max(val_log)
+    args = [a, b, min_value, max_value]
+    train_scaled = _scale_to_range(train_log, *args)
+    val_scaled = _scale_to_range(val_log, *args)  
+    return train_scaled, val_scaled 
 
 # Delete if unused in train_and_validate()
 def inverse_scale(data, scaler='log'):
@@ -283,10 +283,10 @@ def convert_to_log(values, scaler, train, val):
         # Calc args for _scale_to_range
         min_value = float(elements[-2])
         max_value = float(elements[-1])
-        range_bottom = min(train)
-        range_top = max(val)
+        a = min(train)
+        b = max(val)
         # Change name
-        args = [range_bottom, range_top, min_value, max_value]
+        args = [a, b, min_value, max_value]
         # may make sense to do this as a for loop (since first 2 will be iteratbvles)
         # and next two are just values
                         # Scale the values to values
@@ -690,6 +690,12 @@ def train_and_valiate_manual(config, dataset=1):
                                         X_val, 
                                         y_train, 
                                         y_val)
+    y_pred_train, y_pred_val, rmse_train, rmse_val = preds_and_rmse
+    """
+    All looks good up to here, the values for y_pred_train, y_pred_val,
+    y_train, y_val, and rmse_train and rmse_val all look reasonable.
+    """
+    return preds_and_rmse
 
 
 if __name__ == '__main__':
@@ -718,3 +724,5 @@ if __name__ == '__main__':
                         'dropna': True # whether to drop missing values from data
                             })
     config = wandb.config # we use this to configure our experiment
+
+    y_pred_train, y_pred_val, rmse_train, rmse_val = train_and_valiate_manual(config, dataset=1)
