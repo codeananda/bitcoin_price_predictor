@@ -466,11 +466,11 @@ def build_model(config):
         Dense(config.n_nodes, activation=config.activation),
         Dense(1)
     ])
-    if config.scaler == 'InverseTimeDecay':
+    if config.lr_scheduler == 'InverseTimeDecay':
         learning_rate_schedule = InverseTimeDecay(config.initial_lr,
                                                   config.decay_steps,
                                                   config.decay_rate)
-    elif config.scaler == 'ExponentialDecay':
+    elif config.lr_scheduler == 'ExponentialDecay':
         learning_rate_schedule = ExponentialDecay(config.initial_lr,
                                                   config.decay_steps,
                                                   config.decay_rate)
