@@ -468,18 +468,21 @@ def build_model(config):
     dense_list = [Dense(config.n_nodes, activation=config.activation) for _ in range(config.num_layers)]
     dense_list.append(Dense(1))
     model = Sequential(dense_list)
-    if config.lr_scheduler == 'InverseTimeDecay':
-        learning_rate_schedule = InverseTimeDecay(config.initial_lr,
-                                                  config.decay_steps,
-                                                  config.decay_rate)
-    elif config.lr_scheduler == 'ExponentialDecay':
-        learning_rate_schedule = ExponentialDecay(config.initial_lr,
-                                                  config.decay_steps,
-                                                  config.decay_rate)
+    if config.use_lr_scheduler:
+        if config.lr_scheduler == 'InverseTimeDecay':
+            learning_rate_schedule = InverseTimeDecay(config.initial_lr,
+                                                    config.decay_steps,
+                                                    config.decay_rate)
+        elif config.lr_scheduler == 'ExponentialDecay':
+            learning_rate_schedule = ExponentialDecay(config.initial_lr,
+                                                    config.decay_steps,
+                                                    config.decay_rate)
+        else:
+            raise Exception('''Please enter supported learning rate scheduler: 
+                            InverseTimeDecay or ExponentialDecay''')
+        optimizer = Adam(learning_rate_schedule)
     else:
-        raise Exception('''Please enter supported learning rate scheduler: 
-                        InverseTimeDecay or ExponentialDecay''')
-    optimizer = Adam(learning_rate_schedule)
+        optimizer = Adam(learning_rate=config.lr)
     model.compile(loss=config.loss, 
                   optimizer=optimizer,
                   metrics=[RootMeanSquaredError()])
