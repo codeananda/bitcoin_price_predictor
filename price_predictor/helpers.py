@@ -13,6 +13,7 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.metrics import RootMeanSquaredError
 from tensorflow.keras.optimizers.schedules import InverseTimeDecay, ExponentialDecay
 from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.callbacks import EarlyStopping
 
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.metrics import mean_squared_error
@@ -498,7 +499,7 @@ def fit_model(model, config, X_train, X_val, y_train, y_val):
                 verbose=config.verbose,
                 shuffle=False, 
                 validation_data=(X_val, y_val),
-                callbacks=[WandbCallback()])
+                callbacks=[WandbCallback(), EarlyStopping(patience=config.patience)])
     return history
 
 
