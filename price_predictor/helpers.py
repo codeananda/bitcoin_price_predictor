@@ -282,7 +282,7 @@ def convert_to_log(values, scaler, train, val):
     if scaler.lower().startswith('log_and_divide'):
         divisor = float(scaler.split('_')[-1])
         values_scaled = [divisor * v for v in values]
-    elif scaler.lower().startswith('log_and_range_a_b'):
+    elif scaler.lower().startswith('log_and_range'):
         # Split scaler on underscores to extract the min and max values for the range
         elements = scaler.split('_')
         # Calc args for _scale_to_range
