@@ -274,10 +274,15 @@ def inverse_scale(data, scaler='log'):
 
 
 def convert_to_log(values, scaler, train, val):
+    """
+    values = [y_pred_train, y_pred_val, rmse_train, rmse_val]
+    y_pred_train, y_pred_val are type np.array
+    rmse_train, rmse_val are type float
+    """
     if scaler.lower().startswith('log_and_divide'):
-        divisor = scaler.split('_')[-1]
+        divisor = float(scaler.split('_')[-1])
         values_scaled = [divisor * v for v in values]
-    elif scaler.lower().startswith('log_and_range'):
+    elif scaler.lower().startswith('log_and_range_a_b'):
         # Split scaler on underscores to extract the min and max values for the range
         elements = scaler.split('_')
         # Calc args for _scale_to_range
@@ -598,11 +603,11 @@ def upload_history_to_wandb(history):
 
 
 """########## FULL PROCESS ##########"""
-def train_and_validate(config, dataset=1):
+def train_and_validate(config):
     # Load data
-    if dataset == 1:
+    if config.dataset == 1:
         train, val, _ = load_dataset_1()
-    elif dataset == 2:
+    elif config.dataset == 2:
         train, val = load_dataset_2()
     else:
         raise Exception('Only two datasets are available: 1 or 2')
