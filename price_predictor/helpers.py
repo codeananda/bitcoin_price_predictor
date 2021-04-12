@@ -493,9 +493,19 @@ def get_optimizer(config):
 
 def build_model(config):
     # Do we need to put input_dim=config.n_input in first layer?
-    dense_list = [Dense(config.n_nodes, activation=config.activation) for _ in range(config.num_layers)]
-    dense_list.append(Dense(1))
-    model = Sequential(dense_list)
+    # dense_list = [Dense(config.n_nodes, activation=config.activation) for _ in range(config.num_layers)]
+    # dense_list.append(Dense(1))
+    # model = Sequential(dense_list)
+    model = Sequential([
+        Dense(500, activation='relu'),
+        Dense(250, activation='relu'),
+        Dense(125, activation='relu'),
+        Dense(62, activation='relu'),
+        Dense(30, activation='relu'),
+        Dense(15, activation='relu'),
+        Dense(7, activation='relu'),
+        Dense(1)
+    ])
     optimizer = get_optimizer(config)
     model.compile(loss=config.loss, 
                   optimizer=optimizer,
