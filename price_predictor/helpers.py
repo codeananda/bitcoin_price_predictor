@@ -652,9 +652,9 @@ def train_and_validate(config):
     model = build_model(config)
     history = fit_model(model, config, X_train, X_val, y_train, y_val)
     # Plot loss, rmse, and 1-rmse curves
-    plot_metric(history, metric='loss', start_epoch=15)
-    plot_metric(history, metric='root_mean_squared_error', start_epoch=15)
-    plot_metric(history, metric='1-root_mean_squared_error', start_epoch=15)
+    plot_metric(history, metric='loss', start_epoch=config.start_plotting_epoch)
+    plot_metric(history, metric='root_mean_squared_error', start_epoch=config.start_plotting_epoch)
+    plot_metric(history, metric='1-root_mean_squared_error', start_epoch=config.start_plotting_epoch)
     # Store history on wandb
     upload_history_to_wandb(history)
 
