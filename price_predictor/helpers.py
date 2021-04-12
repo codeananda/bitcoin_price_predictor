@@ -12,7 +12,7 @@ from tensorflow.keras.layers import Dense, LSTM
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.metrics import RootMeanSquaredError
 from tensorflow.keras.optimizers.schedules import InverseTimeDecay, ExponentialDecay
-from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.optimizers import Adam, RMSprop
 from tensorflow.keras.callbacks import EarlyStopping
 
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
@@ -476,10 +476,18 @@ def get_optimizer(config):
                                                     config.decay_rate)
         else:
             raise Exception('''Please enter a supported learning rate scheduler: 
-                            InverseTimeDecay or ExponentialDecay''')
-        optimizer = Adam(learning_rate_schedule)
+                            InverseTimeDecay or ExponentialDecay.''')
+        if config.optimizer.lower() == 'adam':
+            optimizer = Adam(learning_rate_schedule)
+        elif config.optimizer.lower() == 'rmsprop':
+            optimizer = RMSprop(learning_rate_schedule)
     else:
-        optimizer = Adam(learning_rate=config.lr)
+        if config.optimizer.lower() == 'adam':
+            optimizer = Adam(learning_rate=config.lr)
+        elif config.optimizer.lower() == 'rmsprop':
+            optimizer = RMSprop(learning_rate=config.lr)
+        else:
+            raise Exception("""Please enter a supported optimizer: Adam or RMSprop.""")
     return optimizer
 
 
