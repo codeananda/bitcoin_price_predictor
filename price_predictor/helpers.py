@@ -464,11 +464,7 @@ def summarize_scores(name, scores):
 
 """########## MODEL BUILD AND FIT ##########"""
 
-def build_model(config):
-    # Do we need to put input_dim=config.n_input in first layer?
-    dense_list = [Dense(config.n_nodes, activation=config.activation) for _ in range(config.num_layers)]
-    dense_list.append(Dense(1))
-    model = Sequential(dense_list)
+def get_optimizer(config):
     if config.use_lr_scheduler:
         if config.lr_scheduler == 'InverseTimeDecay':
             learning_rate_schedule = InverseTimeDecay(config.initial_lr,
@@ -479,11 +475,20 @@ def build_model(config):
                                                     config.decay_steps,
                                                     config.decay_rate)
         else:
-            raise Exception('''Please enter supported learning rate scheduler: 
+            raise Exception('''Please enter a supported learning rate scheduler: 
                             InverseTimeDecay or ExponentialDecay''')
         optimizer = Adam(learning_rate_schedule)
     else:
         optimizer = Adam(learning_rate=config.lr)
+    return optimizer
+
+
+def build_model(config):
+    # Do we need to put input_dim=config.n_input in first layer?
+    dense_list = [Dense(config.n_nodes, activation=config.activation) for _ in range(config.num_layers)]
+    dense_list.append(Dense(1))
+    model = Sequential(dense_list)
+    optimizer = get_optimizer(config)
     model.compile(loss=config.loss, 
                   optimizer=optimizer,
                   metrics=[RootMeanSquaredError()])
