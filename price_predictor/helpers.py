@@ -514,6 +514,9 @@ def build_model(config):
 
 
 def fit_model(model, config, X_train, X_val, y_train, y_val):
+    es = EarlyStopping(patience=config.patience,
+                       restore_best_weights=config.restore_best_weights)
+    callbacks_list = [WandbCallback(), es]
     history = model.fit(
                 X_train, 
                 y_train, 
@@ -522,7 +525,7 @@ def fit_model(model, config, X_train, X_val, y_train, y_val):
                 verbose=config.verbose,
                 shuffle=False, 
                 validation_data=(X_val, y_val),
-                callbacks=[WandbCallback(), EarlyStopping(patience=config.patience)])
+                callbacks=callbacks_list)
     return history
 
 
