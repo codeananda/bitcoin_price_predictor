@@ -464,11 +464,13 @@ def summarize_scores(name, scores):
 
 """########## MODEL BUILD AND FIT ##########"""
 
-def custom_lr_schduler(epoch, lr):
-    if epoch <= 5:
+def custom_lr_scheduler(epoch, lr):
+    if epoch <= 6:
         return 1e-4
+    elif epoch <= 12:
+        return 1e-5
     else:
-        return 1e-5   
+        return 1e-6
 
 
 
@@ -489,6 +491,7 @@ def get_optimizer(config):
                 optimizer = RMSprop(learning_rate=config.initial_lr)
             else:
                 raise Exception("""Please enter a supported optimizer: Adam or RMSprop.""")
+            return optimizer
         else:
             raise Exception('''Please enter a supported learning rate scheduler: 
                             InverseTimeDecay or ExponentialDecay.''')
@@ -537,7 +540,7 @@ def fit_model(model, config, X_train, X_val, y_train, y_val):
     callbacks_list = [WandbCallback(), es]
     # Add custom lr scheduling
     if config.use_lr_scheduler and config.lr_scheduler.lower() == 'custom':
-        custom_lr_scheduler_callback = LearningRateScheduler(custom_lr_schduler)
+        custom_lr_scheduler_callback = LearningRateScheduler(custom_lr_scheduler)
         callbacks_list.append(custom_lr_scheduler_callback)
     history = model.fit(
                 X_train, 
