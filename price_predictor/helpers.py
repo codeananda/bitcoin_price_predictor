@@ -534,6 +534,7 @@ def build_model(config):
 
 
 def fit_model(model, config, X_train, X_val, y_train, y_val):
+    # Define callbacks
     es = EarlyStopping(patience=config.patience,
                        restore_best_weights=config.restore_best_weights,
                        baseline=config.early_stopping_baseline)
@@ -542,6 +543,7 @@ def fit_model(model, config, X_train, X_val, y_train, y_val):
     if config.use_lr_scheduler and config.lr_scheduler.lower() == 'custom':
         custom_lr_scheduler_callback = LearningRateScheduler(custom_lr_scheduler)
         callbacks_list.append(custom_lr_scheduler_callback)
+    # Fit model
     history = model.fit(
                 X_train, 
                 y_train, 
