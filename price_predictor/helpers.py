@@ -13,7 +13,7 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.metrics import RootMeanSquaredError
 from tensorflow.keras.optimizers.schedules import InverseTimeDecay, ExponentialDecay
 from tensorflow.keras.optimizers import Adam, RMSprop
-from tensorflow.keras.callbacks import EarlyStopping
+from tensorflow.keras.callbacks import EarlyStopping, LearningRateScheduler
 
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.metrics import mean_squared_error
@@ -464,6 +464,14 @@ def summarize_scores(name, scores):
 
 """########## MODEL BUILD AND FIT ##########"""
 
+def custom_lr_schduler(epoch, lr):
+    if epoch <= 5:
+        return 1e-4
+    else:
+        return 1e-5   
+
+
+
 def get_optimizer(config):
     if config.use_lr_scheduler:
         if config.lr_scheduler == 'InverseTimeDecay':
@@ -474,6 +482,13 @@ def get_optimizer(config):
             learning_rate_schedule = ExponentialDecay(config.initial_lr,
                                                     config.decay_steps,
                                                     config.decay_rate)
+        elif config.lr_scheduler.lower() == 'custom':
+            if config.optimizer.lower() == 'adam':
+                optimizer = Adam(learning_rate=config.initial_lr)
+            elif config.optimizer.lower() == 'rmsprop':
+                optimizer = RMSprop(learning_rate=config.initial_lr)
+            else:
+                raise Exception("""Please enter a supported optimizer: Adam or RMSprop.""")
         else:
             raise Exception('''Please enter a supported learning rate scheduler: 
                             InverseTimeDecay or ExponentialDecay.''')
@@ -481,6 +496,8 @@ def get_optimizer(config):
             optimizer = Adam(learning_rate_schedule)
         elif config.optimizer.lower() == 'rmsprop':
             optimizer = RMSprop(learning_rate_schedule)
+        else:
+            raise Exception("""Please enter a supported optimizer: Adam or RMSprop.""")
     else:
         if config.optimizer.lower() == 'adam':
             optimizer = Adam(learning_rate=config.lr)
@@ -518,6 +535,10 @@ def fit_model(model, config, X_train, X_val, y_train, y_val):
                        restore_best_weights=config.restore_best_weights,
                        baseline=config.early_stopping_baseline)
     callbacks_list = [WandbCallback(), es]
+    # Add custom lr scheduling
+    if config.use_lr_scheduler and config.lr_scheduler.lower() == 'custom':
+        custom_lr_scheduler_callback = LearningRateScheduler(custom_lr_schduler)
+        callbacks_list.append(custom_lr_scheduler_callback)
     history = model.fit(
                 X_train, 
                 y_train, 
