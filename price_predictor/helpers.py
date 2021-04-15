@@ -572,26 +572,66 @@ def build_model(config):
     return model
 
 
-def fit_model(model, config, X_train, X_val, y_train, y_val):
-    # Define callbacks
+def get_callbacks(config):
+    # EarlyStopping
     es = EarlyStopping(patience=config.patience,
                        restore_best_weights=config.restore_best_weights,
                        baseline=config.early_stopping_baseline)
+    # WandB
     callbacks_list = [WandbCallback(), es]
-    # Add custom lr scheduling
+    # LearningRateScheduler
     if config.use_lr_scheduler and config.lr_scheduler.lower() == 'custom':
         custom_lr_scheduler_callback = LearningRateScheduler(custom_lr_scheduler)
         callbacks_list.append(custom_lr_scheduler_callback)
-    # Fit model
+    return callbacks_list
+
+
+def fit_MLP(model, config, X_train, X_val, y_train, y_val, callbacks_list):
     history = model.fit(
-                X_train, 
-                y_train, 
-                epochs=config.n_epochs,
-                batch_size=config.n_batch, 
-                verbose=config.verbose,
-                shuffle=False, 
-                validation_data=(X_val, y_val),
-                callbacks=callbacks_list)
+        X_train, 
+        y_train, 
+        epochs=config.n_epochs,
+        batch_size=config.n_batch, 
+        verbose=config.verbose,
+        shuffle=False, 
+        validation_data=(X_val, y_val),
+        callbacks=callbacks_list
+    )
+    return history
+
+
+def fit_LSTM(model, config, X_train, X_val, y_train, y_val, callbacks_list):
+    # Create TF Train Dataset (to ensure batch size never changes between batches)
+    train_dataset = tf.data.Dataset.from_tensor_slices((X_train, y_train))
+    train_dataset = train_dataset.repeat().batch(config.n_batch, drop_remainder=True)
+    steps_per_epoch = len(X_train) // config.n_batch
+    # Create TF Val Dataset
+    validation_dataset = tf.data.Dataset.from_tensor_slices((X_val, y_val))
+    validation_dataset = validation_dataset.repeat().batch(config.n_batch, drop_remainder=True)
+    validation_steps = len(X_val) // config.n_batch
+
+    history = model.fit(
+        train_dataset,
+        epochs=config.n_epochs,
+        steps_per_epoch=steps_per_epoch,
+        verbose=config.verbose,
+        shuffle=False,
+        validation_data=validation_dataset,
+        validation_steps=validation_steps,
+        callbacks=callbacks_list   
+    )
+    return history
+
+
+def fit_model(model, config, X_train, X_val, y_train, y_val):
+    callbacks_list = get_callbacks(config)
+    # Fit model
+    if config.model_type.upper() == 'MLP':
+        history = fit_MLP(model, config, X_train, X_val, y_train, y_val, callbacks_list)
+    elif config.model_type.upper() == 'LSTM':
+        history = fit_LSTM(model, config, X_train, X_val, y_train, y_val, callbacks_list)
+    else:
+        raise Exception('Please enter a supported model_type: MLP or LSTM.')
     return history
 
 
@@ -714,6 +754,9 @@ def train_and_validate(config):
                                                               val_scaled,
                                                               config.n_input,
                                                               config)
+    # No point transforming into tf.data.Dataset here since it just
+    # matters in fit()
+
     print(X_train.shape, X_val.shape, y_train.shape, y_val.shape)
     # Build and fit model
     model = build_model(config)
