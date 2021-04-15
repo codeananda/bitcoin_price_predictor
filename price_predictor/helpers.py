@@ -821,17 +821,43 @@ def train_and_validate(config):
         X_val_log = X_val_log.batch(config.n_batch, drop_remainder=True)
         X_val_log = list(X_val_log.as_numpy_iterator())
 
+        y_train_log = tf.data.Dataset.from_tensor_slices(y_train_log)
+        y_train_log = y_train_log.batch(config.n_batch, drop_remainder=True)
+        y_train_log = list(y_train_log.as_numpy_iterator())
+        y_val_log = tf.data.Dataset.from_tensor_slices(y_val_log)
+        y_val_log = y_val_log.batch(config.n_batch, drop_remainder=True)
+        y_val_log = list(y_val_log.as_numpy_iterator())
+
     # Not sure if this works with LSTM. 
     # Calculate rmse for train and val data
     # Note we must use X_train_log and not X_train as we need a common point
     # of comparison between models and scales. All preds are now compared
     # against the same X values and so it is as if these X values produced
     # these preds.
-    eval_results_train = model.evaluate(X_train_log, y_pred_train_log, verbose=0)
-    eval_results_val = model.evaluate(X_val_log, y_pred_val_log, verbose=0)
-    rmse_train_log = eval_results_train[1]
-    rmse_val_log = eval_results_val[1]
+    # If using .evaluate() you must pass a single dataset
+    # eval_results_train = model.evaluate(X_train_log, y_pred_train_log, verbose=0)
+    # eval_results_val = model.evaluate(X_val_log, y_pred_val_log, verbose=0)
+    # rmse_train_log = eval_results_train[1]
+    # rmse_val_log = eval_results_val[1]
+
+    train_log_ds = tf.data.Dataset.from_tensor_slices((X_train_log, y_pred_train_log))
+    train_log_ds = train_log_ds.batch(config.n_batch)
+    val_log_ds = tf.data.Dataset.from_tensor_slices((X_val_log, y_pred_val_log))
+    val_log_ds = val_log_ds.batch(config.n_batch)
+    eval_results_train  = model.evaluate(train_log_ds, verbose=0)
+    eval_results_val = model.evaluate(val_log_ds, verbose=0)
+
+    rmse_train_log_eval_method = eval_results_train[1]
+    rmse_val_log_eval_method = eval_results_val[1]
+
+    # Test this with evaluate as well to ensure same results
+    rmse_train_log = _measure_rmse(y_train_log, y_pred_train_log)
+    rmse_val_log = _measure_rmse(y_val_log, y_pred_val_log)
+
+    print(rmse_train_log_eval_method == rmse_train_log)
+    print(rmse_val_log_eval_method == rmse_val_log)
     """TO HERE"""                               
+
     # Just so you know what's inside preds_and_rmse                                    
     # y_pred_train, y_pred_val, rmse_train, rmse_val = preds_and_rmse
 
