@@ -754,6 +754,9 @@ def train_and_validate(config):
     # Scale data
     train_scaled, val_scaled = scale_train_val(train, val, scaler=config.scaler)
     # Get data into form Keras needs
+    # NAME OF THIS FUNCTION IS MISLEADING AS THE OUTPUT IS NOT IN A FORM
+    # KERAS LIKES IF IT'S AN LSTM (IT'S BETTER TO TRANSFORM IT INTO
+    # A TF.DATA.DATASET CLASS).
     X_train, X_val, y_train, y_val = transform_to_keras_input(config,
                                                               train_scaled,
                                                               val_scaled,
@@ -781,10 +784,18 @@ def train_and_validate(config):
     
     """ALL NEW FROM HERE"""
     if config.model_type.upper() == 'LSTM':
-        X_train = X_train.reshape(-1, config.n_input, 1)
-        X_val = X_val.reshape(-1, config.n_input, 1)
-    y_pred_train = model.predict(X_train)
-    y_pred_val = model.predict(X_val)
+        train_ds = tf.data.Dataset.from_tensor_slices((X_train, y_train))
+        train_ds = train_ds.repeat().batch(config.n_batch, drop_remainder=True)
+        val_ds = tf.data.Dataset.from_tensor_slices((X_val, y_val)) 
+        val_ds = val_ds.repeat().batch(config.n_batch, drop_remainder=True)
+        
+        y_pred_train = model.predict(train_ds)
+        y_pred_val = model.predict(val_ds)
+    elif config.model_type.upper() == 'MLP':
+        y_pred_train = model.predict(X_train)
+        y_pred_val = model.predict(X_val)
+    else:
+        raise Exception('Please enter a supported model_type: MLP or LSTM.')      
 
     train_log, val_log = scale_train_val(train, val, scaler='log')
 
