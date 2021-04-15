@@ -148,13 +148,23 @@ def _series_to_supervised(data, n_in=1, n_out=1):
 # Create train and val sets to input into Keras model
 # we do not need test sets at this stage, just care about 
 # validation, not testing
-def transform_to_keras_input(train, val, n_in):
+def transform_to_keras_input(train, val, n_in, config=None):
+    """
+    Given train and val datasets of univariate timeseries, transform them into sequences
+    of length n_in and split into X_train, X_val, y_train, y_val. 
+
+    Note: config is optional and only needed if using an LSTM (which require 3D inputs).
+          It should work fine building MLPs without passing config, but this is untested.
+    """
     # Transform to keras input
     train_data = _series_to_supervised(train, n_in=n_in)
     val_data = _series_to_supervised(val, n_in=n_in)
     # Create X and y variables
     X_train, y_train = train_data[:, :-1], train_data[:, -1]
     X_val, y_val = val_data[:, :-1], val_data[:, -1]
+    if config.model_type.lower() == 'lstm':
+        X_train = X_train.reshape(-1, n_in, 1)
+        X_val = X_val.reshape(-1, n_in, 1)
     return X_train, X_val, y_train, y_val
 
 """########## SCALE ##########"""
@@ -702,7 +712,8 @@ def train_and_validate(config):
     # Get data into form Keras needs
     X_train, X_val, y_train, y_val = transform_to_keras_input(train_scaled,
                                                               val_scaled,
-                                                              config.n_input)
+                                                              config.n_input,
+                                                              config)
     print(X_train.shape, X_val.shape, y_train.shape, y_val.shape)
     # Build and fit model
     model = build_model(config)
