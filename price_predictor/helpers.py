@@ -465,9 +465,9 @@ def summarize_scores(name, scores):
 """########## MODEL BUILD AND FIT ##########"""
 
 def custom_lr_scheduler(epoch, lr):
-    if epoch <= 6:
+    if epoch <= config.first_epoch_drop:
         return 1e-4
-    elif epoch <= 12:
+    elif epoch <= config.second_epoch_drop:
         return 1e-5
     else:
         return 1e-6
