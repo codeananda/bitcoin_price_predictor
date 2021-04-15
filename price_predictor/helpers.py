@@ -46,6 +46,9 @@ config = wandb.config # use this to configure experiment
 DOWNLOAD_DIR = Path('/content/drive/MyDrive/1 Projects/bitcoin_price_predictor/download')
 DATA_DIR = Path('/content/drive/MyDrive/1 Projects/bitcoin_price_predictor/data')
 
+DOWNLOAD_DIR = Path('../download')
+DATA_DIR = Path('../data')
+
 
 """########## LOAD DATA ##########"""
 
@@ -465,9 +468,9 @@ def summarize_scores(name, scores):
 """########## MODEL BUILD AND FIT ##########"""
 
 def custom_lr_scheduler(epoch, lr):
-    if epoch <= config.first_epoch_drop:
+    if epoch <= 4:
         return 1e-4
-    elif epoch <= config.second_epoch_drop:
+    elif epoch <= 10:
         return 1e-5
     else:
         return 1e-6
