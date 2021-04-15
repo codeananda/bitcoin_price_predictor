@@ -514,7 +514,7 @@ def get_optimizer(config):
     return optimizer
 
 
-def build_model(config):
+def build_mlp(config):
     # Do we need to put input_dim=config.n_input in first layer?
     # dense_list = [Dense(config.n_nodes, activation=config.activation) for _ in range(config.num_layers)]
     # dense_list.append(Dense(1))
@@ -533,6 +533,31 @@ def build_model(config):
     model.compile(loss=config.loss, 
                   optimizer=optimizer,
                   metrics=[RootMeanSquaredError()])
+    return model
+
+
+def build_lstm(config):
+    model = Sequential([
+        LSTM(50, return_sequences=True, stateful=True, input_shape=(config.n_input, 1)),
+        LSTM(25, return_sequences=True, stateful=True),
+        LSTM(12, return_sequences=True, stateful=True),
+        LSTM(5, stateful=True),
+        Dense(1)
+    ])
+    optimizer = get_optimizer(config)
+    model.compile(loss=config.loss, 
+                  optimizer=optimizer,
+                  metrics=[RootMeanSquaredError()])
+    return model
+
+
+def build_model(config):
+    if config.model_type.lower() == 'mlp':
+        model = build_mlp(config)
+    elif config.model_type.lower() == 'lstm':
+        model = build_lstm(config)
+    else:
+        raise Exception('Please enter a supported model type: MLP or LSTM')
     return model
 
 
