@@ -816,8 +816,10 @@ def train_and_validate(config):
         # some were cut off at the end due to needing equally sized batches
         X_train_log = tf.data.Dataset.from_tensor_slices(X_train_log)
         X_train_log = X_train_log.batch(config.n_batch, drop_remainder=True)
+        X_train_log = list(X_train_log.as_numpy_iterator())
         X_val_log = tf.data.Dataset.from_tensor_slices(X_val_log)
         X_val_log = X_val_log.batch(config.n_batch, drop_remainder=True)
+        X_val_log = list(X_val_log.as_numpy_iterator())
 
     # Not sure if this works with LSTM. 
     # Calculate rmse for train and val data
