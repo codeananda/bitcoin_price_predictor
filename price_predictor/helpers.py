@@ -785,9 +785,9 @@ def train_and_validate(config):
     """ALL NEW FROM HERE"""
     if config.model_type.upper() == 'LSTM':
         train_ds = tf.data.Dataset.from_tensor_slices((X_train, y_train))
-        train_ds = train_ds.repeat().batch(config.n_batch, drop_remainder=True)
+        train_ds = train_ds.batch(config.n_batch, drop_remainder=True)
         val_ds = tf.data.Dataset.from_tensor_slices((X_val, y_val)) 
-        val_ds = val_ds.repeat().batch(config.n_batch, drop_remainder=True)
+        val_ds = val_ds.batch(config.n_batch, drop_remainder=True)
         
         y_pred_train = model.predict(train_ds)
         y_pred_val = model.predict(val_ds)
