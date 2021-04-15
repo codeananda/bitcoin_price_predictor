@@ -603,6 +603,9 @@ def fit_MLP(model, config, X_train, X_val, y_train, y_val, callbacks_list):
 def fit_LSTM(model, config, X_train, X_val, y_train, y_val, callbacks_list):
     # Create TF Train Dataset (to ensure batch size never changes between batches)
     train_dataset = tf.data.Dataset.from_tensor_slices((X_train, y_train))
+    # Call repeat() and batch() to ensure all elements are included in training
+    # Note: some elements are left out of each epoch due to RNNs needing fixed batch size
+    # Helpful article https://www.gcptutorials.com/article/how-to-use-batch-method-in-tensorflow
     train_dataset = train_dataset.repeat().batch(config.n_batch, drop_remainder=True)
     steps_per_epoch = len(X_train) // config.n_batch
     # Create TF Val Dataset
@@ -754,8 +757,6 @@ def train_and_validate(config):
                                                               val_scaled,
                                                               config.n_input,
                                                               config)
-    # No point transforming into tf.data.Dataset here since it just
-    # matters in fit()
 
     print(X_train.shape, X_val.shape, y_train.shape, y_val.shape)
     # Build and fit model
