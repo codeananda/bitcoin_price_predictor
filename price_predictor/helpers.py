@@ -162,7 +162,7 @@ def transform_to_keras_input(train, val, n_in, config=None):
     # Create X and y variables
     X_train, y_train = train_data[:, :-1], train_data[:, -1]
     X_val, y_val = val_data[:, :-1], val_data[:, -1]
-    if config.model_type.lower() == 'lstm':
+    if config is not None and config.model_type.lower() == 'lstm':
         X_train = X_train.reshape(-1, n_in, 1)
         X_val = X_val.reshape(-1, n_in, 1)
     return X_train, X_val, y_train, y_val
