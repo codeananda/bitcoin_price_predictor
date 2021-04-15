@@ -703,6 +703,7 @@ def train_and_validate(config):
     X_train, X_val, y_train, y_val = transform_to_keras_input(train_scaled,
                                                               val_scaled,
                                                               config.n_input)
+    print(X_train.shape, X_val.shape, y_train.shape, y_val.shape)
     # Build and fit model
     model = build_model(config)
     history = fit_model(model, config, X_train, X_val, y_train, y_val)
