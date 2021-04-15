@@ -87,6 +87,7 @@ def load_dataset_2():
 
 def get_training_data():
     """
+    DOES NOT WORK, USE load_dataset_1 and load_dataset_2 instead.
     Convenience function to quickly load in train and val data to train models on.
     """
     # Load in data
@@ -98,7 +99,7 @@ def get_training_data():
     # Scale data
     train, val, test = scale_train_val_test(*tvt, scaler='log')
     # Get data into form Keras needs
-    X_train, X_val, y_train, y_val = transform_to_keras_input(train, val, 168)
+    X_train, X_val, y_train, y_val = transform_to_keras_input(config, train, val, 168)
     return (X_train, X_val, y_train, y_val)
 
 """########## SPLIT DATA #############"""
@@ -148,7 +149,7 @@ def _series_to_supervised(data, n_in=1, n_out=1):
 # Create train and val sets to input into Keras model
 # we do not need test sets at this stage, just care about 
 # validation, not testing
-def transform_to_keras_input(train, val, n_in, config=None):
+def transform_to_keras_input(config, train, val, n_in):
     """
     Given train and val datasets of univariate timeseries, transform them into sequences
     of length n_in and split into X_train, X_val, y_train, y_val. 
@@ -162,7 +163,7 @@ def transform_to_keras_input(train, val, n_in, config=None):
     # Create X and y variables
     X_train, y_train = train_data[:, :-1], train_data[:, -1]
     X_val, y_val = val_data[:, :-1], val_data[:, -1]
-    if config is not None and config.model_type.lower() == 'lstm':
+    if config.model_type.upper() == 'LSTM':
         X_train = X_train.reshape(-1, n_in, 1)
         X_val = X_val.reshape(-1, n_in, 1)
     return X_train, X_val, y_train, y_val
@@ -753,10 +754,10 @@ def train_and_validate(config):
     # Scale data
     train_scaled, val_scaled = scale_train_val(train, val, scaler=config.scaler)
     # Get data into form Keras needs
-    X_train, X_val, y_train, y_val = transform_to_keras_input(train_scaled,
+    X_train, X_val, y_train, y_val = transform_to_keras_input(config,
+                                                              train_scaled,
                                                               val_scaled,
-                                                              config.n_input,
-                                                              config)
+                                                              config.n_input)
 
     print(X_train.shape, X_val.shape, y_train.shape, y_val.shape)
     # Build and fit model
@@ -771,11 +772,45 @@ def train_and_validate(config):
 
     """Are we getting values we expect from preds_and_rmse?"""
     # Calc preds and pred rmse on train and val datasets (in config.scaler scale)
-    preds_and_rmse = get_preds_and_rmse(model, 
-                                        X_train, 
-                                        X_val, 
-                                        y_train, 
-                                        y_val)
+    # Don't think we need this function any more.
+    # preds_and_rmse = get_preds_and_rmse(model, 
+    #                                     X_train, 
+    #                                     X_val, 
+    #                                     y_train, 
+    #                                     y_val)
+    
+    """ALL NEW FROM HERE"""
+    if config.model_type.upper() == 'LSTM':
+        X_train = X_train.reshape(-1, config.n_input, 1)
+        X_val = X_val.reshape(-1, config.n_input, 1)
+    y_pred_train = model.predict(X_train)
+    y_pred_val = model.predict(X_val)
+
+    train_log, val_log = scale_train_val(train, val, scaler='log')
+
+    y_pred_train_log, y_pred_val_log = convert_to_log([y_pred_train, y_pred_val],
+                                                       config.scaler,
+                                                       train_log,
+                                                       val_log)
+
+    X_train_log, X_val_log, y_train_log, y_val_log = transform_to_keras_input(
+                                                        config,
+                                                        train_log,
+                                                        val_log,
+                                                        config.n_input
+                                                        )
+
+    # Not sure if this works with LSTM. 
+    # Calculate rmse for train and val data
+    # Note we must use X_train_log and not X_train as we need a common point
+    # of comparison between models and scales. All preds are now compared
+    # against the same X values and so it is as if these X values produced
+    # these preds.
+    eval_results_train = model.evaluate(X_train_log, y_pred_train_log, verbose=0)
+    eval_results_val = model.evaluate(X_val_log, y_pred_val_log, verbose=0)
+    rmse_train_log = eval_results_train[1]
+    rmse_val_log = eval_results_val[1]
+    """TO HERE"""                               
     # Just so you know what's inside preds_and_rmse                                    
     # y_pred_train, y_pred_val, rmse_train, rmse_val = preds_and_rmse
 
@@ -786,21 +821,25 @@ def train_and_validate(config):
 
     # Goal 1: Transform preds_and_rmse to log scale
     # First, get train and val datasets in log scale
-    train_log, val_log = scale_train_val(train, val, scaler='log')
+    
     # Second, use train_log and val_log to convert preds_and_rmse to log scale
-    preds_and_rmse_log = convert_to_log(preds_and_rmse, 
-                                        config.scaler, 
-                                        train_log, 
-                                        val_log)
-    # Finally, unpack preds_and_rmse_log to use in plots below
-    y_pred_train_log, y_pred_val_log, \
-        rmse_train_log, rmse_val_log = preds_and_rmse_log  
-    # Goal 2: get y_train and y_val in log scale for plotting
-    _, _, y_train_log, y_val_log = transform_to_keras_input(train_log,
-                                                            val_log,
-                                                            config.n_input)    
+    # preds_and_rmse_log = convert_to_log(preds_and_rmse, 
+    #                                     config.scaler, 
+    #                                     train_log, 
+    #                                     val_log)
+    # # Finally, unpack preds_and_rmse_log to use in plots below
+    # y_pred_train_log, y_pred_val_log, \
+    #     rmse_train_log, rmse_val_log = preds_and_rmse_log  
+    # # Goal 2: get y_train and y_val in log scale for plotting
+    # _, _, y_train_log, y_val_log = transform_to_keras_input(config,
+    #                                                         train_log,
+    #                                                         val_log,
+    #                                                         config.n_input)    
 
     # Plot predictions for train and val data (all log scaled)
+    # Now we plot the y_true against the y_pred. We don't care about X
+    # values anymore since we want to see how well our predictions do in
+    # the real world.
     _plot_actual_vs_pred(y_train_log, y_pred_train_log, rmse=rmse_train_log,
                          name='X_train preds', logy=True)
     _plot_actual_vs_pred(y_val_log, y_pred_val_log, rmse=rmse_val_log,
