@@ -25,22 +25,34 @@ from wandb.keras import WandbCallback
 """
 # Initalize wandb with project name
 run = wandb.init(project='bitcoin_price_predictor',
-                 config={
-                     'test_size': 0.15,
-                     'n_input': 168, # num lag observations
-                     'n_nodes': 300, # num nodes per lauyer
-                     'n_epochs': 100, # num training epochs
-                     'n_batch': 168 * 20, # batch size
-                     'n_repeats': 5, # num repeats of WF validation
-                     'activation': 'relu',
-                     'loss': 'mse',
-                     'optimizer': 'adam',
-                     'val_split': 0.15,
-                     'verbose': 0, # control verbosity of Keras fit
-                     'dropna': True # whether to drop missing values from data
-                         })
-
-config = wandb.config # use this to configure experiment
+                config={
+                    ### Data preparation
+                    'dataset': 1,
+                    # log, log_and_divide_a, log_and_range_a_b
+                    'scaler': 'log_and_range_0_1',
+                    'n_input': 168, # num lag observations
+                    ### Model build
+                    'model_type': 'MLP',
+                    'activation': 'relu',
+                    'loss': 'mse',
+                    'optimizer': 'adam', # adam, rmsprop
+                    #### LR scheduler and optimizer
+                    'use_lr_scheduler': True,
+                    'lr_scheduler': 'custom', # InverseTimeDecay, ExponentialDecay, cusom
+                    'initial_lr': 1e-4,
+#                    'lr': 1e-4, # if use_lr_scheduler == False for fixed LR
+                    ### Model fit
+                    'n_epochs': 150, # num training epochs
+                    'n_batch': 168 * 9, # batch size
+                    'verbose': 1, # verbosity of  fit
+                    ### EarlyStopping callback
+                    'patience': 10,
+                    'restore_best_weights': True,
+                    'early_stopping_baseline': None, # set to None if there isn't one
+                    # Plots
+                    'start_plotting_epoch': 0
+                        })
+config = wandb.config # we use this to configure our experiment
 """
 
 DOWNLOAD_DIR = Path('/content/drive/MyDrive/1 Projects/bitcoin_price_predictor/download')
