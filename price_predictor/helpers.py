@@ -850,15 +850,10 @@ def train_and_validate(config):
     # Scale data
     train_scaled, val_scaled = scale_train_val(train, val, scaler=config.scaler)
     # Get data into form Keras needs
-    # NAME OF THIS FUNCTION IS MISLEADING AS THE OUTPUT IS NOT IN A FORM
-    # KERAS LIKES IF IT'S AN LSTM (IT'S BETTER TO TRANSFORM IT INTO
-    # A TF.DATA.DATASET CLASS).
     X_train, X_val, y_train, y_val = transform_to_keras_input(config,
                                                               train_scaled,
                                                               val_scaled,
                                                               config.n_input)
-
-    print(X_train.shape, X_val.shape, y_train.shape, y_val.shape)
     # Build and fit model
     model = build_model(config)
     history = fit_model(model, config, X_train, X_val, y_train, y_val)
@@ -868,74 +863,26 @@ def train_and_validate(config):
     plot_metric(history, metric='1-root_mean_squared_error', start_epoch=config.start_plotting_epoch)
     # Store history on wandb
     upload_history_to_wandb(history)
-
-    """Are we getting values we expect from preds_and_rmse?"""
-    # Calc preds and pred rmse on train and val datasets (in config.scaler scale)
-    # Don't think we need this function any more.
-    # preds_and_rmse = get_preds_and_rmse(model, 
-    #                                     X_train, 
-    #                                     X_val, 
-    #                                     y_train, 
-    #                                     y_val)
-    
-    """ALL NEW FROM HERE"""
-    y_pred_train, y_pred_val = get_preds(config, model, 
-                                         X_train, X_val, 
-                                         y_train, y_val)     
-
+    # Calc predictions
+    y_pred_train, y_pred_val = get_preds(config, model, X_train, X_val, y_train, y_val)     
+    # Convert y_pred_train and y_pred_val into a log scale to enable comparison
+    # between different scaling types
     train_log, val_log = scale_train_val(train, val, scaler='log')
-
     y_pred_train_log, y_pred_val_log = convert_to_log([y_pred_train, y_pred_val],
                                                        config.scaler,
                                                        train_log,
                                                        val_log)
-
+    # Create y_train and y_val in log form
     _, _, y_train_log, y_val_log = transform_to_keras_input(
                                                         config,
                                                         train_log,
                                                         val_log,
                                                         config.n_input)
-
-    if config.model_type.upper() == 'LSTM':
-        # Remove the elements that form the last, imperfectly sized, batch
-        y_train_log = remove_excess_elements(config, y_train_log)
-        y_val_log = remove_excess_elements(config, y_val_log)
-
-
+    # Calc RMSE between actuals and predictions (both in log scale)
     rmse_train_log = measure_rmse_tf(y_train_log, y_pred_train_log)
     rmse_val_log = measure_rmse_tf(y_val_log, y_pred_val_log)
 
-    """TO HERE"""                               
-
-    # Just so you know what's inside preds_and_rmse                                    
-    # y_pred_train, y_pred_val, rmse_train, rmse_val = preds_and_rmse
-
-    # NOW TRANSFORM EVERYTHING TO LOG SCALE FOR PLOTTING AND COMPARISON BETWEEN SCALING TECHNIQUES
-    # Could be fancy and not perform these steps if scaler.lower() == 'log' but 
-    # it was too much effort and this won't cost that much
-     
-
-    # Goal 1: Transform preds_and_rmse to log scale
-    # First, get train and val datasets in log scale
-    
-    # Second, use train_log and val_log to convert preds_and_rmse to log scale
-    # preds_and_rmse_log = convert_to_log(preds_and_rmse, 
-    #                                     config.scaler, 
-    #                                     train_log, 
-    #                                     val_log)
-    # # Finally, unpack preds_and_rmse_log to use in plots below
-    # y_pred_train_log, y_pred_val_log, \
-    #     rmse_train_log, rmse_val_log = preds_and_rmse_log  
-    # # Goal 2: get y_train and y_val in log scale for plotting
-    # _, _, y_train_log, y_val_log = transform_to_keras_input(config,
-    #                                                         train_log,
-    #                                                         val_log,
-    #                                                         config.n_input)    
-
-    # Plot predictions for train and val data (all log scaled)
-    # Now we plot the y_true against the y_pred. We don't care about X
-    # values anymore since we want to see how well our predictions do in
-    # the real world.
+    # Plot actuals vs. predictions for train and val data (both in log scale)
     _plot_actual_vs_pred(y_train_log, y_pred_train_log, rmse=rmse_train_log,
                          name='X_train preds', logy=True)
     _plot_actual_vs_pred(y_val_log, y_pred_val_log, rmse=rmse_val_log,
