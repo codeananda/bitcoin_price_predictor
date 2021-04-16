@@ -26,6 +26,8 @@ from wandb.keras import WandbCallback
 # Initalize wandb with project name
 run = wandb.init(project='bitcoin_price_predictor',
                 config={
+                    ### Notebook environment
+                    'notebook': 'colab', # colab or local
                     ### Data preparation
                     'dataset': 1,
                     'scaler': 'log_and_range_0_1', # log, log_and_divide_a, log_and_range_a_b
@@ -118,6 +120,7 @@ def get_training_data(config):
     DOES NOT WORK, USE load_dataset_1 and load_dataset_2 instead.
     Convenience function to quickly load in train and val data to train models on.
     """
+    DOWNLOAD_DIR, _ = get_dirs(config)
     # Load in data
     data = load_close_data(DOWNLOAD_DIR, dropna=True)
     # Convert val/test percentages to numbers
@@ -743,7 +746,7 @@ def fit_model(model, config, X_train, X_val, y_train, y_val):
     # Fit model
     if config.model_type.upper() == 'MLP':
         history = fit_MLP(model, config, X_train, X_val, y_train, y_val, callbacks_list)
-    elif config.model_type.upper() == 'LSTM':
+    elif config.model_type.upper().startswith() == 'LSTM':
         history = fit_LSTM(model, config, X_train, X_val, y_train, y_val, callbacks_list)
     else:
         raise Exception('Please enter a supported model_type: MLP or LSTM.')
