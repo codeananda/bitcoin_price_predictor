@@ -54,11 +54,16 @@ run = wandb.init(project='bitcoin_price_predictor',
 config = wandb.config # we use this to configure our experiment
 """
 
-DOWNLOAD_DIR = Path('/content/drive/MyDrive/1 Projects/bitcoin_price_predictor/download')
-DATA_DIR = Path('/content/drive/MyDrive/1 Projects/bitcoin_price_predictor/data')
-
-DOWNLOAD_DIR = Path('../download')
-DATA_DIR = Path('../data')
+def get_dirs(config):
+    if config.notebook.lower() == 'colab':
+        DOWNLOAD_DIR = Path('/content/drive/MyDrive/1 Projects/bitcoin_price_predictor/download')
+        DATA_DIR = Path('/content/drive/MyDrive/1 Projects/bitcoin_price_predictor/data')
+    elif config.notebook.lower() == 'local':
+        DOWNLOAD_DIR = Path('../download')
+        DATA_DIR = Path('../data')
+    else:
+        raise Exception('Please enter a supported notebook type: colab or local')
+    return DOWNLOAD_DIR, DATA_DIR
 
 
 """########## LOAD DATA ##########"""
@@ -73,7 +78,8 @@ def load_close_data(DOWNLOAD_DIR, dropna=False):
     return data
 
 
-def load_dataset_1():
+def load_dataset_1(config):
+    _, DATA_DIR = get_dirs(config)
     with open(DATA_DIR / 'train_1.pkl', 'rb') as f:
         train_1 = pickle.load(f)
 
@@ -86,7 +92,8 @@ def load_dataset_1():
     return train_1, val_1, test_1
 
 
-def load_dataset_2():
+def load_dataset_2(config):
+    _, DATA_DIR = get_dirs(config)
     with open(DATA_DIR / 'train_2.pkl', 'rb') as f:
         train_2 = pickle.load(f)
 
@@ -98,11 +105,11 @@ def load_dataset_2():
 
 def load_train_and_val_data(config):
     if config.dataset == 1:
-        train, val, _ = load_dataset_1()
+        train, val, _ = load_dataset_1(config)
     elif config.dataset == 2:
-        train, val = load_dataset_2()
+        train, val = load_dataset_2(config)
     else:
-        raise Exception('Only two datasets are available: 1 or 2')
+        raise Exception('Please enter a supported dataset: 1 or 2')
     return train, val
 
 
