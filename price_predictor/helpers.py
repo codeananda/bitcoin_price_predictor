@@ -848,9 +848,9 @@ def train_and_validate(config):
         # y_pred_train_log has fewer elements that X_train_log now because
         # some were cut off at the end due to needing equally sized batches
         X_train_log = remove_excess_elements(config, X_train_log)
-        X_val_log = remove_excess_elements(X_val_log)
-        y_train_log = remove_excess_elements(y_train_log)
-        y_val_log = remove_excess_elements(y_val_log)
+        X_val_log = remove_excess_elements(config, X_val_log)
+        y_train_log = remove_excess_elements(config, y_train_log)
+        y_val_log = remove_excess_elements(config, y_val_log)
 
     # Not sure if this works with LSTM. 
     # Calculate rmse for train and val data
