@@ -498,6 +498,12 @@ def plot_train_val_test(train, val, test):
 def _measure_rmse(actual, predicted):
     return np.sqrt(mean_squared_error(actual, predicted))
 
+def measure_rmse_tf(y_true, y_pred):
+    m = RootMeanSquaredError()
+    m.update_state(y_true, y_pred)
+    result = m.result().numpy()
+    return result
+
 # Summarize model performance
 def summarize_scores(name, scores):
     # print a summary
@@ -863,12 +869,18 @@ def train_and_validate(config):
     # against the same X values and so it is as if these X values produced
     # these preds.
     # If using .evaluate() you must pass a single dataset
-    eval_results_train = model.evaluate(X_train_log, y_pred_train_log, verbose=0,
-                                        batch_size=config.n_batch)
-    eval_results_val = model.evaluate(X_val_log, y_pred_val_log, verbose=0,
-                                      batch_size=config.n_batch)
-    rmse_train_log_eval_method = eval_results_train[1]
-    rmse_val_log_eval_method = eval_results_val[1]
+
+    """WARNING: THIS METHOD DOES NOT WORK.
+       EVALUATE(X, Y) WILL DO MODEL.PREDICT(X) AND COMPARE THAT WITH Y. """
+    # eval_results_train = model.evaluate(X_train_log, y_pred_train_log, verbose=0,
+    #                                     batch_size=config.n_batch)
+    # eval_results_val = model.evaluate(X_val_log, y_pred_val_log, verbose=0,
+    #                                   batch_size=config.n_batch)
+    # rmse_train_log_eval_method = eval_results_train[1]
+    # rmse_val_log_eval_method = eval_results_val[1]
+
+    rmse_train_log_eval_method = measure_rmse_tf(y_train_log, y_pred_train_log)
+    rmse_val_log_eval_method = measure_rmse_tf(y_val_log, y_pred_val_log)
 
     # train_log_ds = tf.data.Dataset.from_tensor_slices((X_train_log, y_pred_train_log))
     # train_log_ds = train_log_ds.batch(config.n_batch)
