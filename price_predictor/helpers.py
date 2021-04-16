@@ -95,7 +95,7 @@ def load_train_and_val_data(config):
     return train, val
 
 
-def get_training_data():
+def get_training_data(config):
     """
     DOES NOT WORK, USE load_dataset_1 and load_dataset_2 instead.
     Convenience function to quickly load in train and val data to train models on.
@@ -244,7 +244,6 @@ def scale_train_val_test(train, val, test=None, scaler='log'):
                         you want to scale to.''')
     return train, val, test
 
-
 # Scaling just on train and val sets (since test is unnecessary for training)
 def scale_train_val(train, val, scaler='log'):
     if scaler.lower() == 'log':
@@ -335,7 +334,6 @@ def inverse_scale(data, scaler='log'):
     # Inverse log scale
     inverse_scaled_data = [np.exp(d) for d in data]
     return inverse_scaled_data
-
 
 
 def convert_to_log(values, scaler, train, val):
@@ -511,6 +509,7 @@ def plot_train_val_test(train, val, test):
 # root mean squared error, or rmse
 def _measure_rmse(actual, predicted):
     return np.sqrt(mean_squared_error(actual, predicted))
+
 
 def measure_rmse_tf(y_true, y_pred):
     m = RootMeanSquaredError()
