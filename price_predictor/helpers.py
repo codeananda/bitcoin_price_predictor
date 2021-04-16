@@ -863,8 +863,10 @@ def train_and_validate(config):
     # against the same X values and so it is as if these X values produced
     # these preds.
     # If using .evaluate() you must pass a single dataset
-    eval_results_train = model.evaluate(X_train_log, y_pred_train_log, verbose=0)
-    eval_results_val = model.evaluate(X_val_log, y_pred_val_log, verbose=0)
+    eval_results_train = model.evaluate(X_train_log, y_pred_train_log, verbose=0,
+                                        batch_size=config.n_batch)
+    eval_results_val = model.evaluate(X_val_log, y_pred_val_log, verbose=0,
+                                      batch_size=config.n_batch)
     rmse_train_log_eval_method = eval_results_train[1]
     rmse_val_log_eval_method = eval_results_val[1]
 
