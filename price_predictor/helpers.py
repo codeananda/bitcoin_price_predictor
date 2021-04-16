@@ -746,7 +746,7 @@ def fit_model(model, config, X_train, X_val, y_train, y_val):
     # Fit model
     if config.model_type.upper() == 'MLP':
         history = fit_MLP(model, config, X_train, X_val, y_train, y_val, callbacks_list)
-    elif config.model_type.upper().startswith() == 'LSTM':
+    elif config.model_type.upper().startswith('LSTM'):
         history = fit_LSTM(model, config, X_train, X_val, y_train, y_val, callbacks_list)
     else:
         raise Exception('Please enter a supported model_type: MLP or LSTM.')
