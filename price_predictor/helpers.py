@@ -171,7 +171,7 @@ def transform_to_keras_input(config, train, val, n_in):
     return X_train, X_val, y_train, y_val
 
 
-def remove_excess_elements(config, array):
+def remove_excess_elements(config, array, ravel=False):
     """
     Take a NumPy array and return it but with the elements removed that
     were not included in training. 
@@ -196,9 +196,10 @@ def remove_excess_elements(config, array):
     # len equal to the number of batches passed to the model during training
     # also equivalent to the number of epochs per training round.
     a_numpy = np.array(a_list)
-    # Turn into 1D numpy array
-    a_flat = a_numpy.ravel()
-    return a_flat
+    if ravel:
+        # Turn into 1D numpy array
+        return a_numpy.ravel()
+    return a_numpy
 
 """########## SCALE ##########"""
 
@@ -849,8 +850,8 @@ def train_and_validate(config):
         # some were cut off at the end due to needing equally sized batches
         X_train_log = remove_excess_elements(config, X_train_log)
         X_val_log = remove_excess_elements(config, X_val_log)
-        y_train_log = remove_excess_elements(config, y_train_log)
-        y_val_log = remove_excess_elements(config, y_val_log)
+        y_train_log = remove_excess_elements(config, y_train_log, ravel=True)
+        y_val_log = remove_excess_elements(config, y_val_log, ravel=True)
 
     # Not sure if this works with LSTM. 
     # Calculate rmse for train and val data
