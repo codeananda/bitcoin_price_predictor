@@ -889,6 +889,18 @@ def train_and_validate(config):
 
     print(rmse_train_log_eval_method == rmse_train_log)
     print(rmse_val_log_eval_method == rmse_val_log)
+
+    print('TRAIN')
+    print(f'Eval method train: {rmse_train_log_eval_method}')
+    print(f'_measure_rmse method: {rmse_train_log}')
+    print(f'Difference: {rmse_train_log_eval_method - rmse_train_log}')
+    print(f'Eval > _measure_rmse: {rmse_train_log_eval_method > rmse_train_log}')
+
+    print('VALIDATION')
+    print(f'Eval method train: {rmse_val_log_eval_method}')
+    print(f'_measure_rmse method: {rmse_val_log}')  
+    print(f'Difference: {rmse_val_log_eval_method - rmse_val_log}')
+    print(f'Eval > _measure_rmse: {rmse_val_log_eval_method > rmse_val_log}')
     """TO HERE"""                               
 
     # Just so you know what's inside preds_and_rmse                                    
