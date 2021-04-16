@@ -170,6 +170,36 @@ def transform_to_keras_input(config, train, val, n_in):
         X_val = X_val.reshape(-1, n_in, 1)
     return X_train, X_val, y_train, y_val
 
+
+def remove_excess_elements(config, array):
+    """
+    Take a NumPy array and return it but with the elements removed that
+    were not included in training. 
+    
+    This is for training with RNNs which require all batches to be the exact
+    same length. During training, we convert numpy arrays to tf.data.Dataset
+    objects, put them in batches and drop the excess elements.
+    
+    In this function we do the same process but then transform the tf.data.Dataset
+    back into a NumPy array for use later on. 
+    
+    Note: I feel like there must be a better way to do this. Or I am doing
+          this unnecessarily and am using the tf.data.Dataset API incorrectly.
+    """
+    # Transform to tf.data.Dataset
+    a_ds = tf.data.Dataset.from_tensor_slices(array)
+    # Put into batches and drop excess elements
+    a_batch = a_ds.batch(config.n_batch, drop_remainder=True)
+    # Turn back into a list
+    a_list = list(a_batch.as_numpy_iterator())
+    # Turn into 2D numpy array (this is 2D becuase the data is batches and has
+    # len equal to the number of batches passed to the model during training
+    # also equivalent to the number of epochs per training round.
+    a_numpy = np.array(a_list)
+    # Turn into 1D numpy array
+    a_flat = a_numpy.ravel()
+    return a_flat
+
 """########## SCALE ##########"""
 
 # I can easily add more functionality to this by writing
@@ -817,19 +847,10 @@ def train_and_validate(config):
     if config.model_type.upper() == 'LSTM':
         # y_pred_train_log has fewer elements that X_train_log now because
         # some were cut off at the end due to needing equally sized batches
-        X_train_log = tf.data.Dataset.from_tensor_slices(X_train_log)
-        X_train_log = X_train_log.batch(config.n_batch, drop_remainder=True)
-        X_train_log = list(X_train_log.as_numpy_iterator())
-        X_val_log = tf.data.Dataset.from_tensor_slices(X_val_log)
-        X_val_log = X_val_log.batch(config.n_batch, drop_remainder=True)
-        X_val_log = list(X_val_log.as_numpy_iterator())
-
-        y_train_log = tf.data.Dataset.from_tensor_slices(y_train_log)
-        y_train_log = y_train_log.batch(config.n_batch, drop_remainder=True)
-        y_train_log = list(y_train_log.as_numpy_iterator())
-        y_val_log = tf.data.Dataset.from_tensor_slices(y_val_log)
-        y_val_log = y_val_log.batch(config.n_batch, drop_remainder=True)
-        y_val_log = list(y_val_log.as_numpy_iterator())
+        X_train_log = remove_excess_elements(config, X_train_log)
+        X_val_log = remove_excess_elements(X_val_log)
+        y_train_log = remove_excess_elements(y_train_log)
+        y_val_log = remove_excess_elements(y_val_log)
 
     # Not sure if this works with LSTM. 
     # Calculate rmse for train and val data
