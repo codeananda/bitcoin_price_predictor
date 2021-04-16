@@ -85,6 +85,16 @@ def load_dataset_2():
     return train_2, val_2
 
 
+def load_train_and_val_data(config):
+    if config.dataset == 1:
+        train, val, _ = load_dataset_1()
+    elif config.dataset == 2:
+        train, val = load_dataset_2()
+    else:
+        raise Exception('Only two datasets are available: 1 or 2')
+    return train, val
+
+
 def get_training_data():
     """
     DOES NOT WORK, USE load_dataset_1 and load_dataset_2 instead.
@@ -185,6 +195,10 @@ def remove_excess_elements(config, array, is_X=False):
     
     Note: I feel like there must be a better way to do this. Or I am doing
           this unnecessarily and am using the tf.data.Dataset API incorrectly.
+
+    Note 2: I included is_X as a kwarg because I thought I needed to remove 
+            values from X in train_and_validate but I actually don't need to.
+            
     """
     # Transform to tf.data.Dataset
     a_ds = tf.data.Dataset.from_tensor_slices(array)
@@ -529,7 +543,6 @@ def custom_lr_scheduler(epoch, lr):
         return 1e-6
 
 
-
 def get_optimizer(config):
     if config.use_lr_scheduler:
         if config.lr_scheduler == 'InverseTimeDecay':
@@ -774,6 +787,36 @@ def get_preds_and_rmse(model, X_train, X_val, y_train, y_val):
 
     return y_pred_train, y_pred_val, rmse_train, rmse_val
 
+
+def get_preds(config, model, X_train, X_val, y_train=None, y_val=None):
+    """
+    Given config, a model and NumPy arrays, calculate and return predictions
+    on X_train and X_val.
+
+    For LSTMs, we must fisrt convert the NumPy arrays into tf.data.Dataset 
+    objects and predict on these. 
+
+    For MLPs, we can predict directly on the X arrays.
+    If you know you are building an MLP model, you can leave out y_train and
+    y_val.
+    """
+    if config.model_type.upper() == 'LSTM':
+        # Create train and val tf.data.Datasets
+        # Drop excess elements in the final batch
+        train_ds = tf.data.Dataset.from_tensor_slices((X_train, y_train))
+        train_ds = train_ds.batch(config.n_batch, drop_remainder=True)
+        val_ds = tf.data.Dataset.from_tensor_slices((X_val, y_val)) 
+        val_ds = val_ds.batch(config.n_batch, drop_remainder=True)
+        
+        y_pred_train = model.predict(train_ds)
+        y_pred_val = model.predict(val_ds)
+    elif config.model_type.upper() == 'MLP':
+        y_pred_train = model.predict(X_train)
+        y_pred_val = model.predict(X_val)
+    else:
+        raise Exception('Please enter a supported model_type: MLP or LSTM.')
+    return y_pred_train, y_pred_val
+
 """########## WANDB ##########"""
 def upload_history_to_wandb(history):
     # Turn into df
@@ -787,12 +830,7 @@ def upload_history_to_wandb(history):
 """########## FULL PROCESS ##########"""
 def train_and_validate(config):
     # Load data
-    if config.dataset == 1:
-        train, val, _ = load_dataset_1()
-    elif config.dataset == 2:
-        train, val = load_dataset_2()
-    else:
-        raise Exception('Only two datasets are available: 1 or 2')
+    train, val = load_train_and_val_data(config)
     # Scale data
     train_scaled, val_scaled = scale_train_val(train, val, scaler=config.scaler)
     # Get data into form Keras needs
@@ -825,19 +863,9 @@ def train_and_validate(config):
     #                                     y_val)
     
     """ALL NEW FROM HERE"""
-    if config.model_type.upper() == 'LSTM':
-        train_ds = tf.data.Dataset.from_tensor_slices((X_train, y_train))
-        train_ds = train_ds.batch(config.n_batch, drop_remainder=True)
-        val_ds = tf.data.Dataset.from_tensor_slices((X_val, y_val)) 
-        val_ds = val_ds.batch(config.n_batch, drop_remainder=True)
-        
-        y_pred_train = model.predict(train_ds)
-        y_pred_val = model.predict(val_ds)
-    elif config.model_type.upper() == 'MLP':
-        y_pred_train = model.predict(X_train)
-        y_pred_val = model.predict(X_val)
-    else:
-        raise Exception('Please enter a supported model_type: MLP or LSTM.')      
+    y_pred_train, y_pred_val = get_preds(config, model, 
+                                         X_train, X_val, 
+                                         y_train, y_val)     
 
     train_log, val_log = scale_train_val(train, val, scaler='log')
 
@@ -846,73 +874,21 @@ def train_and_validate(config):
                                                        train_log,
                                                        val_log)
 
-    X_train_log, X_val_log, y_train_log, y_val_log = transform_to_keras_input(
+    _, _, y_train_log, y_val_log = transform_to_keras_input(
                                                         config,
                                                         train_log,
                                                         val_log,
-                                                        config.n_input
-                                                        )
-    print('After transform_to_keras_input y_train log is')
-    print(type(y_train_log), y_train_log.shape)
+                                                        config.n_input)
+
     if config.model_type.upper() == 'LSTM':
-        # y_pred_train_log has fewer elements that X_train_log now because
-        # some were cut off at the end due to needing equally sized batches
-        X_train_log = remove_excess_elements(config, X_train_log, is_X=True)
-        X_val_log = remove_excess_elements(config, X_val_log, is_X=True)
+        # Remove the elements that form the last, imperfectly sized, batch
         y_train_log = remove_excess_elements(config, y_train_log)
         y_val_log = remove_excess_elements(config, y_val_log)
 
-    # Not sure if this works with LSTM. 
-    # Calculate rmse for train and val data
-    # Note we must use X_train_log and not X_train as we need a common point
-    # of comparison between models and scales. All preds are now compared
-    # against the same X values and so it is as if these X values produced
-    # these preds.
-    # If using .evaluate() you must pass a single dataset
 
-    """WARNING: THIS METHOD DOES NOT WORK.
-       EVALUATE(X, Y) WILL DO MODEL.PREDICT(X) AND COMPARE THAT WITH Y. """
-    # eval_results_train = model.evaluate(X_train_log, y_pred_train_log, verbose=0,
-    #                                     batch_size=config.n_batch)
-    # eval_results_val = model.evaluate(X_val_log, y_pred_val_log, verbose=0,
-    #                                   batch_size=config.n_batch)
-    # rmse_train_log_eval_method = eval_results_train[1]
-    # rmse_val_log_eval_method = eval_results_val[1]
+    rmse_train_log = measure_rmse_tf(y_train_log, y_pred_train_log)
+    rmse_val_log = measure_rmse_tf(y_val_log, y_pred_val_log)
 
-    rmse_train_log_eval_method = measure_rmse_tf(y_train_log, y_pred_train_log)
-    rmse_val_log_eval_method = measure_rmse_tf(y_val_log, y_pred_val_log)
-
-    # train_log_ds = tf.data.Dataset.from_tensor_slices((X_train_log, y_pred_train_log))
-    # train_log_ds = train_log_ds.batch(config.n_batch)
-    # val_log_ds = tf.data.Dataset.from_tensor_slices((X_val_log, y_pred_val_log))
-    # val_log_ds = val_log_ds.batch(config.n_batch)
-    # eval_results_train  = model.evaluate(train_log_ds, verbose=0)
-    # eval_results_val = model.evaluate(val_log_ds, verbose=0)
-
-    # rmse_train_log_eval_method = eval_results_train[1]
-    # rmse_val_log_eval_method = eval_results_val[1]
-
-    # Test this with evaluate as well to ensure same results
-    print(type(y_train_log), type(y_pred_train_log))
-    print(f'len(y_train_log) is {len(y_train_log)}')
-    print(f'Shape of y_pred_train_log is {y_pred_train_log.shape}')
-    rmse_train_log = _measure_rmse(y_train_log, y_pred_train_log)
-    rmse_val_log = _measure_rmse(y_val_log, y_pred_val_log)
-
-    print(rmse_train_log_eval_method == rmse_train_log)
-    print(rmse_val_log_eval_method == rmse_val_log)
-
-    print('TRAIN')
-    print(f'Eval method train: {rmse_train_log_eval_method}')
-    print(f'_measure_rmse method: {rmse_train_log}')
-    print(f'Difference: {rmse_train_log_eval_method - rmse_train_log}')
-    print(f'Eval > _measure_rmse: {rmse_train_log_eval_method > rmse_train_log}')
-
-    print('VALIDATION')
-    print(f'Eval method train: {rmse_val_log_eval_method}')
-    print(f'_measure_rmse method: {rmse_val_log}')  
-    print(f'Difference: {rmse_val_log_eval_method - rmse_val_log}')
-    print(f'Eval > _measure_rmse: {rmse_val_log_eval_method > rmse_val_log}')
     """TO HERE"""                               
 
     # Just so you know what's inside preds_and_rmse                                    
