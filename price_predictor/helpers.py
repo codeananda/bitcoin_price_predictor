@@ -154,6 +154,8 @@ def transform_to_keras_input(config, train, val, n_in):
     Given train and val datasets of univariate timeseries, transform them into sequences
     of length n_in and split into X_train, X_val, y_train, y_val. 
 
+    Ouputs: numpy arrays
+
     Note: config is optional and only needed if using an LSTM (which require 3D inputs).
           It should work fine building MLPs without passing config, but this is untested.
     """
@@ -810,7 +812,8 @@ def train_and_validate(config):
                                                         val_log,
                                                         config.n_input
                                                         )
-    
+    print('After transform_to_keras_input y_train log is')
+    print(type(y_train_log), y_train_log.shape)
     if config.model_type.upper() == 'LSTM':
         # y_pred_train_log has fewer elements that X_train_log now because
         # some were cut off at the end due to needing equally sized batches
