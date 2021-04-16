@@ -859,10 +859,10 @@ def train_and_validate(config):
     # against the same X values and so it is as if these X values produced
     # these preds.
     # If using .evaluate() you must pass a single dataset
-    # eval_results_train = model.evaluate(X_train_log, y_pred_train_log, verbose=0)
-    # eval_results_val = model.evaluate(X_val_log, y_pred_val_log, verbose=0)
-    # rmse_train_log = eval_results_train[1]
-    # rmse_val_log = eval_results_val[1]
+    eval_results_train = model.evaluate(X_train_log, y_pred_train_log, verbose=0)
+    eval_results_val = model.evaluate(X_val_log, y_pred_val_log, verbose=0)
+    rmse_train_log_eval_method = eval_results_train[1]
+    rmse_val_log_eval_method = eval_results_val[1]
 
     # train_log_ds = tf.data.Dataset.from_tensor_slices((X_train_log, y_pred_train_log))
     # train_log_ds = train_log_ds.batch(config.n_batch)
@@ -881,8 +881,8 @@ def train_and_validate(config):
     rmse_train_log = _measure_rmse(y_train_log, y_pred_train_log)
     rmse_val_log = _measure_rmse(y_val_log, y_pred_val_log)
 
-    # print(rmse_train_log_eval_method == rmse_train_log)
-    # print(rmse_val_log_eval_method == rmse_val_log)
+    print(rmse_train_log_eval_method == rmse_train_log)
+    print(rmse_val_log_eval_method == rmse_val_log)
     """TO HERE"""                               
 
     # Just so you know what's inside preds_and_rmse                                    
