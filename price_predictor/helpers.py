@@ -851,6 +851,7 @@ def train_and_validate(config):
     # rmse_val_log_eval_method = eval_results_val[1]
 
     # Test this with evaluate as well to ensure same results
+    print(type(y_train_log), type(y_pred_train_log))
     rmse_train_log = _measure_rmse(y_train_log, y_pred_train_log)
     rmse_val_log = _measure_rmse(y_val_log, y_pred_val_log)
 
