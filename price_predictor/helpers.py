@@ -28,8 +28,7 @@ run = wandb.init(project='bitcoin_price_predictor',
                 config={
                     ### Data preparation
                     'dataset': 1,
-                    # log, log_and_divide_a, log_and_range_a_b
-                    'scaler': 'log_and_range_0_1',
+                    'scaler': 'log_and_range_0_1', # log, log_and_divide_a, log_and_range_a_b
                     'n_input': 168, # num lag observations
                     ### Model build
                     'model_type': 'MLP',
