@@ -577,7 +577,7 @@ def custom_MLP_lr_scheduler(epoch, lr):
 
 
 def custom_LSTM_lr_scheduler(epoch, lr):
-    if epoch <= 3:
+    if epoch <= 2:
         return 1e-3
     else:
         return 1e-4
