@@ -639,12 +639,12 @@ def build_LSTM(config):
     model = Sequential([
         LSTM(500, return_sequences=False, stateful=True, 
             batch_input_shape=(config.n_batch, config.n_input, 1)),
-        # LSTM(250, return_sequences=True, stateful=True),
-        # LSTM(125, return_sequences=True, stateful=True),
-        # LSTM(62, return_sequences=True, stateful=True),
-        # LSTM(30, return_sequences=True, stateful=True),
-        # LSTM(15, return_sequences=True, stateful=True),
-        # LSTM(7, stateful=True),
+        LSTM(250, return_sequences=True, stateful=True),
+        LSTM(125, return_sequences=True, stateful=True),
+        LSTM(62, return_sequences=True, stateful=True),
+        LSTM(30, return_sequences=True, stateful=True),
+        LSTM(15, return_sequences=True, stateful=True),
+        LSTM(7, stateful=True),
         Dense(1)
     ])
     optimizer = get_optimizer(config)
