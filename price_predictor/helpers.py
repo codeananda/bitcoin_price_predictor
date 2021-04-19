@@ -695,9 +695,20 @@ def get_callbacks(config):
         custom_lr_scheduler_callback = LearningRateScheduler(custom_lr_scheduler)
         callbacks_list.append(custom_lr_scheduler_callback)
     return callbacks_list
+    
 
+def fit_model(model, config, X_train, X_val, y_train, y_val):
+    """
+    Fit a DL model and return the history. 
 
-def fit_MLP(model, config, X_train, X_val, y_train, y_val, callbacks_list):
+    Note that this is model agnostic (MLP vs. LSTM) becuase of our
+    data preprocessing. Everything put into fit() is a NumPy array
+    and is the correct shape/size such that there will be no errors,
+    i.e. for LSTMs the arrays contain n elements where n is a divisor
+    of config.n_batch (no excess elements in each batch).
+    """
+    callbacks_list = get_callbacks(config)
+    
     history = model.fit(
         X_train, 
         y_train, 
@@ -708,48 +719,6 @@ def fit_MLP(model, config, X_train, X_val, y_train, y_val, callbacks_list):
         validation_data=(X_val, y_val),
         callbacks=callbacks_list
     )
-    return history
-
-
-def fit_LSTM(model, config, X_train, X_val, y_train, y_val, callbacks_list):
-    # Create TF Train Dataset (to ensure batch size never changes between batches)
-    # train_dataset = tf.data.Dataset.from_tensor_slices((X_train, y_train))
-    # Call repeat() and batch() to ensure all elements are included in training
-    # Note: some elements are left out of each epoch due to RNNs needing fixed batch size
-    # Helpful article https://www.gcptutorials.com/article/how-to-use-batch-method-in-tensorflow
-    # train_dataset = train_dataset.repeat().batch(config.n_batch, drop_remainder=True)
-    # steps_per_epoch = len(X_train) // config.n_batch
-    # Create TF Val Dataset
-    # validation_dataset = tf.data.Dataset.from_tensor_slices((X_val, y_val))
-    # validation_dataset = validation_dataset.repeat().batch(config.n_batch, drop_remainder=True)
-    # validation_steps = len(X_val) // config.n_batch
-
-    history = model.fit(
-        # train_dataset,
-        X_train, 
-        y_train,
-        epochs=config.n_epochs,
-        batch_size=config.n_batch,
-        # steps_per_epoch=steps_per_epoch,
-        verbose=config.verbose,
-        shuffle=False,
-        # validation_data=validation_dataset,
-        validation_data=(X_val, y_val),
-        # validation_steps=validation_steps,
-        callbacks=callbacks_list   
-    )
-    return history
-
-
-def fit_model(model, config, X_train, X_val, y_train, y_val):
-    callbacks_list = get_callbacks(config)
-    # Fit model
-    if config.model_type.upper() == 'MLP':
-        history = fit_MLP(model, config, X_train, X_val, y_train, y_val, callbacks_list)
-    elif config.model_type.upper().startswith('LSTM'):
-        history = fit_LSTM(model, config, X_train, X_val, y_train, y_val, callbacks_list)
-    else:
-        raise Exception('Please enter a supported model_type: MLP or LSTM.')
     return history
 
 
