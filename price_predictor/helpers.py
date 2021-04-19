@@ -637,20 +637,21 @@ def build_MLP(config):
 
 def build_LSTM(config):
     model = Sequential([
-        LSTM(500, return_sequences=True, stateful=True, 
+        LSTM(500, return_sequences=False, stateful=True, 
             batch_input_shape=(config.n_batch, config.n_input, 1)),
-        LSTM(250, return_sequences=True, stateful=True),
-        LSTM(125, return_sequences=True, stateful=True),
-        LSTM(62, return_sequences=True, stateful=True),
-        LSTM(30, return_sequences=True, stateful=True),
-        LSTM(15, return_sequences=True, stateful=True),
-        LSTM(7, stateful=True),
+        # LSTM(250, return_sequences=True, stateful=True),
+        # LSTM(125, return_sequences=True, stateful=True),
+        # LSTM(62, return_sequences=True, stateful=True),
+        # LSTM(30, return_sequences=True, stateful=True),
+        # LSTM(15, return_sequences=True, stateful=True),
+        # LSTM(7, stateful=True),
         Dense(1)
     ])
     optimizer = get_optimizer(config)
     model.compile(loss=config.loss, 
                   optimizer=optimizer,
                   metrics=[RootMeanSquaredError()])
+    print(model.summary())
     return model
 
 
@@ -695,7 +696,7 @@ def get_callbacks(config):
         custom_lr_scheduler_callback = LearningRateScheduler(custom_lr_scheduler)
         callbacks_list.append(custom_lr_scheduler_callback)
     return callbacks_list
-    
+
 
 def fit_model(model, config, X_train, X_val, y_train, y_val):
     """
