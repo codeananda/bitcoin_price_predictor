@@ -637,7 +637,7 @@ def build_MLP(config):
 
 def build_LSTM(config):
     model = Sequential([
-        LSTM(500, return_sequences=False, stateful=True, 
+        LSTM(500, return_sequences=True, stateful=True, 
             batch_input_shape=(config.n_batch, config.n_input, 1)),
         LSTM(250, return_sequences=True, stateful=True),
         LSTM(125, return_sequences=True, stateful=True),
