@@ -651,7 +651,6 @@ def build_LSTM(config):
     model.compile(loss=config.loss, 
                   optimizer=optimizer,
                   metrics=[RootMeanSquaredError()])
-    print(model.summary())
     return model
 
 
