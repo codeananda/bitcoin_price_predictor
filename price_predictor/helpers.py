@@ -567,13 +567,38 @@ def summarize_scores(name, scores):
 
 """########## MODEL BUILD AND FIT ##########"""
 
-def custom_lr_scheduler(epoch, lr):
+def custom_MLP_lr_scheduler(epoch, lr):
     if epoch <= 4:
         return 1e-4
     elif epoch <= 10:
         return 1e-5
     else:
         return 1e-6
+
+
+def custom_LSTM_lr_scheduler(epoch, lr):
+    if epoch <= 4:
+        return 1e-3
+    else:
+        return 1e-4
+
+
+def get_custom_lr_schduler(config):
+    """
+    Define a custom LR scheduler and return the appropriate one based on
+    model_type.
+
+    Note: I cannot do this with one function. The custom_lr_schduler(epoch, lr)
+          functions must have a specific form as defined by Keras, so I abstracted
+          that away with this func. 
+    """
+    if config.model_type.upper() == 'MLP':
+        lrs = LearningRateScheduler(custom_MLP_lr_scheduler)
+    elif config.model_type.upper() == 'LSTM':
+        lrs = LearningRateScheduler(custom_LSTM_lr_scheduler)
+    else:
+        raise Exception('Please enter a supported model_type: MLP or LSTM.')
+    return lrs
 
 
 def get_optimizer(config):
@@ -692,7 +717,7 @@ def get_callbacks(config):
     callbacks_list = [WandbCallback(), es]
     # LearningRateScheduler
     if config.use_lr_scheduler and config.lr_scheduler.lower() == 'custom':
-        custom_lr_scheduler_callback = LearningRateScheduler(custom_lr_scheduler)
+        custom_lr_scheduler_callback = get_custom_lr_schduler(config)
         callbacks_list.append(custom_lr_scheduler_callback)
     return callbacks_list
 
