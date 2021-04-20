@@ -666,19 +666,14 @@ def build_MLP(config):
 
 
 def build_LSTM(config):
-    model = Sequential([
-        LSTM(config.num_nodes, return_sequences=False, stateful=True, 
-            batch_input_shape=(config.n_batch, config.n_input, 1),
-            dropout=config.dropout,
-            recurrent_dropout=config.recurrent_dropout),
-        # LSTM(250, return_sequences=True, stateful=True),
-        # LSTM(125, return_sequences=True, stateful=True),
-        # LSTM(62, return_sequences=True, stateful=True),
-        # LSTM(30, return_sequences=True, stateful=True),
-        # LSTM(15, return_sequences=True, stateful=True),
-        # LSTM(7, stateful=True),
-        Dense(1)
-    ])
+    lstm_list = [LSTM(config.num_nodes, 
+                      return_sequences=False, 
+                      stateful=True, 
+                      batch_input_shape=(config.n_batch, config.n_input, 1),
+                      dropout=config.dropout,
+                      recurrent_dropout=config.recurrent_dropout) for _ in range(config.num_layers)]
+    lstm_list.append(Dense(1))
+    model = Sequential(lstm_list)
     optimizer = get_optimizer(config)
     model.compile(loss=config.loss, 
                   optimizer=optimizer,
