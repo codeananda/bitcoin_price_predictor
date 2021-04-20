@@ -666,12 +666,21 @@ def build_MLP(config):
 
 
 def build_LSTM(config):
+    # Add (config.num_layers - 1) layers that return sequences 
     lstm_list = [LSTM(config.num_nodes, 
+                      return_sequences=True, 
+                      stateful=True, 
+                      batch_input_shape=(config.n_batch, config.n_input, 1),
+                      dropout=config.dropout,
+                      recurrent_dropout=config.recurrent_dropout) for _ in range(config.num_layers - 1)]
+    # Final layer does not return sequences
+    lstm_list.append(LSTM(config.num_nodes, 
                       return_sequences=False, 
                       stateful=True, 
                       batch_input_shape=(config.n_batch, config.n_input, 1),
                       dropout=config.dropout,
-                      recurrent_dropout=config.recurrent_dropout) for _ in range(config.num_layers)]
+                      recurrent_dropout=config.recurrent_dropout))
+    # Single node output layer
     lstm_list.append(Dense(1))
     model = Sequential(lstm_list)
     optimizer = get_optimizer(config)
