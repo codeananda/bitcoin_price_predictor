@@ -8,7 +8,7 @@ from tqdm.notebook import trange, tqdm
 
 import tensorflow as tf
 from tensorflow.keras import Input, Model
-from tensorflow.keras.layers import Dense, LSTM
+from tensorflow.keras.layers import Dense, LSTM, Dropout
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.metrics import RootMeanSquaredError
 from tensorflow.keras.optimizers.schedules import InverseTimeDecay, ExponentialDecay
@@ -665,7 +665,9 @@ def build_MLP(config):
 def build_LSTM(config):
     model = Sequential([
         LSTM(64, return_sequences=False, stateful=True, 
-            batch_input_shape=(config.n_batch, config.n_input, 1)),
+            batch_input_shape=(config.n_batch, config.n_input, 1),
+            dropout=config.dropout,
+            recurrent_dropout=config.recurrent_dropout),
         # LSTM(250, return_sequences=True, stateful=True),
         # LSTM(125, return_sequences=True, stateful=True),
         # LSTM(62, return_sequences=True, stateful=True),
