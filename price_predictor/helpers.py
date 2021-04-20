@@ -79,11 +79,32 @@ def load_close_data(DOWNLOAD_DIR, dropna=False):
     data = close.values
     return data
 
+# Broken
+def get_training_data(config):
+    """
+    DOES NOT WORK, USE load_dataset_1 and load_dataset_2 instead.
+    Convenience function to quickly load in train and val data to train models on.
+    """
+    DOWNLOAD_DIR, _ = get_dirs(config)
+    # Load in data
+    data = load_close_data(DOWNLOAD_DIR, dropna=True)
+    # Convert val/test percentages to numbers
+    n_val, n_test = get_n_val_and_n_test(data, 0.12, 0.12)
+    # Split data
+    tvt = train_val_test_split(data, n_val, n_test)
+    # Scale data
+    train, val, test = scale_train_val_test(*tvt, scaler='log')
+    # Get data into form Keras needs
+    X_train, X_val, y_train, y_val = transform_to_keras_input(config, train, val, 168)
+    return (X_train, X_val, y_train, y_val)
+
 
 def load_dataset_1(config):
     _, DATA_DIR = get_dirs(config)
     with open(DATA_DIR / 'train_1.pkl', 'rb') as f:
         train_1 = pickle.load(f)
+        if config.drop_first_900_train_elements:
+            train_1 = train_1[900:]
 
     with open(DATA_DIR / 'val_1.pkl', 'rb') as f:
         val_1 = pickle.load(f)
@@ -114,24 +135,6 @@ def load_train_and_val_data(config):
         raise Exception('Please enter a supported dataset: 1 or 2')
     return train, val
 
-
-def get_training_data(config):
-    """
-    DOES NOT WORK, USE load_dataset_1 and load_dataset_2 instead.
-    Convenience function to quickly load in train and val data to train models on.
-    """
-    DOWNLOAD_DIR, _ = get_dirs(config)
-    # Load in data
-    data = load_close_data(DOWNLOAD_DIR, dropna=True)
-    # Convert val/test percentages to numbers
-    n_val, n_test = get_n_val_and_n_test(data, 0.12, 0.12)
-    # Split data
-    tvt = train_val_test_split(data, n_val, n_test)
-    # Scale data
-    train, val, test = scale_train_val_test(*tvt, scaler='log')
-    # Get data into form Keras needs
-    X_train, X_val, y_train, y_val = transform_to_keras_input(config, train, val, 168)
-    return (X_train, X_val, y_train, y_val)
 
 """########## SPLIT DATA #############"""
 
