@@ -315,7 +315,8 @@ def _scale_log_and_divide(train, val, scaler):
     val /= divisor
     return train, val
 
-
+# Misleading name! This is short for _scale_value (a single value) as opposed
+# to a sequence. 
 def _scale_val(val, a, b, minimum, maximum):
     # Scale val into [a, b] given the max and min values of the seq
     # it belongs to.
