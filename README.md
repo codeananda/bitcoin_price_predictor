@@ -13,6 +13,12 @@ I finished this project in June 2021 and am in the process of tidying everything
 
 However, I hope it gives you an idea of how I approached this project and demonstrates I can build and tune Tensorflow/Keras models on univariate time-series data.
 
+# Results
+
+The best results were obtained by an LSTM with 5 layers each getting sequentially smaller. I ran multiple tests on wandb and achieved a low loss on the validation set of
+
+<img width="1252" alt="Screenshot 2021-09-02 at 00 28 27" src="https://user-images.githubusercontent.com/51246969/131754518-df0674f4-4f28-49ec-860e-fb66ee2a75ef.png">
+
 # Notes
 
 ### Where is the Code?
@@ -30,6 +36,16 @@ Not all functions have docstrings and for this I will probably face 🔥 eternal
 🙏 **I promise to add docstrings when I write everything up neatly.** 🙏
 
 In the meantime, check out the scripts from my [PyTorch project](https://github.com/theadammurphy/portfolio/tree/main/electrochem_pytorch/scripts) if you want proof I can write docstrings.
+
+# Improvements
+
+### Using Classes
+
+This was my first time building such a model with TensorFlow/Keras. Since then I have used PyTorch Lightning and love the flexibility of their [Data Modules](https://pytorch-lightning.readthedocs.io/en/latest/extensions/datamodules.html) to encapsulate all data processing code. I would like to encapsulate more of the code into easy-to-transport classes rather than the rather the large collection of functions I wrote. 
+
+### Regular Re-Training and Deployment. 
+
+Since the Bitcoin price never stops, it's easy to re-train the model and see how it performs on brand new data. Because we only used the price of Bitcoin to make predictions, I doubt the model will perform well. But it would be great to get a measure of how well (or poorly) it performs in production. 
 
 ## Libraries Used
 
