@@ -1,4 +1,4 @@
-# Let's Predict the Price of Bitcoin
+# Let's Predict the Price of Bitcoin 📈
 A project to predict the price of Bitcoin over the next few days using Tensorflow/Keras and LSTMs.
 
 ## Note
