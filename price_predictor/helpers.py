@@ -79,25 +79,6 @@ def load_close_data(DOWNLOAD_DIR, dropna=False):
     data = close.values
     return data
 
-# Broken
-def get_training_data(config):
-    """
-    DOES NOT WORK, USE load_dataset_1 and load_dataset_2 instead.
-    Convenience function to quickly load in train and val data to train models on.
-    """
-    DOWNLOAD_DIR, _ = get_dirs(config)
-    # Load in data
-    data = load_close_data(DOWNLOAD_DIR, dropna=True)
-    # Convert val/test percentages to numbers
-    n_val, n_test = get_n_val_and_n_test(data, 0.12, 0.12)
-    # Split data
-    tvt = train_val_test_split(data, n_val, n_test)
-    # Scale data
-    train, val, test = scale_train_val_test(*tvt, scaler='log')
-    # Get data into form Keras needs
-    X_train, X_val, y_train, y_val = transform_to_keras_input(config, train, val, 168)
-    return (X_train, X_val, y_train, y_val)
-
 
 def load_dataset_1(config):
     _, DATA_DIR = get_dirs(config)
@@ -146,7 +127,7 @@ def get_n_test_samples(data, test_size):
 
 def get_n_val_and_n_test(data, val_size, test_size):
     n_val = int(len(data) * val_size)
-    n_test = int(len(data) * test_size)  
+    n_test = int(len(data) * test_size)
     return n_val, n_test
 
 
@@ -183,21 +164,21 @@ def _series_to_supervised(data, n_in=1, n_out=1):
 def remove_excess_elements(config, array, is_X=False):
     """
     Take a NumPy array and return it but with the elements removed that
-    were not included in training. 
-    
+    were not included in training.
+
     This is for training with RNNs which require all batches to be the exact
     same length. During training, we convert numpy arrays to tf.data.Dataset
     objects, put them in batches and drop the excess elements.
-    
+
     In this function we do the same process but then transform the tf.data.Dataset
-    back into a NumPy array for use later on. 
-    
+    back into a NumPy array for use later on.
+
     Note: I feel like there must be a better way to do this. Or I am doing
           this unnecessarily and am using the tf.data.Dataset API incorrectly.
 
-    Note 2: I included is_X as a kwarg because I thought I needed to remove 
+    Note 2: I included is_X as a kwarg because I thought I needed to remove
             values from X in train_and_validate but I actually don't need to.
-            
+
     """
     # Transform to tf.data.Dataset
     a_ds = tf.data.Dataset.from_tensor_slices(array)
@@ -219,19 +200,19 @@ def remove_excess_elements(config, array, is_X=False):
 
 
 # Create train and val sets to input into Keras model
-# we do not need test sets at this stage, just care about 
+# we do not need test sets at this stage, just care about
 # validation, not testing
 def transform_to_keras_input(config, train, val, n_in):
     """
     Given train and val datasets of univariate timeseries, transform them into sequences
-    of length n_in and split into X_train, X_val, y_train, y_val. 
+    of length n_in and split into X_train, X_val, y_train, y_val.
 
     If model is an LSTM, remove the excess elements that occur when arranging data
     into batches (each batch fed into an RNN must be exactly the same length).
 
     I've chosen to remove the batches here and keep everything as NumPy arrays for
     simplicity. It may be better to work with tf.data.Datasets in general
-    e.g.     
+    e.g.
     >>> train_dataset = tf.data.Dataset.from_tensor_slices((X_train, y_train))
     >>> train_dataset = train_dataset.repeat().batch(config.n_batch, drop_remainder=True)
     >>> model.fit(train_dataset, ...)
@@ -259,7 +240,7 @@ def transform_to_keras_input(config, train, val, n_in):
 
 # I can easily add more functionality to this by writing
 # other functions like min_max_scale_train_val_test()
-# and add them under each 'if scaler == 'min_max': 
+# and add them under each 'if scaler == 'min_max':
 def scale_train_val_test(train, val, test=None, scaler='log'):
     """
     WARNING: MAY NOT WORK
@@ -291,7 +272,7 @@ def scale_train_val(train, val, scaler='log'):
         train, val = _scale_log_and_range(train, val, scaler)
     else:
         raise Exception('''Please enter a supported scaling type: log, log_and_divide_a
-                        (first take log, then divide by a), or log_and_range_a_b (first take 
+                        (first take log, then divide by a), or log_and_range_a_b (first take
                         log then scale to range [a, b]).''')
     return train, val
 
@@ -316,7 +297,7 @@ def _scale_log_and_divide(train, val, scaler):
     return train, val
 
 # Misleading name! This is short for _scale_value (a single value) as opposed
-# to a sequence. 
+# to a sequence.
 def _scale_val(val, a, b, minimum, maximum):
     # Scale val into [a, b] given the max and min values of the seq
     # it belongs to.
@@ -329,8 +310,8 @@ def _scale_val(val, a, b, minimum, maximum):
 # Taken from this SO answer: https://tinyurl.com/j5rppewr
 def _scale_to_range(seq, a, b, min=None, max=None):
     """
-    Given a sequence of numbers - seq - scale all of its values to the 
-    range [a, b]. 
+    Given a sequence of numbers - seq - scale all of its values to the
+    range [a, b].
 
     Default behaviour will map min(seq) to a and max(seq) to b.
     To override this, set max and min yourself.
@@ -362,8 +343,8 @@ def _scale_log_and_range(train, val, scaler):
     max_value = max(val_log)
     args = [a, b, min_value, max_value]
     train_scaled = _scale_to_range(train_log, *args)
-    val_scaled = _scale_to_range(val_log, *args)  
-    return train_scaled, val_scaled 
+    val_scaled = _scale_to_range(val_log, *args)
+    return train_scaled, val_scaled
 
 # Delete if unused in train_and_validate()
 def inverse_scale(data, scaler='log'):
@@ -403,7 +384,7 @@ def convert_to_log(values, scaler, train, val):
         values_scaled = values
     else:
         raise Exception('''Please enter a supported scaling type: log, log_and_divide_a
-                        (first take log, then divide by a), or log_and_range_a_b (first take 
+                        (first take log, then divide by a), or log_and_range_a_b (first take
                         log then scale to range [a, b]).''')
     return values_scaled
 
@@ -488,7 +469,7 @@ def _plot_actual_vs_all_preds(y_true, y_preds, rmse_scores):
 
 def plot_metric(history, metric='loss', ylim=None, start_epoch=0):
     """
-    * Given a Keras history, plot the specific metric given. 
+    * Given a Keras history, plot the specific metric given.
     * Can also plot '1-metric'
     * Set the y-axis limits with ylim
     * Since you cannot know what the optimal y-axis limits will be ahead of time,
@@ -523,7 +504,7 @@ def plot_metric(history, metric='loss', ylim=None, start_epoch=0):
 
     ax.plot(epochs[start_epoch:], values[start_epoch:], 'b', label='Training')
     ax.plot(epochs[start_epoch:], val_values[start_epoch:], 'r', label='Validation')
-        
+
     ax.set(title=title,
            xlabel='Epoch',
            ylabel=ylabel,
@@ -596,7 +577,7 @@ def get_custom_lr_schduler(config):
 
     Note: I cannot do this with one function. The custom_lr_schduler(epoch, lr)
           functions must have a specific form as defined by Keras, so I abstracted
-          that away with this func. 
+          that away with this func.
     """
     if config.model_type.upper() == 'MLP':
         lrs = LearningRateScheduler(custom_MLP_lr_scheduler)
@@ -626,7 +607,7 @@ def get_optimizer(config):
                 raise Exception("""Please enter a supported optimizer: Adam or RMSprop.""")
             return optimizer
         else:
-            raise Exception('''Please enter a supported learning rate scheduler: 
+            raise Exception('''Please enter a supported learning rate scheduler:
                             InverseTimeDecay or ExponentialDecay.''')
         if config.optimizer.lower() == 'adam':
             optimizer = Adam(learning_rate_schedule)
@@ -660,24 +641,24 @@ def build_MLP(config):
         Dense(1)
     ])
     optimizer = get_optimizer(config)
-    model.compile(loss=config.loss, 
+    model.compile(loss=config.loss,
                   optimizer=optimizer,
                   metrics=[RootMeanSquaredError()])
     return model
 
 
 def build_LSTM(config):
-    # Add (config.num_layers - 1) layers that return sequences 
-    lstm_list = [LSTM(config.num_nodes, 
-                      return_sequences=True, 
-                      stateful=True, 
+    # Add (config.num_layers - 1) layers that return sequences
+    lstm_list = [LSTM(config.num_nodes,
+                      return_sequences=True,
+                      stateful=True,
                       batch_input_shape=(config.n_batch, config.n_input, 1),
                       dropout=config.dropout,
                       recurrent_dropout=config.recurrent_dropout) for _ in range(config.num_layers - 1)]
     # Final layer does not return sequences
-    lstm_list.append(LSTM(config.num_nodes, 
-                      return_sequences=False, 
-                      stateful=True, 
+    lstm_list.append(LSTM(config.num_nodes,
+                      return_sequences=False,
+                      stateful=True,
                       batch_input_shape=(config.n_batch, config.n_input, 1),
                       dropout=config.dropout,
                       recurrent_dropout=config.recurrent_dropout))
@@ -685,7 +666,7 @@ def build_LSTM(config):
     lstm_list.append(Dense(1))
     model = Sequential(lstm_list)
     optimizer = get_optimizer(config)
-    model.compile(loss=config.loss, 
+    model.compile(loss=config.loss,
                   optimizer=optimizer,
                   metrics=[RootMeanSquaredError()])
     return model
@@ -693,7 +674,7 @@ def build_LSTM(config):
 
 def build_LSTM_small(config):
     model = Sequential([
-        LSTM(100, return_sequences=True, stateful=True, 
+        LSTM(100, return_sequences=True, stateful=True,
             batch_input_shape=(config.n_batch, config.n_input, 1)),
         LSTM(50, return_sequences=True, stateful=True),
         LSTM(25, return_sequences=True, stateful=True),
@@ -702,7 +683,7 @@ def build_LSTM_small(config):
         Dense(1)
     ])
     optimizer = get_optimizer(config)
-    model.compile(loss=config.loss, 
+    model.compile(loss=config.loss,
                   optimizer=optimizer,
                   metrics=[RootMeanSquaredError()])
     return model
@@ -736,7 +717,7 @@ def get_callbacks(config):
 
 def fit_model(model, config, X_train, X_val, y_train, y_val):
     """
-    Fit a DL model and return the history. 
+    Fit a DL model and return the history.
 
     Note that this is model agnostic (MLP vs. LSTM) becuase of our
     data preprocessing. Everything put into fit() is a NumPy array
@@ -745,14 +726,14 @@ def fit_model(model, config, X_train, X_val, y_train, y_val):
     of config.n_batch (no excess elements in each batch).
     """
     callbacks_list = get_callbacks(config)
-    
+
     history = model.fit(
-        X_train, 
-        y_train, 
+        X_train,
+        y_train,
         epochs=config.n_epochs,
-        batch_size=config.n_batch, 
+        batch_size=config.n_batch,
         verbose=config.verbose,
-        shuffle=False, 
+        shuffle=False,
         validation_data=(X_val, y_val),
         callbacks=callbacks_list
     )
@@ -766,22 +747,22 @@ def _model_fit(train, config):
     X_train, y_train = train_data[:, :-1], train_data[:, -1]
     # define model
     model = Sequential()
-    model.add(Dense(config.n_nodes, 
-                    activation=config.activation, 
+    model.add(Dense(config.n_nodes,
+                    activation=config.activation,
                     input_dim=config.n_input))
     model.add(Dense(1))
     # compile
-    model.compile(loss=config.loss, 
+    model.compile(loss=config.loss,
                   optimizer=config.optimizer,
                   metrics=[RootMeanSquaredError()])
     # fit
     history = model.fit(
-                X_train, 
-                y_train, 
+                X_train,
+                y_train,
                 epochs=config.n_epochs,
-                batch_size=config.n_batch, 
+                batch_size=config.n_batch,
                 verbose=config.verbose,
-                shuffle=False, 
+                shuffle=False,
                 validation_split=config.val_split,
                 callbacks=[WandbCallback()]
                 )
@@ -858,8 +839,8 @@ def get_preds(config, model, X_train, X_val, y_train=None, y_val=None):
     Given config, a model and NumPy arrays, calculate and return predictions
     on X_train and X_val.
 
-    For LSTMs, we must fisrt convert the NumPy arrays into tf.data.Dataset 
-    objects and predict on these. 
+    For LSTMs, we must fisrt convert the NumPy arrays into tf.data.Dataset
+    objects and predict on these.
 
     For MLPs, we can predict directly on the X arrays.
     If you know you are building an MLP model, you can leave out y_train and
@@ -870,9 +851,9 @@ def get_preds(config, model, X_train, X_val, y_train=None, y_val=None):
         # Drop excess elements in the final batch
         train_ds = tf.data.Dataset.from_tensor_slices((X_train, y_train))
         train_ds = train_ds.batch(config.n_batch, drop_remainder=True)
-        val_ds = tf.data.Dataset.from_tensor_slices((X_val, y_val)) 
+        val_ds = tf.data.Dataset.from_tensor_slices((X_val, y_val))
         val_ds = val_ds.batch(config.n_batch, drop_remainder=True)
-        
+
         y_pred_train = model.predict(train_ds)
         y_pred_val = model.predict(val_ds)
     elif config.model_type.upper() == 'MLP':
@@ -913,7 +894,7 @@ def train_and_validate(config):
     # Store history on wandb
     upload_history_to_wandb(history)
     # Calc predictions
-    y_pred_train, y_pred_val = get_preds(config, model, X_train, X_val, y_train, y_val)     
+    y_pred_train, y_pred_val = get_preds(config, model, X_train, X_val, y_train, y_val)
     # Convert y_pred_train and y_pred_val into a log scale to enable comparison
     # between different scaling types
     train_log, val_log = scale_train_val(train, val, scaler='log')
