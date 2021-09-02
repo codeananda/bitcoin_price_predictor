@@ -137,6 +137,20 @@ def load_dataset_2(config):
 
 
 def load_train_and_val_data(config):
+    """Convenience function to load just the train and val datasets from
+    either dataset 1 or 2 (as controlled by the config)
+
+    Parameters
+    ----------
+    config : WandB Config
+        Config file to control wandb experiments
+
+    Returns
+    -------
+    train, val : Numpy arrays
+        Numpy arrays containing the train/val univariate Bitcoin close
+        datasets as defined in data/define_datasets_1_and_2.png
+    """
     if config.dataset == 1:
         train, val, _ = load_dataset_1(config)
     elif config.dataset == 2:
