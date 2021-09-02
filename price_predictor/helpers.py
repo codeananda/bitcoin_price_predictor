@@ -81,6 +81,19 @@ def load_close_data(DOWNLOAD_DIR, dropna=False):
 
 
 def load_dataset_1(config):
+    """Load dataset 1 as defined in data/define_datasets_1_and_2.png
+
+    Parameters
+    ----------
+    config : WandB Config
+        Config file to control wandb experiments
+
+    Returns
+    -------
+    train_1, val_1, test_1 : Numpy arrays
+        Numpy arrays containing the train/val/test univariate Bitcoin close
+        price datasets as defined in data/define_datasets_1_and_2.png
+    """
     _, DATA_DIR = get_dirs(config)
     with open(DATA_DIR / 'train_1.pkl', 'rb') as f:
         train_1 = pickle.load(f)
@@ -97,6 +110,22 @@ def load_dataset_1(config):
 
 
 def load_dataset_2(config):
+    """Load dataset 2 as defined in data/define_datasets_1_and_2.png
+
+    Parameters
+    ----------
+    config : WandB Config
+        Config file to control wandb experiments
+
+    Returns
+    -------
+    train_2, val_2 : Numpy arrays
+        Numpy arrays containing the train/val univariate Bitcoin close
+        price datasets as defined in data/define_datasets_1_and_2.png
+
+        Note: there is no test dataset included due to the limited amount of
+        data available after train_2 ends.
+    """
     _, DATA_DIR = get_dirs(config)
     with open(DATA_DIR / 'train_2.pkl', 'rb') as f:
         train_2 = pickle.load(f)
