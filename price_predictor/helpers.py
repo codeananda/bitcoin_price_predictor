@@ -1,3 +1,4 @@
+import numpy as np
 import pickle
 from pathlib import Path
 
@@ -29,7 +30,7 @@ def get_download_and_data_dirs(config):
         DOWNLOAD_DIR = Path('../download')
         DATA_DIR = Path('../data')
     else:
-        raise Exception('''Set config.notebook to a supported notebook type:
+        raise ValueError('''Set config.notebook to a supported notebook type:
                         colab or local''')
     return DOWNLOAD_DIR, DATA_DIR
 
