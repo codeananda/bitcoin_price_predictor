@@ -57,6 +57,23 @@ config = wandb.config # we use this to configure our experiment
 """
 
 def get_dirs(config):
+    """
+    Return DOWNLOAD_DIR and DATA_DIR depending on the type of notebook being
+    used.
+
+    Google Colab notebooks require different paths to local ones.
+
+    Parameters
+    ----------
+    config : WandB Config
+        Config file to control wandb experiments. Set config.notebook to
+        either 'local' or 'colab'.
+
+    Returns
+    -------
+    DOWNLOAD_DIR, DATA_DIR : tuple of Path objects
+        Filepaths to the download and data directories respectively
+    """
     if config.notebook.lower() == 'colab':
         DOWNLOAD_DIR = Path('/content/drive/MyDrive/1 Projects/bitcoin_price_predictor/download')
         DATA_DIR = Path('/content/drive/MyDrive/1 Projects/bitcoin_price_predictor/data')
@@ -64,7 +81,8 @@ def get_dirs(config):
         DOWNLOAD_DIR = Path('../download')
         DATA_DIR = Path('../data')
     else:
-        raise Exception('Please enter a supported notebook type: colab or local')
+        raise Exception('''Set config.notebook to a supported notebook type:
+                        colab or local''')
     return DOWNLOAD_DIR, DATA_DIR
 
 
