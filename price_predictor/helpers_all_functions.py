@@ -427,6 +427,11 @@ def _scale_log_and_range(train, val, scaler):
     # Calc args for _scale_to_range
     a = float(elements[-2])
     b = float(elements[-1])
+    if not a < b:
+        raise ValueError(f'''You are trying to scale to the range [a, b] where
+                        a = {a} and b = {b}. Pleae choose different values
+                        such that a < b.''')
+
     min_value = min(train_log)
     max_value = max(val_log)
     args = [a, b, min_value, max_value]
