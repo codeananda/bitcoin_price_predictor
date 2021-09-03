@@ -111,7 +111,7 @@ def load_train_and_val_data(config):
     elif config.dataset == 2:
         train, val = load_dataset_2(config)
     else:
-        raise Exception('Please enter a supported dataset: 1 or 2')
+        raise ValueError('Set config.dataset to a supported dataset: 1 or 2')
     return train, val
 
 
