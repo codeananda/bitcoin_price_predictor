@@ -56,7 +56,7 @@ run = wandb.init(project='bitcoin_price_predictor',
 config = wandb.config # we use this to configure our experiment
 """
 
-def get_dirs(config):
+def get_download_and_data_dirs(config):
     """
     Return DOWNLOAD_DIR and DATA_DIR depending on the type of notebook being
     used.
@@ -112,7 +112,7 @@ def load_dataset_1(config):
         Numpy arrays containing the train/val/test univariate Bitcoin close
         price datasets as defined in data/define_datasets_1_and_2.png
     """
-    _, DATA_DIR = get_dirs(config)
+    _, DATA_DIR = get_download_and_data_dirs(config)
     with open(DATA_DIR / 'train_1.pkl', 'rb') as f:
         train_1 = pickle.load(f)
         if config.drop_first_900_train_elements:
@@ -144,7 +144,7 @@ def load_dataset_2(config):
         Note: there is no test dataset included due to the limited amount of
         data available after train_2 ends.
     """
-    _, DATA_DIR = get_dirs(config)
+    _, DATA_DIR = get_download_and_data_dirs(config)
     with open(DATA_DIR / 'train_2.pkl', 'rb') as f:
         train_2 = pickle.load(f)
 
