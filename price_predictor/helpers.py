@@ -157,6 +157,32 @@ def scale_train_val(train, val, scaler='log'):
     return train, val
 
 
+def _scale_log(train, val, test=None):
+    """Apply a log transform to train, val and test and return them.
+
+    Parameters
+    ----------
+    train : np.ndarray
+        Training dataset
+    val : np.ndarray
+        Validation dataset
+    test : np.ndarray, optional
+        Test dataset, by default None
+
+    Returns
+    -------
+    train, val, [test] : tuple of np.ndarrays
+        Log scaled versions of train, val and test.
+    """
+    train_log = np.log(train)
+    val_log = np.log(val)
+    if test is not None:
+        test_log = np.log(test)
+        return train_log, val_log, test_log
+    else:
+        return train_log, val_log
+
+
 """########## FULL PROCESS ##########"""
 def train_and_validate(config):
     # Load data
