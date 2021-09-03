@@ -113,6 +113,50 @@ def load_train_and_val_data(config):
         raise Exception('Please enter a supported dataset: 1 or 2')
     return train, val
 
+
+"""########## SCALE ##########"""
+
+def scale_train_val(train, val, scaler='log'):
+    """Scaled the train and validation datasets based on the scaler type
+    specified.
+
+    Parameters
+    ----------
+    train : np.ndarray
+        Training dataset
+    val : np.ndarray
+        Validation dataset
+    scaler: str, optional {'log', 'log_and_divide_a', 'log_and_range_a_b'}
+        Scaling to apply to train and validation datasets. Options:
+
+            * 'log' - apply a log transforma
+            * 'log_and_divide_a' - first apply a log transform, then divide by
+               a (a can be any numeric value)
+            * 'log_and_range_a_b' - first apply a log transform, then
+               scale the dataset to be in the range [a, b]
+               (a and b can be any numeric value but you must have a < b)
+
+        Note: a and b can be any numeric value e.g. 'log_and_divide_20'
+        applies a log transformation, then divides the datasets by 20.
+
+    Returns
+    -------
+    train, val : Tuple of numpy arrays
+        Scaled copies of input train and val as dictated by scaler.
+    """
+    if scaler.lower() == 'log':
+        train, val = _scale_log(train, val)
+    elif scaler.lower().startswith('log_and_divide'):
+        train, val = _scale_log_and_divide(train, val, scaler)
+    elif scaler.lower().startswith('log_and_range'):
+        train, val = _scale_log_and_range(train, val, scaler)
+    else:
+        raise ValueError('''Please enter a supported scaling type: log, log_and_divide_a
+                        (first take log, then divide by a), or log_and_range_a_b (first take
+                        log then scale to range [a, b]).''')
+    return train, val
+
+
 """########## FULL PROCESS ##########"""
 def train_and_validate(config):
     # Load data
