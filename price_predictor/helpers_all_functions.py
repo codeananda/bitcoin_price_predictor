@@ -419,31 +419,6 @@ def _scale_val(val, a, b, minimum, maximum):
     return (numerator / denominator) + a
 
 
-# Taken from this SO answer: https://tinyurl.com/j5rppewr
-def _scale_to_range(seq, a, b, min=None, max=None):
-    """
-    Given a sequence of numbers - seq - scale all of its values to the
-    range [a, b].
-
-    Default behaviour will map min(seq) to a and max(seq) to b.
-    To override this, set max and min yourself.
-    """
-    assert a < b
-    # Default is to use the max of the seq as the min/max
-    # Can override this and input custom min and max values
-    # if, for example, want to scale to ranges not necesarily included
-    # in the data (as in our case with the train and val data)
-    if max is None:
-        max = max(seq)
-    if min is None:
-        min = min(seq)
-    assert min < max
-    scaled_seq = np.array([_scale_val(val, a, b, min, max) \
-                           for val in seq])
-
-    return scaled_seq
-
-
 def _scale_seq_to_range(
         seq,
         scaled_min,
