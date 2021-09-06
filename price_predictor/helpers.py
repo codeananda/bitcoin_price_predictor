@@ -317,23 +317,26 @@ def _scale_log_and_divide(train, val, scaler='log_and_divide_20'):
 
 
 def _scale_log_and_range(train, val, scaler):
+    # Log scale
     train_log, val_log = _scale_log(train, val)
-    # Split scaler on underscores to extract the min and max values for the range
-    elements = scaler.split('_')
+
     # Calculate scaling parameters for _scale_seq_to_range
-    scaled_min = float(elements[-2])
-    scaled_max = float(elements[-1])
+    scaler_elements = scaler.split('_')
+    scaled_min = float(scaler_elements[-2])
+    scaled_max = float(scaler_elements[-1])
     if not scaled_min < scaled_max:
         raise ValueError(f'''You are trying to scale to the range [a, b] where
                         a = {scaled_min} and b = {scaled_max}. Please choose
                         different values such that a < b.''')
-
     global_min_value = min(train_log)
     global_max_value = max(val_log)
-    args = [scaled_min, scaled_max, global_min_value, global_max_value]
-    train_scaled = _scale_seq_to_range(train_log, *args)
-    val_scaled = _scale_seq_to_range(val_log, *args)
-    return train_scaled, val_scaled
+
+    scaling_args = [scaled_min, scaled_max, global_min_value, global_max_value]
+
+    train_log_and_range = _scale_seq_to_range(train_log, *scaling_args)
+    val_log_and_range = _scale_seq_to_range(val_log, *scaling_args)
+
+    return train_log_and_range, val_log_and_range
 
 
 """########## FULL PROCESS ##########"""
