@@ -1,3 +1,10 @@
+"""
+This file contains all functions I wrote over the course of completing this
+project. Not all of them were used in the end.
+
+See helpers.py for the functions that I ended up using.
+"""
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
