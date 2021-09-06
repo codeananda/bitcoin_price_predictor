@@ -493,7 +493,7 @@ def _scale_seq_to_range(
     if global_min is None:
         global_min = np.min(seq)
 
-    scaled_seq = np.array([self._scale_one_value(value, scaled_min, scaled_max,
+    scaled_seq = np.array([_scale_one_value(value, scaled_min, scaled_max,
                                                     global_min, global_max) \
                             for value in seq])
 
@@ -504,7 +504,7 @@ def _scale_log_and_range(train, val, scaler):
     train_log, val_log = _scale_log(train, val)
     # Split scaler on underscores to extract the min and max values for the range
     elements = scaler.split('_')
-    # Calculate scaling parameters for _scale_to_range
+    # Calculate scaling parameters for _scale_seq_to_range
     scaled_min = float(elements[-2])
     scaled_max = float(elements[-1])
     if not scaled_min < scaled_max:
@@ -515,8 +515,8 @@ def _scale_log_and_range(train, val, scaler):
     global_min_value = min(train_log)
     global_max_value = max(val_log)
     args = [scaled_min, scaled_max, global_min_value, global_max_value]
-    train_scaled = _scale_to_range(train_log, *args)
-    val_scaled = _scale_to_range(val_log, *args)
+    train_scaled = _scale_seq_to_range(train_log, *args)
+    val_scaled = _scale_seq_to_range(val_log, *args)
     return train_scaled, val_scaled
 
 # Delete if unused in train_and_validate()
@@ -540,7 +540,7 @@ def convert_to_log(values, scaler, train, val):
     elif scaler.lower().startswith('log_and_range'):
         # Split scaler on underscores to extract the min and max values for the range
         elements = scaler.split('_')
-        # Calc args for _scale_to_range
+        # Calc args for _scale_seq_to_range
         min_value = float(elements[-2])
         max_value = float(elements[-1])
         a = min(train)
@@ -551,7 +551,7 @@ def convert_to_log(values, scaler, train, val):
         # and next two are just values
                         # Scale the values to values
         values_scaled = [_scale_val(v, *args) if isinstance(v, (int, float)) \
-                        else _scale_to_range(v, *args) \
+                        else _scale_seq_to_range(v, *args) \
                         for v in values]
     elif scaler.lower() == 'log':
         values_scaled = values
