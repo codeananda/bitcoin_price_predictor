@@ -319,7 +319,10 @@ def _scale_log_and_divide(train, val, scaler='log_and_divide_20'):
     return train_log_and_divide, val_log_and_divide
 
 
-def _scale_log_and_range(train, val, scaler):
+def _scale_log_and_range(train, val, scaler='log_and_range_0_1'):
+    if 'log_and_range' not in scaler:
+        raise ValueError(f"""scaler must be of the form 'log_and_range_a_b'
+                        for some numbers a and b. You entered {scaler}""")
     # Log scale
     train_log, val_log = _scale_log(train, val)
 
