@@ -320,19 +320,19 @@ def _scale_log_and_range(train, val, scaler):
     train_log, val_log = _scale_log(train, val)
     # Split scaler on underscores to extract the min and max values for the range
     elements = scaler.split('_')
-    # Calc args for _scale_to_range
-    a = float(elements[-2])
-    b = float(elements[-1])
-    if not a < b:
+    # Calculate scaling parameters for _scale_seq_to_range
+    scaled_min = float(elements[-2])
+    scaled_max = float(elements[-1])
+    if not scaled_min < scaled_max:
         raise ValueError(f'''You are trying to scale to the range [a, b] where
-                        a = {a} and b = {b}. Pleae choose different values
-                        such that a < b.''')
+                        a = {scaled_min} and b = {scaled_max}. Please choose
+                        different values such that a < b.''')
 
-    min_value = min(train_log)
-    max_value = max(val_log)
-    args = [a, b, min_value, max_value]
-    train_scaled = _scale_to_range(train_log, *args)
-    val_scaled = _scale_to_range(val_log, *args)
+    global_min_value = min(train_log)
+    global_max_value = max(val_log)
+    args = [scaled_min, scaled_max, global_min_value, global_max_value]
+    train_scaled = _scale_seq_to_range(train_log, *args)
+    val_scaled = _scale_seq_to_range(val_log, *args)
     return train_scaled, val_scaled
 
 
