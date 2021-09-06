@@ -320,6 +320,31 @@ def _scale_log_and_divide(train, val, scaler='log_and_divide_20'):
 
 
 def _scale_log_and_range(train, val, scaler='log_and_range_0_1'):
+    """First apply a log transform, then scale train and val sequences to
+    the range dicated by scaler. The default ('log_and_range_0_1') scales
+    inputs to [0, 1].
+
+    Parameters
+    ----------
+    train : np.ndarray
+        Training dataset
+    val : np.ndarray
+        Validation dataset
+    scaler: str, optional of the form {'log_and_range_a_b'}
+        Scaling to apply to train and validation datasets. Options:
+
+            * 'log_and_range_a_b' - first apply a log transform, then
+               scale the dataset to the range [a, b]
+
+        Note: a and b can be any numeric values and you must have a < b. So,
+        'log_and_range_-5_5' applies a log transformation, then scales the
+        datasets to the range [-5, 5].
+
+    Returns
+    -------
+    train_log_and_divide, val_log_and_divide : Tuple of numpy arrays
+        Scaled copies of inputs train and val as dictated by scaler.
+    """
     if 'log_and_range' not in scaler:
         raise ValueError(f"""scaler must be of the form 'log_and_range_a_b'
                         for some numbers a and b. You entered {scaler}""")
