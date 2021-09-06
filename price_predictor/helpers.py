@@ -142,20 +142,21 @@ def scale_train_val(train, val, scaler='log'):
 
     Returns
     -------
-    train, val : Tuple of numpy arrays
+    train_scaled, val_scaled : Tuple of numpy arrays
         Scaled copies of input train and val as dictated by scaler.
     """
     if scaler.lower() == 'log':
-        train, val = _scale_log(train, val)
+        train_scaled, val_scaled = _scale_log(train, val)
     elif scaler.lower().startswith('log_and_divide'):
-        train, val = _scale_log_and_divide(train, val, scaler)
+        train_scaled, val_scaled = _scale_log_and_divide(train, val, scaler)
     elif scaler.lower().startswith('log_and_range'):
-        train, val = _scale_log_and_range(train, val, scaler)
+        train_scaled, val_scaled = _scale_log_and_range(train, val, scaler)
     else:
-        raise ValueError('''Please enter a supported scaling type: log, log_and_divide_a
-                        (first take log, then divide by a), or log_and_range_a_b (first take
-                        log then scale to range [a, b]).''')
-    return train, val
+        raise ValueError('''Please enter a supported scaling type: log,
+                        log_and_divide_a (first take log, then divide by a),
+                        or log_and_range_a_b (first take log then scale to
+                        range [a, b]).''')
+    return train_scaled, val_scaled
 
 
 def _scale_log(train, val, test=None):
