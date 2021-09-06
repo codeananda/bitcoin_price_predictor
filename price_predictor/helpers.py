@@ -306,6 +306,10 @@ def _scale_log_and_divide(train, val, scaler='log_and_divide_20'):
     train_log_and_divide, val_log_and_divide : Tuple of numpy arrays
         Scaled copies of inputs train and val as dictated by scaler.
     """
+    if 'scale_log_and_divide' not in scaler:
+        raise ValueError(f"""scaler must be of the form
+                        'scale_log_and_divide_a' for some number a. You have
+                        entered {scaler}. """)
     # Take log
     train_log, val_log = _scale_log(train, val)
     # The last element of the scaler string the divisor
