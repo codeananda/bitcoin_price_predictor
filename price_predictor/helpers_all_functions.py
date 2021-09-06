@@ -444,6 +444,62 @@ def _scale_to_range(seq, a, b, min=None, max=None):
     return scaled_seq
 
 
+def _scale_seq_to_range(
+        seq,
+        scaled_min,
+        scaled_max,
+        global_min=None,
+        global_max=None
+        ):
+    """Given a sequence of numbers - seq - scale its values to the range
+    [scaled_min, scaled_max].
+
+    Default behaviour maps min(seq) to scaled_min and max(seq) to
+    scaled_max. To map different values to scaled_min/max, set global_min
+    and global_max yourself. Manually controlling the global_min/max
+    is useful if you map multiple sequences to the same range but each
+    sequence does not contain the same min/max values.
+
+    Parameters
+    ----------
+    seq : 1D array
+        1D array containing numbers.
+    scaled_min : int or float
+        The minimum value of seq after it has been scaled.
+    scaled_max : int or float
+        The maximum value of seq after it has been scaled.
+    global_min : int or float, optional
+        The minimum possible value for elements of seq, by default None.
+        If None, this is taken to be min(seq). You will want to set
+        global_min manually if you are scaling multiple sequences to the
+        same range and they don't all contain global_min.
+    global_max : int or float, optional
+        The maximum possible value for elements of seq, by default None.
+        If None, this is taken to be max(seq). You will want to set
+        global_max manually if you are scaling multiple sequences to the
+        same range and they don't all contain global_max.
+
+    Returns
+    -------
+    scaled_seq: 1D np.ndarray
+        1D array with all values mapped to the range [scaled_min, scaled_max].
+    """
+    assert seq.ndim == 1
+    assert scaled_min < scaled_max
+    assert global_min < global_max
+
+    if global_max is None:
+        global_max = np.max(seq)
+    if global_min is None:
+        global_min = np.min(seq)
+
+    scaled_seq = np.array([self._scale_one_value(value, scaled_min, scaled_max,
+                                                    global_min, global_max) \
+                            for value in seq])
+
+    return scaled_seq
+
+
 def _scale_log_and_range(train, val, scaler):
     train_log, val_log = _scale_log(train, val)
     # Split scaler on underscores to extract the min and max values for the range
