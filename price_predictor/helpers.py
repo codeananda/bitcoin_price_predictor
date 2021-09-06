@@ -281,15 +281,38 @@ def _scale_seq_to_range(
     return scaled_seq
 
 
-def _scale_log_and_divide(train, val, scaler):
+def _scale_log_and_divide(train, val, scaler='log_and_divide_20'):
+    """First apply a log transform, then divide by the value specified in
+    scaler to sequences train and val.
+
+    Parameters
+    ----------
+    train : np.ndarray
+        Training dataset
+    val : np.ndarray
+        Validation dataset
+    scaler: str, optional {'log_and_divide_a'}
+        Scaling to apply to train and validation datasets. Options:
+
+            * 'log_and_divide_a' - first apply a log transform, then divide by
+               a (a can be any numeric value)
+
+        Note: a can be any numeric value e.g. 'log_and_divide_20'
+        applies a log transformation, then divides the datasets by 20.
+
+    Returns
+    -------
+    train_log_and_divide, val_log_and_divide : Tuple of numpy arrays
+        Scaled copies of inputs train and val as dictated by scaler.
+    """
     # Take log
-    train, val = _scale_log(train, val)
-    # Get divisor (last elt of str)
+    train_log, val_log = _scale_log(train, val)
+    # The last element of the scaler string the divisor
     divisor = scaler.split('_')[-1]
     # Divide by divisor
-    train /= divisor
-    val /= divisor
-    return train, val
+    train_log_and_divide = train_log / divisor
+    val_log_and_divide = val_log / divisor
+    return train_log_and_divide, val_log_and_divide
 
 
 def _scale_log_and_range(train, val, scaler):
