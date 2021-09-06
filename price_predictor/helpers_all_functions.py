@@ -408,15 +408,46 @@ def _scale_log_and_divide(train, val, scaler):
     val /= divisor
     return train, val
 
-# Misleading name! This is short for _scale_value (a single value) as opposed
-# to a sequence.
-def _scale_val(val, a, b, minimum, maximum):
-    # Scale val into [a, b] given the max and min values of the seq
-    # it belongs to.
-    # Taken from this SO answer: https://tinyurl.com/j5rppewr
-    numerator = (b - a) * (val - minimum)
-    denominator = maximum - minimum
-    return (numerator / denominator) + a
+
+def _scale_one_value(
+        value,
+        scaled_min,
+        scaled_max,
+        global_min,
+        global_max
+        ):
+    """Scale value to the range [scaled_min, scaled_max]. The min/max
+    of the sequence/population that value comes from are global_min and
+    global_max.
+
+    Parameters
+    ----------
+    value : int or float
+        Single number to be scaled
+    scaled_min : int or float
+        The minimum value that value can be mapped to.
+    scaled_max : int or float
+        The maximum value that value can be mapped to.
+    global_min : int or float
+        The minimum value of the population value comes from. Value must
+        not be smaller than this.
+    global_max : int or float
+        The maximum value of the population value comes from. Value must
+        not be bigger than this.
+
+    Returns
+    -------
+    scaled_value: float
+        Value mapped to the range [scaled_min, scaled_max] given global_min
+        and global_max values.
+    """
+    assert value >= global_min
+    assert value <= global_max
+    # Math adapted from this SO answer: https://tinyurl.com/j5rppewr
+    numerator = (scaled_max - scaled_min) * (value - global_min)
+    denominator = global_max - global_min
+    scaled_value = (numerator / denominator) + scaled_min
+    return scaled_value
 
 
 def _scale_seq_to_range(
@@ -525,7 +556,7 @@ def convert_to_log(values, scaler, train, val):
         # may make sense to do this as a for loop (since first 2 will be iteratbvles)
         # and next two are just values
                         # Scale the values to values
-        values_scaled = [_scale_val(v, *args) if isinstance(v, (int, float)) \
+        values_scaled = [_scale_one_value(v, *args) if isinstance(v, (int, float)) \
                         else _scale_seq_to_range(v, *args) \
                         for v in values]
     elif scaler.lower() == 'log':
