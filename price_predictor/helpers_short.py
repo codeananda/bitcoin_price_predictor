@@ -370,6 +370,44 @@ def _scale_log_and_range(train, val, scaler='log_and_range_0_1'):
     return train_log_and_range, val_log_and_range
 
 
+# Create train and val sets to input into Keras model
+# we do not need test sets at this stage, just care about
+# validation, not testing
+def transform_to_keras_input(config, train, val, n_in):
+    """
+    Given train and val datasets of univariate timeseries, transform them into sequences
+    of length n_in and split into X_train, X_val, y_train, y_val.
+
+    If model is an LSTM, remove the excess elements that occur when arranging data
+    into batches (each batch fed into an RNN must be exactly the same length).
+
+    I've chosen to remove the batches here and keep everything as NumPy arrays for
+    simplicity. It may be better to work with tf.data.Datasets in general
+    e.g.
+    >>> train_dataset = tf.data.Dataset.from_tensor_slices((X_train, y_train))
+    >>> train_dataset = train_dataset.repeat().batch(config.n_batch, drop_remainder=True)
+    >>> model.fit(train_dataset, ...)
+    But this is my first project of this size and I am sticking to what I know.
+    Would be interesting to see what performance gains there would be for using
+    tf.data.Dataset all the time.
+
+    Ouputs: numpy arrays
+    """
+    # Transform to keras input
+    train_data = _series_to_supervised(train, n_in=n_in)
+    val_data = _series_to_supervised(val, n_in=n_in)
+    # Create X and y variables
+    X_train, y_train = train_data[:, :-1], train_data[:, -1]
+    X_val, y_val = val_data[:, :-1], val_data[:, -1]
+    if config.model_type.upper() == 'LSTM':
+        # Remove excess elements in the final batch.
+        X_train = remove_excess_elements(config, X_train, is_X=True)
+        X_val = remove_excess_elements(config, X_val, is_X=True)
+        y_train = remove_excess_elements(config, y_train)
+        y_val = remove_excess_elements(config, y_val)
+    return X_train, X_val, y_train, y_val
+
+
 """########## FULL PROCESS ##########"""
 def train_and_validate(config):
     # Load data
