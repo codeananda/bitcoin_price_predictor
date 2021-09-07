@@ -373,14 +373,40 @@ def _scale_log_and_range(train, val, scaler='log_and_range_0_1'):
 
 
 """########## RESHAPE ##########"""
-def _series_to_supervised(data, n_in=1, n_out=1):
+def _series_to_supervised(
+        univar_time_series,
+        input_seq_length=1,
+        output_seq_length=1):
+    """Transform a univariate time-series dataset into a supervised ML problem
+    The number of timesteps in each input sequence is input_seq_length and
+    the number of timesteps forcasted is output_seq_length.
+
+    Parameters
+    ----------
+    univar_time_series : np.ndarray
+        Numpy array containing univariate time-series data
+    input_seq_length : int, optional
+        The number of timesteps for each input sequence i.e. the number of
+        timesteps your model will use to make a single prediction, by default
+        1
+    output_seq_length : int, optional
+        The number of timesteps into the future you want to predict, by
+        default 1
+
+    Returns
+    -------
+    np.ndarray
+        Numpy array containing the transformed dataset. It has shape
+        (num_samples, input_seq_length + output_seq_length)
+        num_samples = len(univar_time_series) - input_seq_length - output_seq_length
+    """
     df = pd.DataFrame(data)
     cols = []
     # input sequence (t-n, ..., t-1)
-    for i in range(n_in, 0, -1):
+    for i in range(input_seq_length, 0, -1):
         cols.append(df.shift(i))
     # forecast sequence (t, t+1, ..., t+n)
-    for i in range(0, n_out):
+    for i in range(0, output_seq_length):
         cols.append(df.shift(-i))
     # put it all together
     agg = pd.concat(cols, axis=1)
