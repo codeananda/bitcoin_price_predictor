@@ -2,6 +2,7 @@ import numpy as np
 import pickle
 from pathlib import Path
 import tensorflow as tf
+import pandas as pd
 
 
 """########## LOAD DATA ##########"""
