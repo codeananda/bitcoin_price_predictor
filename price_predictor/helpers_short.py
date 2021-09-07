@@ -370,10 +370,73 @@ def _scale_log_and_range(train, val, scaler='log_and_range_0_1'):
     return train_log_and_range, val_log_and_range
 
 
-# Create train and val sets to input into Keras model
-# we do not need test sets at this stage, just care about
-# validation, not testing
-def transform_to_keras_input(config, train, val, n_in):
+"""########## RESHAPE ##########"""
+def _series_to_supervised(data, n_in=1, n_out=1):
+    df = pd.DataFrame(data)
+    cols = []
+    # input sequence (t-n, ..., t-1)
+    for i in range(n_in, 0, -1):
+        cols.append(df.shift(i))
+    # forecast sequence (t, t+1, ..., t+n)
+    for i in range(0, n_out):
+        cols.append(df.shift(-i))
+    # put it all together
+    agg = pd.concat(cols, axis=1)
+    # drop rows with NaN values
+    agg.dropna(inplace=True)
+    return agg.values
+
+
+def remove_excess_elements(
+        array,
+        batch_size=1512,
+        timesteps=168,
+        is_X=False):
+    """
+    Take a NumPy array and return it but with the elements removed that
+    were not included in training.
+
+    This is for training with RNNs which require all batches to be the exact
+    same length. During training, we convert numpy arrays to tf.data.Dataset
+    objects, put them in batches and drop the excess elements.
+
+    In this function we do the same process but then transform the tf.data.Dataset
+    back into a NumPy array for use later on.
+
+    Note: I feel like there must be a better way to do this. Or I am doing
+          this unnecessarily and am using the tf.data.Dataset API incorrectly.
+
+    Note 2: I included is_X as a kwarg because I thought I needed to remove
+            values from X in train_and_validate but I actually don't need to.
+
+    """
+    # Transform to tf.data.Dataset
+    a_ds = tf.data.Dataset.from_tensor_slices(array)
+    # Put into batches and drop excess elements
+    a_batch = a_ds.batch(batch_size, drop_remainder=True)
+    # Turn back into a list
+    a_list = list(a_batch.as_numpy_iterator())
+    # Turn into 2D numpy array (this is 2D becuase the data is batches and has
+    # len equal to the number of batches passed to the model during training
+    # also equivalent to the number of epochs per training round.
+    a_numpy = np.array(a_list)
+    # Turn into 1D numpy array
+    a_flat = a_numpy.ravel()
+    if is_X:
+        # Reshape to (samples, timesteps, features) if it's an X array
+        a_X_shaped = a_flat.reshape(-1, timesteps, 1)
+        return a_X_shaped
+    return a_flat
+
+
+def transform_to_keras_input(
+        config,
+        train,
+        val,
+        n_in,
+        model_type='LSTM',
+        batch_size=1512,
+        timesteps=168):
     """
     Given train and val datasets of univariate timeseries, transform them into sequences
     of length n_in and split into X_train, X_val, y_train, y_val.
@@ -399,12 +462,14 @@ def transform_to_keras_input(config, train, val, n_in):
     # Create X and y variables
     X_train, y_train = train_data[:, :-1], train_data[:, -1]
     X_val, y_val = val_data[:, :-1], val_data[:, -1]
-    if config.model_type.upper() == 'LSTM':
+    if model_type.upper() == 'LSTM':
         # Remove excess elements in the final batch.
-        X_train = remove_excess_elements(config, X_train, is_X=True)
-        X_val = remove_excess_elements(config, X_val, is_X=True)
-        y_train = remove_excess_elements(config, y_train)
-        y_val = remove_excess_elements(config, y_val)
+        X_train = remove_excess_elements(X_train, batch_size, timesteps,
+                                        is_X=True)
+        X_val = remove_excess_elements(X_val, batch_size, timesteps,
+                                      is_X=True)
+        y_train = remove_excess_elements(y_train, batch_size, timesteps)
+        y_val = remove_excess_elements(y_val, batch_size, timesteps)
     return X_train, X_val, y_train, y_val
 
 
