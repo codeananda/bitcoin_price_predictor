@@ -432,7 +432,6 @@ def remove_excess_elements(
 
 
 def transform_to_keras_input(
-        config,
         train,
         val,
         n_in,
