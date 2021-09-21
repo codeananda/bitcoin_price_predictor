@@ -484,8 +484,8 @@ def transform_to_keras_input(
     Ouputs: numpy arrays
     """
     # Transform to keras input
-    train_data = _series_to_supervised(train, n_in=n_in)
-    val_data = _series_to_supervised(val, n_in=n_in)
+    train_data = _series_to_supervised(train, input_seq_length=n_in)
+    val_data = _series_to_supervised(val, input_seq_length=n_in)
     # Create X and y variables
     X_train, y_train = train_data[:, :-1], train_data[:, -1]
     X_val, y_val = val_data[:, :-1], val_data[:, -1]
