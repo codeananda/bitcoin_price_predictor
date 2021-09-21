@@ -377,7 +377,7 @@ def _series_to_supervised(
         univar_time_series,
         input_seq_length=1,
         output_seq_length=1):
-    """Transform a univariate time-series dataset into a supervised ML problem
+    """Transform a univariate time-series dataset to a supervised ML problem.
     The number of timesteps in each input sequence is input_seq_length and
     the number of timesteps forcasted is output_seq_length.
 
@@ -400,12 +400,12 @@ def _series_to_supervised(
         (num_samples, input_seq_length + output_seq_length)
         num_samples = len(univar_time_series) - input_seq_length - output_seq_length
     """
-    df = pd.DataFrame(data)
+    df = pd.DataFrame(univar_time_series)
     cols = []
-    # input sequence (t-n, ..., t-1)
+    # Create input sequence cols (t-n, ..., t-1)
     for i in range(input_seq_length, 0, -1):
         cols.append(df.shift(i))
-    # forecast sequence (t, t+1, ..., t+n)
+    # Create forecast sequence cols (t, t+1, ..., t+n)
     for i in range(0, output_seq_length):
         cols.append(df.shift(-i))
     # put it all together
