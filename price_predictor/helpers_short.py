@@ -4,6 +4,10 @@ from pathlib import Path
 import tensorflow as tf
 import pandas as pd
 
+# We use hourly close data and want to feed in 1 week of data for each hour of
+# predictions. There are 168 hours in a week
+TIMESTEPS = 168
+
 
 """########## LOAD DATA ##########"""
 
