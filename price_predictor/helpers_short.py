@@ -548,12 +548,12 @@ def transform_to_keras_input(
     X_val, y_val = val_data[:, :-1], val_data[:, -1]
     if model_type.upper() == 'LSTM':
         # Remove excess elements in the final batch.
-        X_train = remove_excess_elements(X_train, batch_size, timesteps,
+        X_train = create_rnn_numpy_batches(X_train, batch_size, timesteps,
                                         is_X=True)
-        X_val = remove_excess_elements(X_val, batch_size, timesteps,
+        X_val = create_rnn_numpy_batches(X_val, batch_size, timesteps,
                                       is_X=True)
-        y_train = remove_excess_elements(y_train, batch_size, timesteps)
-        y_val = remove_excess_elements(y_val, batch_size, timesteps)
+        y_train = create_rnn_numpy_batches(y_train, batch_size, timesteps)
+        y_val = create_rnn_numpy_batches(y_val, batch_size, timesteps)
     return X_train, X_val, y_train, y_val
 
 
