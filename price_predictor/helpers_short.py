@@ -419,47 +419,6 @@ def _series_to_supervised(
     return agg.values
 
 
-def remove_excess_elements(
-        array,
-        batch_size=1512,
-        timesteps=168,
-        is_X=False):
-    """
-    Take a NumPy array and return it but with the elements removed that
-    were not included in training.
-
-    This is for training with RNNs which require all batches to be the exact
-    same length. During training, we convert numpy arrays to tf.data.Dataset
-    objects, put them in batches and drop the excess elements.
-
-    In this function we do the same process but then transform the tf.data.Dataset
-    back into a NumPy array for use later on.
-
-    Note: I feel like there must be a better way to do this. Or I am doing
-          this unnecessarily and am using the tf.data.Dataset API incorrectly.
-
-    Note 2: I included is_X as a kwarg because I thought I needed to remove
-            values from X in train_and_validate but I actually don't need to.
-
-    """
-    # Transform to tf.data.Dataset
-    a_ds = tf.data.Dataset.from_tensor_slices(array)
-    # Put into batches and drop excess elements
-    a_batch = a_ds.batch(batch_size, drop_remainder=True)
-    # Turn back into a list
-    a_list = list(a_batch.as_numpy_iterator())
-    # Turn into 2D numpy array (this is 2D becuase the data is batches and has
-    # len equal to the number of batches passed to the model during training
-    # also equivalent to the number of epochs per training round.
-    a_numpy = np.array(a_list)
-    # Turn into 1D numpy array
-    a_flat = a_numpy.ravel()
-    if is_X:
-        # Reshape to (samples, timesteps, features) if it's an X array
-        a_X_shaped = a_flat.reshape((-1, timesteps, 1))
-        return a_X_shaped
-    return a_flat
-
 def create_rnn_numpy_batches(
         array,
         batch_size=9,
