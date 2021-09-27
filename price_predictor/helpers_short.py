@@ -460,6 +460,59 @@ def remove_excess_elements(
         return a_X_shaped
     return a_flat
 
+def create_rnn_numpy_batches(
+        array,
+        batch_size=9,
+        timesteps=TIMESTEPS,
+        is_X=False):
+    """Transform a numpy array, so that it can be fed into an RNN.
+
+    RNNs require all batches to be the exact same length. This fucntion
+    removes excess elements from the array and so ensures all batches are the
+    same length.
+
+    Note: this probably isn't the most efficient way to work with the
+          tf.data.Dataset API. But keeping everything as numpy arrays makes
+          it easier down the road.
+
+    Parameters
+    ----------
+    array : np.ndarray
+        Numpy array containing univariate time-series data
+    batch_size : int, optional, default TIMESTEPS * 9
+        The number of samples to feed into the RNN on each batch.
+    timesteps : int, optional, default TIMESTEPS
+        The number of datapoints to feed into the RNN for each sample. If you are
+        using 10 datapoints to predict the next one, then set timesteps=10.
+    is_X : bool, default False
+        Whether the array is an X (feature) array or a y (target) array.
+        If is_X=True, the function reshapes the array to
+        (samples, timesteps, features). If is_X=False, it returns a 1-D array.
+
+    Returns
+    -------
+    array: np.ndarray
+        Numpy array shaped so that each batch is the exact same length and is
+        ready to be fed into an RNN.
+    """
+    # Transform to tf.data.Dataset
+    a_ds = tf.data.Dataset.from_tensor_slices(array)
+    # Put into batches and drop excess elements
+    a_batch = a_ds.batch(batch_size * timesteps, drop_remainder=True)
+    # Turn back into a list
+    a_list = list(a_batch.as_numpy_iterator())
+    # Turn into 2D numpy array (this is 2D becuase the data is batches and has
+    # len equal to the number of batches passed to the model during training
+    # also equivalent to the number of epochs per training round.
+    a_numpy = np.array(a_list)
+    # Turn into 1D numpy array
+    a_flat = a_numpy.ravel()
+    if is_X:
+        # Reshape to (samples, timesteps, features) if it's an X array
+        a_X_shaped = a_flat.reshape((-1, timesteps, 1))
+        return a_X_shaped
+    return a_flat
+
 
 def transform_to_keras_input(
         train,
