@@ -452,7 +452,7 @@ def remove_excess_elements(
     a_flat = a_numpy.ravel()
     if is_X:
         # Reshape to (samples, timesteps, features) if it's an X array
-        a_X_shaped = a_flat.reshape(-1, timesteps, 1)
+        a_X_shaped = a_flat.reshape((-1, timesteps, 1))
         return a_X_shaped
     return a_flat
 
