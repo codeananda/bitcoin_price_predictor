@@ -536,6 +536,9 @@ def timeseries_to_keras_input(
     return X_train, X_val, y_train, y_val
 
 
+"""########## MODEL BUILD AND FIT ##########"""
+
+
 def build_model(model_type='LSTM'):
     if model_type.upper() == 'MLP':
         model = build_MLP(config)
@@ -592,6 +595,43 @@ def build_LSTM(config):
                   optimizer=optimizer,
                   metrics=[RootMeanSquaredError()])
     return model
+
+
+def get_optimizer(config):
+    if config.use_lr_scheduler:
+        if config.lr_scheduler == 'InverseTimeDecay':
+            learning_rate_schedule = InverseTimeDecay(config.initial_lr,
+                                                    config.decay_steps,
+                                                    config.decay_rate)
+        elif config.lr_scheduler == 'ExponentialDecay':
+            learning_rate_schedule = ExponentialDecay(config.initial_lr,
+                                                    config.decay_steps,
+                                                    config.decay_rate)
+        elif config.lr_scheduler.lower() == 'custom':
+            if config.optimizer.lower() == 'adam':
+                optimizer = Adam(learning_rate=config.initial_lr)
+            elif config.optimizer.lower() == 'rmsprop':
+                optimizer = RMSprop(learning_rate=config.initial_lr)
+            else:
+                raise Exception("""Please enter a supported optimizer: Adam or RMSprop.""")
+            return optimizer
+        else:
+            raise Exception('''Please enter a supported learning rate scheduler:
+                            InverseTimeDecay or ExponentialDecay.''')
+        if config.optimizer.lower() == 'adam':
+            optimizer = Adam(learning_rate_schedule)
+        elif config.optimizer.lower() == 'rmsprop':
+            optimizer = RMSprop(learning_rate_schedule)
+        else:
+            raise Exception("""Please enter a supported optimizer: Adam or RMSprop.""")
+    else:
+        if config.optimizer.lower() == 'adam':
+            optimizer = Adam(learning_rate=config.lr)
+        elif config.optimizer.lower() == 'rmsprop':
+            optimizer = RMSprop(learning_rate=config.lr)
+        else:
+            raise Exception("""Please enter a supported optimizer: Adam or RMSprop.""")
+    return optimizer
 
 
 
