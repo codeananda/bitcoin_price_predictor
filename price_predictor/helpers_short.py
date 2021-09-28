@@ -478,7 +478,7 @@ def transform_to_keras_input(
         val,
         input_seq_length=TIMESTEPS,
         output_seq_length=1,
-        model_type='LSTM',
+        is_rnn=True,
         batch_size=9):
     """
     Given train and val datasets of univariate timeseries, transform them into
@@ -511,7 +511,7 @@ def transform_to_keras_input(
     # Create X and y variables
     X_train, y_train = train_data[:, :-1], train_data[:, -1]
     X_val, y_val = val_data[:, :-1], val_data[:, -1]
-    if model_type.upper() == 'LSTM':
+    if is_rnn:
         # Remove excess elements in the final batch.
         X_train = create_rnn_numpy_batches(X_train, batch_size, input_seq_length,
                                         is_X=True)
