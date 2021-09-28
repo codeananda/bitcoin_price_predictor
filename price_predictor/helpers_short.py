@@ -536,13 +536,14 @@ def timeseries_to_keras_input(
     return X_train, X_val, y_train, y_val
 
 
-def build_model(config):
-    if config.model_type.upper() == 'MLP':
+def build_model(model_type='LSTM'):
+    if model_type.upper() == 'MLP':
         model = build_MLP(config)
-    elif config.model_type.upper() == 'LSTM':
+    elif model_type.upper() == 'LSTM':
         model = build_LSTM(config)
     else:
-        raise Exception('Please enter a supported model type: MLP or LSTM')
+        raise ValueError(f'''Supported model types are: MLP or LSTM. You
+                             entered {model_type}''')
     return model
 
 
