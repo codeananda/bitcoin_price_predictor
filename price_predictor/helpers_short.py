@@ -476,16 +476,19 @@ def create_rnn_numpy_batches(
 def transform_to_keras_input(
         train,
         val,
-        n_in,
+        input_seq_length=1,
+        output_seq_length=1,
         model_type='LSTM',
         batch_size=1512,
-        timesteps=168):
+        timesteps=TIMESTEPS):
     """
-    Given train and val datasets of univariate timeseries, transform them into sequences
-    of length n_in and split into X_train, X_val, y_train, y_val.
+    Given train and val datasets of univariate timeseries, transform them into
+    sequences of length input_seq_length and split into X_train, X_val,
+    y_train, y_val.
 
-    If model is an LSTM, remove the excess elements that occur when arranging data
-    into batches (each batch fed into an RNN must be exactly the same length).
+    If model is an LSTM, remove the excess elements that occur when arranging
+    data into batches (each batch fed into an RNN must be exactly the same
+    length).
 
     I've chosen to remove the batches here and keep everything as NumPy arrays for
     simplicity. It may be better to work with tf.data.Datasets in general
@@ -500,8 +503,12 @@ def transform_to_keras_input(
     Ouputs: numpy arrays
     """
     # Transform to keras input
-    train_data = _series_to_supervised(train, input_seq_length=n_in)
-    val_data = _series_to_supervised(val, input_seq_length=n_in)
+    train_data = _series_to_supervised(train,
+                                       input_seq_length=input_seq_length,
+                                       output_seq_length=1)
+    val_data = _series_to_supervised(val,
+                                     input_seq_length=input_seq_length,
+                                     output_seq_length=1)
     # Create X and y variables
     X_train, y_train = train_data[:, :-1], train_data[:, -1]
     X_val, y_val = val_data[:, :-1], val_data[:, -1]
