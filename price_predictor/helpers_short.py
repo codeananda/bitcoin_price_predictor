@@ -476,11 +476,10 @@ def create_rnn_numpy_batches(
 def transform_to_keras_input(
         train,
         val,
-        input_seq_length=1,
+        input_seq_length=TIMESTEPS,
         output_seq_length=1,
         model_type='LSTM',
-        batch_size=9,
-        timesteps=TIMESTEPS):
+        batch_size=9):
     """
     Given train and val datasets of univariate timeseries, transform them into
     sequences of length input_seq_length and split into X_train, X_val,
@@ -514,13 +513,63 @@ def transform_to_keras_input(
     X_val, y_val = val_data[:, :-1], val_data[:, -1]
     if model_type.upper() == 'LSTM':
         # Remove excess elements in the final batch.
-        X_train = create_rnn_numpy_batches(X_train, batch_size, timesteps,
+        X_train = create_rnn_numpy_batches(X_train, batch_size, input_seq_length,
                                         is_X=True)
-        X_val = create_rnn_numpy_batches(X_val, batch_size, timesteps,
+        X_val = create_rnn_numpy_batches(X_val, batch_size, input_seq_length,
                                       is_X=True)
-        y_train = create_rnn_numpy_batches(y_train, batch_size, timesteps)
-        y_val = create_rnn_numpy_batches(y_val, batch_size, timesteps)
+        y_train = create_rnn_numpy_batches(y_train, batch_size, input_seq_length)
+        y_val = create_rnn_numpy_batches(y_val, batch_size, input_seq_length)
     return X_train, X_val, y_train, y_val
+
+
+def f(x, y):
+    """[summary]
+
+    Parameters
+    ----------
+    x : [type]
+        [description]
+    y : [type]
+        [description]
+
+    Returns
+    -------
+    [type]
+        [description]
+    """
+    return x * y
+
+def f(train,
+        val,
+        input_seq_length=1,
+        output_seq_length=1,
+        model_type='LSTM',
+        batch_size=9,
+        timesteps=TIMESTEPS):
+    """Given univariate timeseries datasets train and val, return X_train,
+    X_val, y_train and y_val such that the X arrays contain sequences of
+    length input_seq_length and the y arrays contain prediction sequences of
+    length output_seq_length. If model_type='LSTM', excess elements will be
+    dropped from the end of the datasets to ensure all batches are the same
+    length (batch_size)
+
+    Parameters
+    ----------
+    train : [type]
+        [description]
+    val : [type]
+        [description]
+    input_seq_length : int, optional
+        [description], by default 1
+    output_seq_length : int, optional
+        [description], by default 1
+    model_type : str, optional
+        [description], by default 'LSTM'
+    batch_size : int, optional
+        [description], by default 9
+    timesteps : [type], optional
+        [description], by default TIMESTEPS
+    """
 
 
 """########## FULL PROCESS ##########"""
