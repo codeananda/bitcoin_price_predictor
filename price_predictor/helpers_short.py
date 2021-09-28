@@ -541,8 +541,6 @@ def build_model(config):
         model = build_MLP(config)
     elif config.model_type.upper() == 'LSTM':
         model = build_LSTM(config)
-    elif config.model_type.upper() == 'LSTM_SMALL':
-        model = build_LSTM_small(config)
     else:
         raise Exception('Please enter a supported model type: MLP or LSTM')
     return model
@@ -588,23 +586,6 @@ def build_LSTM(config):
     # Single node output layer
     lstm_list.append(Dense(1))
     model = Sequential(lstm_list)
-    optimizer = get_optimizer(config)
-    model.compile(loss=config.loss,
-                  optimizer=optimizer,
-                  metrics=[RootMeanSquaredError()])
-    return model
-
-
-def build_LSTM_small(config):
-    model = Sequential([
-        LSTM(100, return_sequences=True, stateful=True,
-            batch_input_shape=(config.n_batch, config.n_input, 1)),
-        LSTM(50, return_sequences=True, stateful=True),
-        LSTM(25, return_sequences=True, stateful=True),
-        LSTM(12, return_sequences=True, stateful=True),
-        LSTM(7, stateful=True),
-        Dense(1)
-    ])
     optimizer = get_optimizer(config)
     model.compile(loss=config.loss,
                   optimizer=optimizer,
