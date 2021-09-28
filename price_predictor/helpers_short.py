@@ -532,6 +532,82 @@ def timeseries_to_keras_input(
     return X_train, X_val, y_train, y_val
 
 
+def build_model(config):
+    if config.model_type.upper() == 'MLP':
+        model = build_MLP(config)
+    elif config.model_type.upper() == 'LSTM':
+        model = build_LSTM(config)
+    elif config.model_type.upper() == 'LSTM_SMALL':
+        model = build_LSTM_small(config)
+    else:
+        raise Exception('Please enter a supported model type: MLP or LSTM')
+    return model
+
+
+def build_MLP(config):
+    # Do we need to put input_dim=config.n_input in first layer?
+    # dense_list = [Dense(config.n_nodes, activation=config.activation) for _ in range(config.num_layers)]
+    # dense_list.append(Dense(1))
+    # model = Sequential(dense_list)
+    model = Sequential([
+        Dense(500, activation='relu'),
+        Dense(250, activation='relu'),
+        Dense(125, activation='relu'),
+        Dense(62, activation='relu'),
+        Dense(30, activation='relu'),
+        Dense(15, activation='relu'),
+        Dense(7, activation='relu'),
+        Dense(1)
+    ])
+    optimizer = get_optimizer(config)
+    model.compile(loss=config.loss,
+                  optimizer=optimizer,
+                  metrics=[RootMeanSquaredError()])
+    return model
+
+
+def build_LSTM(config):
+    # Add (config.num_layers - 1) layers that return sequences
+    lstm_list = [LSTM(config.num_nodes,
+                      return_sequences=True,
+                      stateful=True,
+                      batch_input_shape=(config.n_batch, config.n_input, 1),
+                      dropout=config.dropout,
+                      recurrent_dropout=config.recurrent_dropout) for _ in range(config.num_layers - 1)]
+    # Final layer does not return sequences
+    lstm_list.append(LSTM(config.num_nodes,
+                      return_sequences=False,
+                      stateful=True,
+                      batch_input_shape=(config.n_batch, config.n_input, 1),
+                      dropout=config.dropout,
+                      recurrent_dropout=config.recurrent_dropout))
+    # Single node output layer
+    lstm_list.append(Dense(1))
+    model = Sequential(lstm_list)
+    optimizer = get_optimizer(config)
+    model.compile(loss=config.loss,
+                  optimizer=optimizer,
+                  metrics=[RootMeanSquaredError()])
+    return model
+
+
+def build_LSTM_small(config):
+    model = Sequential([
+        LSTM(100, return_sequences=True, stateful=True,
+            batch_input_shape=(config.n_batch, config.n_input, 1)),
+        LSTM(50, return_sequences=True, stateful=True),
+        LSTM(25, return_sequences=True, stateful=True),
+        LSTM(12, return_sequences=True, stateful=True),
+        LSTM(7, stateful=True),
+        Dense(1)
+    ])
+    optimizer = get_optimizer(config)
+    model.compile(loss=config.loss,
+                  optimizer=optimizer,
+                  metrics=[RootMeanSquaredError()])
+    return model
+
+
 
 """########## FULL PROCESS ##########"""
 def train_and_validate(config):
