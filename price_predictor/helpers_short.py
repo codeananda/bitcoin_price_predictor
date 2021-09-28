@@ -473,7 +473,7 @@ def create_rnn_numpy_batches(
     return a_flat
 
 
-def transform_to_keras_input(
+def timeseries_to_keras_input(
         train,
         val,
         input_seq_length=TIMESTEPS,
@@ -540,7 +540,7 @@ def train_and_validate(config):
     # Scale data
     train_scaled, val_scaled = scale_train_val(train, val, scaler=config.scaler)
     # Get data into form Keras needs
-    X_train, X_val, y_train, y_val = transform_to_keras_input(config,
+    X_train, X_val, y_train, y_val = timeseries_to_keras_input(config,
                                                               train_scaled,
                                                               val_scaled,
                                                               config.n_input)
@@ -563,7 +563,7 @@ def train_and_validate(config):
                                                        train_log,
                                                        val_log)
     # Create y_train and y_val in log form
-    _, _, y_train_log, y_val_log = transform_to_keras_input(
+    _, _, y_train_log, y_val_log = timeseries_to_keras_input(
                                                         config,
                                                         train_log,
                                                         val_log,
