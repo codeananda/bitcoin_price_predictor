@@ -479,7 +479,7 @@ def transform_to_keras_input(
         input_seq_length=1,
         output_seq_length=1,
         model_type='LSTM',
-        batch_size=1512,
+        batch_size=9,
         timesteps=TIMESTEPS):
     """
     Given train and val datasets of univariate timeseries, transform them into
