@@ -501,16 +501,17 @@ def transform_to_keras_input(
 
     Ouputs: numpy arrays
     """
-    # Transform to keras input
+    # Transform timeseries into a supervised ML problem
     train_data = _series_to_supervised(train,
                                        input_seq_length=input_seq_length,
                                        output_seq_length=1)
     val_data = _series_to_supervised(val,
                                      input_seq_length=input_seq_length,
                                      output_seq_length=1)
-    # Create X and y variables
+    # Create X and y vars (note: batches may not be the same length)
     X_train, y_train = train_data[:, :-1], train_data[:, -1]
     X_val, y_val = val_data[:, :-1], val_data[:, -1]
+    # Ensure all batches are the same length if RNN.
     if is_rnn:
         # Remove excess elements in the final batch.
         X_train = create_rnn_numpy_batches(X_train, batch_size, input_seq_length,
