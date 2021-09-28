@@ -480,26 +480,35 @@ def transform_to_keras_input(
         output_seq_length=1,
         is_rnn=True,
         batch_size=9):
-    """
-    Given train and val datasets of univariate timeseries, transform them into
-    sequences of length input_seq_length and split into X_train, X_val,
-    y_train, y_val.
+    """Given univariate timeseries datasets train and val, transform them into a
+    supervised ML problem and (if is_rnn=True) ensure all batches are the same
+    length.
 
-    If model is an LSTM, remove the excess elements that occur when arranging
-    data into batches (each batch fed into an RNN must be exactly the same
-    length).
+    Parameters
+    ----------
+    train : np.ndarray
+        Numpy array containing univariate time-series data
+    val : np.ndarray
+        Numpy array containing univariate time-series data
+    input_seq_length : int, optional
+        The number of timesteps for each input sequence i.e. the number of
+        timesteps your model uses to make a single prediction, by default
+        168 (i.e. 1 week's worth of hourly data)
+    output_seq_length : int, optional
+        The number of timesteps into the future you want to predict, by
+        default 1
+    is_rnn : bool, optional
+        RNNs require all batches to be the same length. If True, the function
+        ensures all batches are the same length, if False the last batch may
+        be shorter than the others, by default True
+    batch_size : int, optional
+        The number of samples to feed into the model on each batch. Only
+        necessary if is_rnn=True, by default 9
 
-    I've chosen to remove the batches here and keep everything as NumPy arrays for
-    simplicity. It may be better to work with tf.data.Datasets in general
-    e.g.
-    >>> train_dataset = tf.data.Dataset.from_tensor_slices((X_train, y_train))
-    >>> train_dataset = train_dataset.repeat().batch(config.n_batch, drop_remainder=True)
-    >>> model.fit(train_dataset, ...)
-    But this is my first project of this size and I am sticking to what I know.
-    Would be interesting to see what performance gains there would be for using
-    tf.data.Dataset all the time.
-
-    Ouputs: numpy arrays
+    Returns
+    -------
+    X_train, X_val, y_train, y_val: Tuple of np.ndarray
+        Numpy arrays correctly shaped and batched for Keras MLPs or RNNs.
     """
     # Transform timeseries into a supervised ML problem
     train_data = _series_to_supervised(train,
@@ -522,55 +531,6 @@ def transform_to_keras_input(
         y_val = create_rnn_numpy_batches(y_val, batch_size, input_seq_length)
     return X_train, X_val, y_train, y_val
 
-
-def f(x, y):
-    """[summary]
-
-    Parameters
-    ----------
-    x : [type]
-        [description]
-    y : [type]
-        [description]
-
-    Returns
-    -------
-    [type]
-        [description]
-    """
-    return x * y
-
-def f(train,
-        val,
-        input_seq_length=1,
-        output_seq_length=1,
-        model_type='LSTM',
-        batch_size=9,
-        timesteps=TIMESTEPS):
-    """Given univariate timeseries datasets train and val, return X_train,
-    X_val, y_train and y_val such that the X arrays contain sequences of
-    length input_seq_length and the y arrays contain prediction sequences of
-    length output_seq_length. If model_type='LSTM', excess elements will be
-    dropped from the end of the datasets to ensure all batches are the same
-    length (batch_size)
-
-    Parameters
-    ----------
-    train : [type]
-        [description]
-    val : [type]
-        [description]
-    input_seq_length : int, optional
-        [description], by default 1
-    output_seq_length : int, optional
-        [description], by default 1
-    model_type : str, optional
-        [description], by default 'LSTM'
-    batch_size : int, optional
-        [description], by default 9
-    timesteps : [type], optional
-        [description], by default TIMESTEPS
-    """
 
 
 """########## FULL PROCESS ##########"""
