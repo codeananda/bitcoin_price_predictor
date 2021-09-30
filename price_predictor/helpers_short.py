@@ -10,7 +10,7 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, LSTM
 from tensorflow.keras.metrics import RootMeanSquaredError
 from tensorflow.keras.optimizers import Adam, RMSprop
-from tensorflow.keras.callbacks import EarlyStopping
+from tensorflow.keras.callbacks import EarlyStopping, LearningRateScheduler
 
 # We use hourly close data and want to feed in 1 week of data for each hour of
 # predictions. There are 168 hours in a week
@@ -728,8 +728,8 @@ def fit_model(model, config, X_train, X_val, y_train, y_val):
     return history
 
 
-def get_callbacks(config, patience, restore_best_weights, baseline,
-                custom_lr_scheduler=None):
+def get_callbacks(patience, restore_best_weights, baseline,
+                custom_lr_scheduler=None, model_type='LSTM'):
     # EarlyStopping
     early_stop_cb = EarlyStopping(patience=patience,
                                   restore_best_weights=restore_best_weights,
@@ -738,12 +738,12 @@ def get_callbacks(config, patience, restore_best_weights, baseline,
     callbacks_list = [WandbCallback(), early_stop_cb]
     # Custom learning rate scheduler
     if custom_lr_scheduler is not None:
-        custom_lr_scheduler_cb = get_custom_lr_schduler(config)
+        custom_lr_scheduler_cb = get_custom_lr_schduler(model_type)
         callbacks_list.append(custom_lr_scheduler_cb)
     return callbacks_list
 
 
-def get_custom_lr_schduler(config):
+def get_custom_lr_schduler(model_type='LSTM'):
     """
     Define a custom LR scheduler and return the appropriate one based on
     model_type.
@@ -752,12 +752,13 @@ def get_custom_lr_schduler(config):
           functions must have a specific form as defined by Keras, so I abstracted
           that away with this func.
     """
-    if config.model_type.upper() == 'MLP':
+    if model_type.upper() == 'MLP':
         lrs = LearningRateScheduler(custom_MLP_lr_scheduler)
-    elif config.model_type.upper() == 'LSTM':
+    elif model_type.upper() == 'LSTM':
         lrs = LearningRateScheduler(custom_LSTM_lr_scheduler)
     else:
-        raise Exception('Please enter a supported model_type: MLP or LSTM.')
+        raise ValueError(f'''Supported model types are: MLP or LSTM. You
+                             entered {model_type}''')
     return lrs
 
 
