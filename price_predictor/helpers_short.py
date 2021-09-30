@@ -3,11 +3,14 @@ import pickle
 from pathlib import Path
 import tensorflow as tf
 import pandas as pd
+import wandb
+from wandb.keras import WandbCallback
 
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, LSTM
 from tensorflow.keras.metrics import RootMeanSquaredError
 from tensorflow.keras.optimizers import Adam, RMSprop
+from tensorflow.keras.callbacks import EarlyStopping
 
 # We use hourly close data and want to feed in 1 week of data for each hour of
 # predictions. There are 168 hours in a week
@@ -699,6 +702,44 @@ def get_optimizer(optimizer='adam', learning_rate=1e-4):
                              insensitive)''')
     return optimizer
 
+
+def fit_model(model, config, X_train, X_val, y_train, y_val):
+    """
+    Fit a DL model and return the history.
+
+    Note that this is model agnostic (MLP vs. LSTM) becuase of our
+    data preprocessing. Everything put into fit() is a NumPy array
+    and is the correct shape/size such that there will be no errors,
+    i.e. for LSTMs the arrays contain n elements where n is a divisor
+    of config.n_batch (no excess elements in each batch).
+    """
+    callbacks_list = get_callbacks(config)
+
+    history = model.fit(
+        X_train,
+        y_train,
+        epochs=config.n_epochs,
+        batch_size=config.n_batch,
+        verbose=config.verbose,
+        shuffle=False,
+        validation_data=(X_val, y_val),
+        callbacks=callbacks_list
+    )
+    return history
+
+
+def get_callbacks(config):
+    # EarlyStopping
+    es = EarlyStopping(patience=config.patience,
+                       restore_best_weights=config.restore_best_weights,
+                       baseline=config.early_stopping_baseline)
+    # WandB
+    callbacks_list = [WandbCallback(), es]
+    # LearningRateScheduler
+    if config.use_lr_scheduler and config.lr_scheduler.lower() == 'custom':
+        custom_lr_scheduler_callback = get_custom_lr_schduler(config)
+        callbacks_list.append(custom_lr_scheduler_callback)
+    return callbacks_list
 
 
 """########## FULL PROCESS ##########"""
