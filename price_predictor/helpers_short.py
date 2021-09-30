@@ -19,43 +19,45 @@ TIMESTEPS = 168
 
 """########## LOAD DATA ##########"""
 
-def get_download_and_data_dirs(config):
+def get_download_and_data_dirs(notebook='local'):
     """
     Return DOWNLOAD_DIR and DATA_DIR depending on the type of notebook being
     used.
 
-    Google Colab notebooks require different paths to local ones.
-
     Parameters
     ----------
-    config : WandB Config
-        Config file to control wandb experiments. Set config.notebook to
-        either 'local' or 'colab'.
+    notebook : str, optional {'local', 'colab'}
+        The type of notebook you are working in
 
     Returns
     -------
     DOWNLOAD_DIR, DATA_DIR : tuple of Path objects
         Filepaths to the download and data directories respectively
     """
-    if config.notebook.lower() == 'colab':
+    if notebook.lower() == 'colab':
         DOWNLOAD_DIR = Path('/content/drive/MyDrive/1 Projects/bitcoin_price_predictor/download')
         DATA_DIR = Path('/content/drive/MyDrive/1 Projects/bitcoin_price_predictor/data')
-    elif config.notebook.lower() == 'local':
+    elif notebook.lower() == 'local':
         DOWNLOAD_DIR = Path('../download')
         DATA_DIR = Path('../data')
     else:
-        raise ValueError('''Set config.notebook to a supported notebook type:
-                        colab or local''')
+        raise ValueError(f'''You entered {notebook} but the only supported
+                             notebook types are: colab or local''')
     return DOWNLOAD_DIR, DATA_DIR
 
 
-def load_dataset_1(config):
+def load_dataset_1(notebook='local', drop_first_900_train_elements=True):
     """Load dataset 1 as defined in data/define_datasets_1_and_2.png
 
     Parameters
     ----------
-    config : WandB Config
-        Config file to control wandb experiments
+    notebook : str, optional {'local', 'colab'}
+        The type of notebook you are working in
+    drop_first_900_train_elements : bool, optional
+        Whether to drop the first 900 training elements or not. The first 900
+        hours (37.5 days) of data contains many missing values. Since it is
+        such a small time window, you may want to drop it rather than trying
+        to impute missing values.
 
     Returns
     -------
@@ -63,10 +65,10 @@ def load_dataset_1(config):
         Numpy arrays containing the train/val/test univariate Bitcoin close
         price datasets as defined in data/define_datasets_1_and_2.png
     """
-    _, DATA_DIR = get_download_and_data_dirs(config)
+    _, DATA_DIR = get_download_and_data_dirs(notebook)
     with open(DATA_DIR / 'train_1.pkl', 'rb') as f:
         train_1 = pickle.load(f)
-        if config.drop_first_900_train_elements:
+        if drop_first_900_train_elements:
             train_1 = train_1[900:]
 
     with open(DATA_DIR / 'val_1.pkl', 'rb') as f:
@@ -78,13 +80,13 @@ def load_dataset_1(config):
     return train_1, val_1, test_1
 
 
-def load_dataset_2(config):
+def load_dataset_2(notebook='local'):
     """Load dataset 2 as defined in data/define_datasets_1_and_2.png
 
     Parameters
     ----------
-    config : WandB Config
-        Config file to control wandb experiments
+    notebook : str, optional {'local', 'colab'}
+        The type of notebook you are working in
 
     Returns
     -------
@@ -95,7 +97,7 @@ def load_dataset_2(config):
         Note: there is no test dataset included due to the limited amount of
         data available after train_2 ends.
     """
-    _, DATA_DIR = get_download_and_data_dirs(config)
+    _, DATA_DIR = get_download_and_data_dirs(notebook)
     with open(DATA_DIR / 'train_2.pkl', 'rb') as f:
         train_2 = pickle.load(f)
 
@@ -105,14 +107,23 @@ def load_dataset_2(config):
     return train_2, val_2
 
 
-def load_train_and_val_data(config):
+def load_train_and_val_data(dataset=1,
+                            notebook='local',
+                            drop_first_900_train_elements_dataset_1=True):
     """Convenience function to load just the train and val datasets from
-    either dataset 1 or 2 (as controlled by the config)
+    either dataset 1 or 2 (as defined in data/define_datasets_1_and_2.png)
 
     Parameters
     ----------
-    config : WandB Config
-        Config file to control wandb experiments
+    dataset : int, optional {1, 2}
+        The dataset you wish to load as defined in data/define_datasets_1_and_2.png
+    notebook : str, optional {'local', 'colab'}
+        The type of notebook you are working in
+    drop_first_900_train_elements_dataset_1 : bool, optional
+        Whether to drop the first 900 training elements of dataset 1 or not.
+        The first 900 hours (37.5 days) of data contains many missing values.
+        Since it is such a small time window, you may want to drop it rather
+        than trying to impute missing values.
 
     Returns
     -------
@@ -120,12 +131,14 @@ def load_train_and_val_data(config):
         Numpy arrays containing the train/val univariate Bitcoin close
         datasets as defined in data/define_datasets_1_and_2.png
     """
-    if config.dataset == 1:
-        train, val, _ = load_dataset_1(config)
-    elif config.dataset == 2:
-        train, val = load_dataset_2(config)
+    if dataset == 1:
+        train, val, _ = load_dataset_1(notebook,
+                                    drop_first_900_train_elements_dataset_1)
+    elif dataset == 2:
+        train, val = load_dataset_2(notebook)
     else:
-        raise ValueError('Set config.dataset to a supported dataset: 1 or 2')
+        raise ValueError(f'''You entered {dataset} for dataset but the only
+                             supported values are: 1 or 2''')
     return train, val
 
 
