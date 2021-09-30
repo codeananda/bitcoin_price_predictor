@@ -728,17 +728,18 @@ def fit_model(model, config, X_train, X_val, y_train, y_val):
     return history
 
 
-def get_callbacks(config):
+def get_callbacks(config, patience, restore_best_weights, baseline,
+                custom_lr_scheduler=None):
     # EarlyStopping
-    es = EarlyStopping(patience=config.patience,
-                       restore_best_weights=config.restore_best_weights,
-                       baseline=config.early_stopping_baseline)
+    early_stop_cb = EarlyStopping(patience=patience,
+                                  restore_best_weights=restore_best_weights,
+                                  baseline=baseline)
     # WandB
-    callbacks_list = [WandbCallback(), es]
-    # LearningRateScheduler
-    if config.use_lr_scheduler and config.lr_scheduler.lower() == 'custom':
-        custom_lr_scheduler_callback = get_custom_lr_schduler(config)
-        callbacks_list.append(custom_lr_scheduler_callback)
+    callbacks_list = [WandbCallback(), early_stop_cb]
+    # Custom learning rate scheduler
+    if custom_lr_scheduler is not None:
+        custom_lr_scheduler_cb = get_custom_lr_schduler(config)
+        callbacks_list.append(custom_lr_scheduler_cb)
     return callbacks_list
 
 
