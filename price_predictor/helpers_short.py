@@ -599,15 +599,7 @@ def build_LSTM(config):
 
 def get_optimizer(config):
     if config.use_lr_scheduler:
-        if config.lr_scheduler == 'InverseTimeDecay':
-            learning_rate_schedule = InverseTimeDecay(config.initial_lr,
-                                                    config.decay_steps,
-                                                    config.decay_rate)
-        elif config.lr_scheduler == 'ExponentialDecay':
-            learning_rate_schedule = ExponentialDecay(config.initial_lr,
-                                                    config.decay_steps,
-                                                    config.decay_rate)
-        elif config.lr_scheduler.lower() == 'custom':
+        if config.lr_scheduler.lower() == 'custom':
             if config.optimizer.lower() == 'adam':
                 optimizer = Adam(learning_rate=config.initial_lr)
             elif config.optimizer.lower() == 'rmsprop':
@@ -616,8 +608,7 @@ def get_optimizer(config):
                 raise Exception("""Please enter a supported optimizer: Adam or RMSprop.""")
             return optimizer
         else:
-            raise Exception('''Please enter a supported learning rate scheduler:
-                            InverseTimeDecay or ExponentialDecay.''')
+            raise Exception('''Only 'custom' LR scheduling is supported.''')
         if config.optimizer.lower() == 'adam':
             optimizer = Adam(learning_rate_schedule)
         elif config.optimizer.lower() == 'rmsprop':
