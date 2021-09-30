@@ -431,10 +431,11 @@ def create_rnn_numpy_batches(
         array,
         batch_size=500,
         timesteps=TIMESTEPS,
-        is_X=False):
+        features=1,
+        array_type='X'):
     """Transform a numpy array, so that it can be fed into an RNN.
 
-    RNNs require all batches to be the exact same length. This fucntion
+    RNNs require all batches to be the exact same length. This function
     removes excess elements from the array and so ensures all batches are the
     same length.
 
@@ -451,13 +452,17 @@ def create_rnn_numpy_batches(
         your data, pick a value that perfectly divides len(array). To keep
         most, pick the value with the smallest remainder after
         len(array) / batch_size
-    timesteps : int, optional, default 168 i.e. 1 week of hourly data
-        The number of datapoints to feed into the RNN for each sample. If you are
-        using 10 datapoints to predict the next one, then set timesteps=10.
-    is_X : bool, default False
-        Whether the array is an X (feature) array or a y (target) array.
-        If is_X=True, the function reshapes the array to
-        (samples, timesteps, features). If is_X=False, it returns a 1-D array.
+    timesteps : int, optional
+        The number of datapoints to feed into the RNN for each sample. If you
+        are using 10 datapoints to predict the next one, then set
+        timesteps=10, by default 168 i.e. 1 week of hourly data
+    features : int
+        The number of features the array contains, by default 1 (for
+        univariate timeseries data)
+    array_type : str {'X', 'y'}
+        Whether the array represents X or y data. X data is shaped into
+        (num_samples, timesteps, features), y is shaped into
+        (num_samples, timesteps), by default 'X'
 
     Returns
     -------
@@ -471,17 +476,22 @@ def create_rnn_numpy_batches(
     a_batch = a_ds.batch(batch_size, drop_remainder=True)
     # Turn back into a list
     a_list = list(a_batch.as_numpy_iterator())
-    # Turn into 2D numpy array (this is 2D becuase the data is batches and has
-    # len equal to the number of batches passed to the model during training
-    # also equivalent to the number of epochs per training round.
+
+    # a_numpy is a 3D array shape (total_num_batches, batch_size, timesteps)
+    # where total_num_batches = int(len(array) / batch_size)
     a_numpy = np.array(a_list)
-    # Turn into 1D numpy array
-    a_flat = a_numpy.ravel()
-    if is_X:
+    # Reshape into Keras-acceptable shapes
+    if array_type.upper() == 'X':
         # Reshape to (samples, timesteps, features) if it's an X array
-        a_X_shaped = a_flat.reshape((-1, timesteps, 1))
-        return a_X_shaped
-    return a_flat
+        a_rnn = a_numpy.reshape((-1, timesteps, features))
+    elif array_type.lower() == 'y':
+        # Reshape to (num_samples, timesteps)
+        a_rnn = a_numpy.reshape((-1, timesteps))
+    else:
+        raise ValueError(f'''You entered {array_type} but the only supported
+                             array_type values are: 'X' and 'y' ''')
+    return a_rnn
+
 
 
 def timeseries_to_keras_input(
