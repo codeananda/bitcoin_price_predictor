@@ -551,11 +551,7 @@ def build_model(model_type='LSTM'):
     return model
 
 
-def build_MLP(config):
-    # Do we need to put input_dim=config.n_input in first layer?
-    # dense_list = [Dense(config.n_nodes, activation=config.activation) for _ in range(config.num_layers)]
-    # dense_list.append(Dense(1))
-    # model = Sequential(dense_list)
+def build_MLP(optimizer, learning_rate, loss):
     model = Sequential([
         Dense(500, activation='relu'),
         Dense(250, activation='relu'),
@@ -566,10 +562,10 @@ def build_MLP(config):
         Dense(7, activation='relu'),
         Dense(1)
     ])
-    optimizer = get_optimizer(optimizer=config.optimizer,
-                              learning_rate=config.lr)
-    model.compile(loss=config.loss,
-                  optimizer=optimizer,
+    optimizer_object = get_optimizer(optimizer=optimizer,
+                                    learning_rate=learning_rate)
+    model.compile(loss=loss,
+                  optimizer=optimizer_object,
                   metrics=[RootMeanSquaredError()])
     return model
 
