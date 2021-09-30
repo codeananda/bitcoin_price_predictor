@@ -738,7 +738,7 @@ def get_callbacks(patience, restore_best_weights, baseline,
     callbacks_list = [WandbCallback(), early_stop_cb]
     # Custom learning rate scheduler
     if custom_lr_scheduler is not None:
-        custom_lr_scheduler_cb = get_custom_lr_schduler(model_type)
+        custom_lr_scheduler_cb = get_custom_lr_scheduler(model_type)
         callbacks_list.append(custom_lr_scheduler_cb)
     return callbacks_list
 
