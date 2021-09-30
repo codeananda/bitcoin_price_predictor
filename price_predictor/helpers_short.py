@@ -570,15 +570,16 @@ def build_MLP(optimizer='adam', learning_rate=1e-4, loss='mse'):
     return model
 
 
-def build_LSTM(optimizer, learning_rate, loss,
-              num_nodes, batch_size, timesteps, num_layers):
+def build_LSTM(optimizer='adam', learning_rate=1e-4, loss='mse',
+              num_nodes=50, batch_size=9, timesteps=168, num_layers=2):
+    ## BUILD LSTM
     # Add (num_layers - 1) layers that return sequences
     lstm_list = [LSTM(num_nodes,
                       return_sequences=True,
                       stateful=True,
                       batch_input_shape=(batch_size, timesteps, 1)
                       ) for _ in range(num_layers - 1)]
-    # Final layer does not return sequences
+    # Add a final layer that does not return sequences
     lstm_list.append(LSTM(num_nodes,
                       return_sequences=False,
                       stateful=True,
@@ -586,6 +587,8 @@ def build_LSTM(optimizer, learning_rate, loss,
     # Single node output layer
     lstm_list.append(Dense(1))
     model = Sequential(lstm_list)
+
+    ## COMPILE LSTM
     optimizer_object = get_optimizer(optimizer=optimizer,
                               learning_rate=learning_rate)
     model.compile(loss=loss,
