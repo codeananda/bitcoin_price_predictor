@@ -7,6 +7,7 @@ import pandas as pd
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, LSTM
 from tensorflow.keras.metrics import RootMeanSquaredError
+from tensorflow.keras.optimizers import Adam, RMSprop
 
 # We use hourly close data and want to feed in 1 week of data for each hour of
 # predictions. There are 168 hours in a week
