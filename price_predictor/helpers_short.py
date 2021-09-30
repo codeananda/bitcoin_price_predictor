@@ -598,11 +598,26 @@ def build_LSTM(config):
     return model
 
 
-def get_optimizer(optimizer='adam', initial_lr=1e-3):
+def get_optimizer(optimizer='adam', learning_rate=1e-3):
+    """Given an optimizer and a learning rate, return the optimizer
+    object with the learning rate set.
+
+    Parameters
+    ----------
+    optimizer : str, optional {'adam', 'rmsprop'}
+        The Keras optimizer you would like to use. Input is case insensitive
+    learning_rate : float, optional, default 1e-3
+        The learning rate
+
+    Returns
+    -------
+    optimizer: tf.keras.optimizer object
+        Optimizer object with the given learning rate
+    """
     if optimizer.lower() == 'adam':
-        optimizer = Adam(learning_rate=initial_lr)
+        optimizer = Adam(learning_rate=learning_rate)
     elif optimizer.lower() == 'rmsprop':
-        optimizer = RMSprop(learning_rate=initial_lr)
+        optimizer = RMSprop(learning_rate=learning_rate)
     else:
         raise ValueError(f'''You entered {optimizer} but the only supporterd
                              optimizers are: Adam and RMSprop.''')
