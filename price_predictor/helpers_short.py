@@ -620,7 +620,8 @@ def get_optimizer(optimizer='adam', learning_rate=1e-3):
         optimizer = RMSprop(learning_rate=learning_rate)
     else:
         raise ValueError(f'''You entered {optimizer} but the only supporterd
-                             optimizers are: Adam and RMSprop.''')
+                             optimizers are: Adam and RMSprop (case
+                             insensitive)''')
     return optimizer
 
 
