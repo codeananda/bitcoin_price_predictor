@@ -730,53 +730,6 @@ def get_optimizer(optimizer='adam', learning_rate=1e-4):
     return optimizer
 
 
-def fit_model(model, X_train, X_val, y_train, y_val,
-              epochs=50, batch_size=500, verbose=2, **kwargs):
-    """Fit a model with the given params and return the history
-
-    Parameters
-    ----------
-    model : Compiled Keras model
-        A compiled Keras model
-    X_train : np.ndarray
-
-        Feature data used for training
-    X_val : np.ndarray
-        The
-        Feature data used for validation
-    y_train : np.ndarray
-        Target data used for training
-    y_val : np.ndarray
-        Target data used for validation
-    epochs : int, optional
-        The number of epochs to train for, by default 50
-    batch_size : int, optional
-        The number of sequences to feed into the model on each batch, by
-        default 500
-    verbose : int, optional {0, 1, 2}
-        The verbosity level of the Keras fit() method, by default 2
-    **kwargs:
-        All other kwargs are passed to the get_callbacks function
-
-    Returns
-    -------
-    history
-        Keras history object
-    """
-    callbacks_list = get_callbacks(**kwargs)
-
-    history = model.fit(
-        X_train,
-        y_train,
-        epochs=epochs,
-        batch_size=batch_size,
-        verbose=verbose,
-        shuffle=False,
-        validation_data=(X_val, y_val),
-        callbacks=callbacks_list
-    )
-    return history
-
 
 def get_callbacks(patience=10,
                   restore_best_weights=True,
@@ -905,7 +858,22 @@ def train_and_validate(config):
                                                               config.n_input)
     # Build and fit model
     model = build_model(config)
-    history = fit_model(model, config, X_train, X_val, y_train, y_val)
+    callbacks_list = get_callbacks(patience=config.patience,
+                                  restore_best_weights=True,
+                                  custom_lr_scheduler=True,
+                                  model_type='LSTM')
+
+    history = model.fit(
+        X_train,
+        y_train,
+        epochs=50,
+        batch_size=500,
+        verbose=2,
+        shuffle=False,
+        validation_data=(X_val, y_val),
+        callbacks=callbacks_list
+    )
+
     # Plot loss, rmse, and 1-rmse curves
     plot_metric(history, metric='loss', start_epoch=config.start_plotting_epoch)
     plot_metric(history, metric='root_mean_squared_error', start_epoch=config.start_plotting_epoch)
