@@ -731,15 +731,37 @@ def get_optimizer(optimizer='adam', learning_rate=1e-4):
 
 
 def fit_model(model, X_train, X_val, y_train, y_val,
-              epochs, batch_size, verbose, **kwargs):
-    """
-    Fit a DL model and return the history.
+              epochs=50, batch_size=500, verbose=2, **kwargs):
+    """Fit a model with the given params and return the history
 
-    Note that this is model agnostic (MLP vs. LSTM) becuase of our
-    data preprocessing. Everything put into fit() is a NumPy array
-    and is the correct shape/size such that there will be no errors,
-    i.e. for LSTMs the arrays contain n elements where n is a divisor
-    of batch_size (no excess elements in each batch).
+    Parameters
+    ----------
+    model : Compiled Keras model
+        A compiled Keras model
+    X_train : np.ndarray
+
+        Feature data used for training
+    X_val : np.ndarray
+        The
+        Feature data used for validation
+    y_train : np.ndarray
+        Target data used for training
+    y_val : np.ndarray
+        Target data used for validation
+    epochs : int, optional
+        The number of epochs to train for, by default 50
+    batch_size : int, optional
+        The number of sequences to feed into the model on each batch, by
+        default 500
+    verbose : int, optional {0, 1, 2}
+        The verbosity level of the Keras fit() method, by default 2
+    **kwargs:
+        All other kwargs are passed to the get_callbacks function
+
+    Returns
+    -------
+    history
+        Keras history object
     """
     callbacks_list = get_callbacks(**kwargs)
 
