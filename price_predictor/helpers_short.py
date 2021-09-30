@@ -598,25 +598,14 @@ def build_LSTM(config):
     return model
 
 
-def get_optimizer(config):
-    if config.use_lr_scheduler:
-        if config.lr_scheduler.lower() == 'custom':
-            if config.optimizer.lower() == 'adam':
-                optimizer = Adam(learning_rate=config.initial_lr)
-            elif config.optimizer.lower() == 'rmsprop':
-                optimizer = RMSprop(learning_rate=config.initial_lr)
-            else:
-                raise Exception("""Please enter a supported optimizer: Adam or RMSprop.""")
-            return optimizer
-        else:
-            raise Exception('''Only 'custom' LR scheduling is supported.''')
+def get_optimizer(optimizer='adam', initial_lr=1e-3):
+    if optimizer.lower() == 'adam':
+        optimizer = Adam(learning_rate=initial_lr)
+    elif optimizer.lower() == 'rmsprop':
+        optimizer = RMSprop(learning_rate=initial_lr)
     else:
-        if config.optimizer.lower() == 'adam':
-            optimizer = Adam(learning_rate=config.lr)
-        elif config.optimizer.lower() == 'rmsprop':
-            optimizer = RMSprop(learning_rate=config.lr)
-        else:
-            raise Exception("""Please enter a supported optimizer: Adam or RMSprop.""")
+        raise ValueError(f'''You entered {optimizer} but the only supporterd
+                             optimizers are: Adam and RMSprop.''')
     return optimizer
 
 
