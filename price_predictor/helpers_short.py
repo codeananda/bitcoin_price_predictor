@@ -566,7 +566,8 @@ def build_MLP(config):
         Dense(7, activation='relu'),
         Dense(1)
     ])
-    optimizer = get_optimizer(config)
+    optimizer = get_optimizer(optimizer=config.optimizer,
+                              learning_rate=config.lr)
     model.compile(loss=config.loss,
                   optimizer=optimizer,
                   metrics=[RootMeanSquaredError()])
@@ -591,7 +592,8 @@ def build_LSTM(config):
     # Single node output layer
     lstm_list.append(Dense(1))
     model = Sequential(lstm_list)
-    optimizer = get_optimizer(config)
+    optimizer = get_optimizer(optimizer=config.optimizer,
+                              learning_rate=config.lr)
     model.compile(loss=config.loss,
                   optimizer=optimizer,
                   metrics=[RootMeanSquaredError()])
