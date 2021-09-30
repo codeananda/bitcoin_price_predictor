@@ -728,8 +728,38 @@ def fit_model(model, config, X_train, X_val, y_train, y_val):
     return history
 
 
-def get_callbacks(patience, restore_best_weights, baseline,
-                custom_lr_scheduler=None, model_type='LSTM'):
+def get_callbacks(patience=10,
+                  restore_best_weights=True,
+                  baseline=None,
+                  custom_lr_scheduler=None,
+                  model_type='LSTM'):
+    """Return a list of callbacks containing EarlyStopping, WandB and
+    (optionally) a custom learning rate scheduler with the given params
+
+    Parameters
+    ----------
+    patience : int, optional
+        Number of epochs with no improvement after which training will be
+        stopped, by default 10
+    restore_best_weights : bool, optional
+        Whether to restore model weights from the epoch with the best value of
+        the monitored quantity. If False, the model weights obtained at the
+        last step of training are used, by default True
+    baseline : Float, optional
+        Baseline value for the monitored quantity. Training will stop if the
+        model doesn't show improvement over the baseline, by default None
+    custom_lr_scheduler : Bool, optional
+        Whether to include a custom learning rate scheduler in the callbacks
+        list or not, by default None
+    model_type : str, optional
+        The type of model the callbacks will be used with, by default 'LSTM'
+
+    Returns
+    -------
+    List
+        A list of callbacks containing EarlyStopping, WandB and
+        (optionally) a custom learning rate scheduler with the given params
+    """
     # EarlyStopping
     early_stop_cb = EarlyStopping(patience=patience,
                                   restore_best_weights=restore_best_weights,
@@ -744,13 +774,17 @@ def get_callbacks(patience, restore_best_weights, baseline,
 
 
 def get_custom_lr_scheduler(model_type='LSTM'):
-    """
-    Define a custom LR scheduler and return the appropriate one based on
-    model_type.
+    """For the given model_type, return a custom LR scheduling callback
 
-    Note: I cannot do this with one function. The custom_lr_schduler(epoch, lr)
-          functions must have a specific form as defined by Keras, so I abstracted
-          that away with this func.
+    Parameters
+    ----------
+    model_type: str, optional {'LSTM', 'MLP'}
+        The type of model you want a schedule for, by default 'LSTM'
+
+    Returns
+    -------
+    lrs: Callback
+        Custom learning rate scheduler callback ready for use in training
     """
     if model_type.upper() == 'MLP':
         lrs = LearningRateScheduler(custom_MLP_lr_scheduler)
@@ -763,6 +797,20 @@ def get_custom_lr_scheduler(model_type='LSTM'):
 
 
 def custom_MLP_lr_scheduler(epoch, lr):
+    """Learning rate schedule for use with MLPs
+
+    Parameters
+    ----------
+    epoch : int
+        The current epoch of training
+    lr : float
+        The current learning rate
+
+    Returns
+    -------
+    Float
+        The learning rate for the next epoch of training
+    """
     if epoch <= 4:
         return 1e-4
     elif epoch <= 10:
@@ -772,6 +820,20 @@ def custom_MLP_lr_scheduler(epoch, lr):
 
 
 def custom_LSTM_lr_scheduler(epoch, lr):
+    """Learning rate schedule for use with LSTMs
+
+    Parameters
+    ----------
+    epoch : int
+        The current epoch of training
+    lr : float
+        The current learning rate
+
+    Returns
+    -------
+    Float
+        The learning rate for the next epoch of training
+    """
     if epoch <= 3:
         return 1e-3
     # elif epoch <= 17:
