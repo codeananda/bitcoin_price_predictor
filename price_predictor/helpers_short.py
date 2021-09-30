@@ -540,11 +540,17 @@ def timeseries_to_keras_input(
 """########## MODEL BUILD AND FIT ##########"""
 
 
-def build_model(model_type='LSTM'):
+def build_model(model_type='LSTM',
+                optimizer='adam',
+                learning_rate=1e-4,
+                loss='mse',
+                **kwargs):
     if model_type.upper() == 'MLP':
-        model = build_MLP(config)
+        model = build_MLP(optimizer=optimizer, learning_rate=learning_rate,
+                          loss=loss)
     elif model_type.upper() == 'LSTM':
-        model = build_LSTM(config)
+        model = build_LSTM(optimizer=optimizer, learning_rate=learning_rate,
+                          loss=loss, **kwargs)
     else:
         raise ValueError(f'''Supported model types are: MLP or LSTM. You
                              entered {model_type}''')
