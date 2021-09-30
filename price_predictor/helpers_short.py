@@ -429,7 +429,7 @@ def _series_to_supervised(
 
 def create_rnn_numpy_batches(
         array,
-        batch_size=9,
+        batch_size=500,
         timesteps=TIMESTEPS,
         is_X=False):
     """Transform a numpy array, so that it can be fed into an RNN.
@@ -446,8 +446,11 @@ def create_rnn_numpy_batches(
     ----------
     array : np.ndarray
         Numpy array containing univariate time-series data
-    batch_size : int, optional, default 9
-        The number of samples to feed into the RNN on each batch.
+    batch_size : int, optional, default 500
+        The number of samples to feed into the RNN on each batch. To keep all
+        your data, pick a value that perfectly divides len(array). To keep
+        most, pick the value with the smallest remainder after
+        len(array) / batch_size
     timesteps : int, optional, default 168 i.e. 1 week of hourly data
         The number of datapoints to feed into the RNN for each sample. If you are
         using 10 datapoints to predict the next one, then set timesteps=10.
@@ -465,7 +468,7 @@ def create_rnn_numpy_batches(
     # Transform to tf.data.Dataset
     a_ds = tf.data.Dataset.from_tensor_slices(array)
     # Put into batches and drop excess elements
-    a_batch = a_ds.batch(batch_size * timesteps, drop_remainder=True)
+    a_batch = a_ds.batch(batch_size, drop_remainder=True)
     # Turn back into a list
     a_list = list(a_batch.as_numpy_iterator())
     # Turn into 2D numpy array (this is 2D becuase the data is batches and has
@@ -703,7 +706,8 @@ def get_optimizer(optimizer='adam', learning_rate=1e-4):
     return optimizer
 
 
-def fit_model(model, config, X_train, X_val, y_train, y_val):
+def fit_model(model, X_train, X_val, y_train, y_val,
+              epochs, batch_size, verbose, **kwargs):
     """
     Fit a DL model and return the history.
 
@@ -711,16 +715,16 @@ def fit_model(model, config, X_train, X_val, y_train, y_val):
     data preprocessing. Everything put into fit() is a NumPy array
     and is the correct shape/size such that there will be no errors,
     i.e. for LSTMs the arrays contain n elements where n is a divisor
-    of config.n_batch (no excess elements in each batch).
+    of batch_size (no excess elements in each batch).
     """
-    callbacks_list = get_callbacks(config)
+    callbacks_list = get_callbacks(**kwargs)
 
     history = model.fit(
         X_train,
         y_train,
-        epochs=config.n_epochs,
-        batch_size=config.n_batch,
-        verbose=config.verbose,
+        epochs=epochs,
+        batch_size=batch_size,
+        verbose=verbose,
         shuffle=False,
         validation_data=(X_val, y_val),
         callbacks=callbacks_list
