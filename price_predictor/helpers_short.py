@@ -545,6 +545,33 @@ def build_model(model_type='LSTM',
                 learning_rate=1e-4,
                 loss='mse',
                 **kwargs):
+    """Build, compile and return a model of the given type with the given
+    params
+
+    Parameters
+    ----------
+    model_type : str, optional {'LSTM', 'MLP'}
+        The type of model to build, by default 'LSTM'
+    optimizer : str, optional {'adam', 'rmsprop'}
+        The Keras optimizer you would like to use (case insensitive input), by
+        default 'adam'
+    learning_rate : float, optional
+        The learning rate, by default 1e-4
+    loss : str, optional {all keras losses are accepted}
+        Keras loss to use, by default 'mse'
+    **kwargs :
+        All other kwargs are passed to the build_LSTM constructor
+
+    Returns
+    -------
+    model : Keras model
+        Compiled Keras model with the given params
+
+    Raises
+    ------
+    ValueError
+        If you pass a model type that is not one of 'MLP' or 'LSTM' (case insensitive)
+    """
     if model_type.upper() == 'MLP':
         model = build_MLP(optimizer=optimizer, learning_rate=learning_rate,
                           loss=loss)
@@ -558,6 +585,23 @@ def build_model(model_type='LSTM',
 
 
 def build_MLP(optimizer='adam', learning_rate=1e-4, loss='mse'):
+    """Build, compile and return an MLP model of with the given params
+
+    Parameters
+    ----------
+    optimizer : str, optional {'adam', 'rmsprop'}
+        The Keras optimizer you would like to use (case insensitive input), by
+        default 'adam'
+    learning_rate : float, optional
+        The learning rate, by default 1e-4
+    loss : str, optional {all keras losses are accepted}
+        Keras loss to use, by default 'mse'
+
+    Returns
+    -------
+    model
+        MLP sequential Keras model compiled with given params
+    """
     model = Sequential([
         Dense(500, activation='relu'),
         Dense(250, activation='relu'),
@@ -578,6 +622,32 @@ def build_MLP(optimizer='adam', learning_rate=1e-4, loss='mse'):
 
 def build_LSTM(optimizer='adam', learning_rate=1e-4, loss='mse',
               num_nodes=50, batch_size=9, timesteps=168, num_layers=2):
+    """Build, compile and return an LSTM model of with the given params
+
+    Parameters
+    ----------
+    optimizer : str, optional {'adam', 'rmsprop'}
+        The Keras optimizer you would like to use (case insensitive input), by
+        default 'adam'
+    learning_rate : float, optional
+        The learning rate, by default 1e-4
+    loss : str, optional {all keras losses are accepted}
+        Keras loss to use, by default 'mse'
+    num_nodes : int, optional
+        The number of nodes in each LSTM layer, by default 50
+    batch_size : int, optional
+        The number of sequences fed into the LSTM on each batch, by default 9
+    timesteps : int, optional
+        The length of each sequence fed into the model, by default 168 (i.e.
+        one week's worth of hourly data)
+    num_layers : int, optional
+        The total number of LSTMs to stack, by default 2
+
+    Returns
+    -------
+    model
+        Built and compiled LSTM model with the given params.
+    """
     ## BUILD LSTM
     # Add (num_layers - 1) layers that return sequences
     lstm_list = [LSTM(num_nodes,
@@ -610,8 +680,8 @@ def get_optimizer(optimizer='adam', learning_rate=1e-4):
     Parameters
     ----------
     optimizer : str, optional {'adam', 'rmsprop'}
-        The Keras optimizer you would like to use. Input is case insensitive
-    learning_rate : float, optional, default 1e-3
+        The Keras optimizer you would like to use (case insensitive input)
+    learning_rate : float, optional, default 1e-4
         The learning rate
 
     Returns
