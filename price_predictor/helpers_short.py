@@ -442,9 +442,9 @@ def create_rnn_numpy_batches(
     ----------
     array : np.ndarray
         Numpy array containing univariate time-series data
-    batch_size : int, optional, default TIMESTEPS * 9
+    batch_size : int, optional, default 9
         The number of samples to feed into the RNN on each batch.
-    timesteps : int, optional, default TIMESTEPS
+    timesteps : int, optional, default 168 i.e. 1 week of hourly data
         The number of datapoints to feed into the RNN for each sample. If you are
         using 10 datapoints to predict the next one, then set timesteps=10.
     is_X : bool, default False
