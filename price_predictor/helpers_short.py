@@ -610,12 +610,6 @@ def get_optimizer(config):
             return optimizer
         else:
             raise Exception('''Only 'custom' LR scheduling is supported.''')
-        if config.optimizer.lower() == 'adam':
-            optimizer = Adam(learning_rate_schedule)
-        elif config.optimizer.lower() == 'rmsprop':
-            optimizer = RMSprop(learning_rate_schedule)
-        else:
-            raise Exception("""Please enter a supported optimizer: Adam or RMSprop.""")
     else:
         if config.optimizer.lower() == 'adam':
             optimizer = Adam(learning_rate=config.lr)
