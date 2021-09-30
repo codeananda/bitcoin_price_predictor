@@ -551,7 +551,7 @@ def build_model(model_type='LSTM'):
     return model
 
 
-def build_MLP(optimizer, learning_rate, loss):
+def build_MLP(optimizer='adam', learning_rate=1e-3, loss='mse'):
     model = Sequential([
         Dense(500, activation='relu'),
         Dense(250, activation='relu'),
