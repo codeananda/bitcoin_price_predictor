@@ -743,6 +743,42 @@ def get_callbacks(config, patience, restore_best_weights, baseline,
     return callbacks_list
 
 
+def get_custom_lr_schduler(config):
+    """
+    Define a custom LR scheduler and return the appropriate one based on
+    model_type.
+
+    Note: I cannot do this with one function. The custom_lr_schduler(epoch, lr)
+          functions must have a specific form as defined by Keras, so I abstracted
+          that away with this func.
+    """
+    if config.model_type.upper() == 'MLP':
+        lrs = LearningRateScheduler(custom_MLP_lr_scheduler)
+    elif config.model_type.upper() == 'LSTM':
+        lrs = LearningRateScheduler(custom_LSTM_lr_scheduler)
+    else:
+        raise Exception('Please enter a supported model_type: MLP or LSTM.')
+    return lrs
+
+
+def custom_MLP_lr_scheduler(epoch, lr):
+    if epoch <= 4:
+        return 1e-4
+    elif epoch <= 10:
+        return 1e-5
+    else:
+        return 1e-6
+
+
+def custom_LSTM_lr_scheduler(epoch, lr):
+    if epoch <= 3:
+        return 1e-3
+    # elif epoch <= 17:
+    #     return 1e-4
+    else:
+        return 1e-4
+
+
 """########## FULL PROCESS ##########"""
 def train_and_validate(config):
     # Load data
