@@ -743,7 +743,7 @@ def get_callbacks(patience, restore_best_weights, baseline,
     return callbacks_list
 
 
-def get_custom_lr_schduler(model_type='LSTM'):
+def get_custom_lr_scheduler(model_type='LSTM'):
     """
     Define a custom LR scheduler and return the appropriate one based on
     model_type.
