@@ -551,7 +551,7 @@ def build_model(model_type='LSTM'):
     return model
 
 
-def build_MLP(optimizer='adam', learning_rate=1e-3, loss='mse'):
+def build_MLP(optimizer='adam', learning_rate=1e-4, loss='mse'):
     model = Sequential([
         Dense(500, activation='relu'),
         Dense(250, activation='relu'),
@@ -594,7 +594,7 @@ def build_LSTM(optimizer, learning_rate, loss,
     return model
 
 
-def get_optimizer(optimizer='adam', learning_rate=1e-3):
+def get_optimizer(optimizer='adam', learning_rate=1e-4):
     """Given an optimizer and a learning rate, return the optimizer
     object with the learning rate set.
 
