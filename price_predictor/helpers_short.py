@@ -859,9 +859,9 @@ def train_and_validate(config):
     # Build and fit model
     model = build_model(config)
     callbacks_list = get_callbacks(patience=config.patience,
-                                  restore_best_weights=True,
-                                  custom_lr_scheduler=True,
-                                  model_type='LSTM')
+                                   restore_best_weights=True,
+                                   custom_lr_scheduler=True,
+                                   model_type='LSTM')
 
     history = model.fit(
         X_train,
