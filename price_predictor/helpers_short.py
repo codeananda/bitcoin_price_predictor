@@ -543,13 +543,27 @@ def timeseries_to_keras_input(
     X_val, y_val = val_data[:, :-1], val_data[:, -1]
     # Ensure all batches are the same length if RNN.
     if is_rnn:
-        # Remove excess elements in the final batch.
-        X_train = create_rnn_numpy_batches(X_train, batch_size, input_seq_length,
-                                        is_X=True)
-        X_val = create_rnn_numpy_batches(X_val, batch_size, input_seq_length,
-                                      is_X=True)
-        y_train = create_rnn_numpy_batches(y_train, batch_size, input_seq_length)
-        y_val = create_rnn_numpy_batches(y_val, batch_size, input_seq_length)
+        # Transform into RNN-acceptable shapes
+        X_train = create_rnn_numpy_batches(X_train,
+                                          batch_size=batch_size,
+                                          timesteps=input_seq_length,
+                                          features=1,
+                                          array_type='X')
+        X_val = create_rnn_numpy_batches(X_val,
+                                         batch_size=batch_size,
+                                         timesteps=input_seq_length,
+                                         features=1,
+                                         array_type='X')
+        y_train = create_rnn_numpy_batches(y_train,
+                                         batch_size=batch_size,
+                                         timesteps=input_seq_length,
+                                         features=1,
+                                         array_type='y')
+        y_val = create_rnn_numpy_batches(y_val,
+                                         batch_size=batch_size,
+                                         timesteps=input_seq_length,
+                                         features=1,
+                                         array_type='y')
     return X_train, X_val, y_train, y_val
 
 
