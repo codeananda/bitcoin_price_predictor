@@ -858,6 +858,58 @@ def custom_LSTM_lr_scheduler(epoch, lr):
         return 1e-4
 
 
+"""########## PLOT ##########"""
+
+def plot_metric(history, metric='loss', ylim=None, start_epoch=0):
+    """Plot the given metric from a Keras history
+
+    Parameters
+    ----------
+    history : Keras history
+        History object obtained from training
+    metric : str, optional
+        Metric monitored in training, by default 'loss'
+    ylim : tuple of numbers, optional
+        Use to set the y-axis limits, by default None
+    start_epoch : int, optional
+        The epoch at which to start plotting. Useful if plots have large
+        values for the first few epochs that render analysis of later epochs
+        impossible, by default 0
+    """
+    # Define plot attrs here as we modify metric later
+    title = f'{metric.title()} - Training and Validation'
+    ylabel = f'{metric.title()}'
+
+    is_one_minus_metric = False
+    if metric.startswith('1-'):
+        # i.e. we calculate and plot 1 - metric rather than just metric
+        is_one_minus_metric = True
+        metric = metric[2:]
+    metric = metric.lower()
+
+    fig, ax = plt.subplots()
+    num_epochs_trained = len(history.history[metric])
+    epochs = range(1, num_epochs_trained + 1)
+
+    values = history.history[metric]
+    val_values = history.history[f'val_{metric}']
+
+    if is_one_minus_metric:
+        values = 1 - np.array(values)
+        val_values = 1 - np.array(val_values)
+
+    ax.plot(epochs[start_epoch:], values[start_epoch:], 'b', label='Training')
+    ax.plot(epochs[start_epoch:], val_values[start_epoch:], 'r', label='Validation')
+
+    ax.set(title=title,
+           xlabel='Epoch',
+           ylabel=ylabel,
+           ylim=ylim)
+    ax.legend()
+    wandb.log({title: wandb.Image(fig)})
+    plt.show()
+
+
 """########## FULL PROCESS ##########"""
 def train_and_validate(config):
     # Load data
