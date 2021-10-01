@@ -397,6 +397,51 @@ def _scale_log_and_range(train, val, scaler='log_and_range_0_1'):
     return train_log_and_range, val_log_and_range
 
 
+def convert_to_log(values, scaler, train, val):
+    """
+    values = [y_pred_train, y_pred_val]
+    y_pred_train, y_pred_val are type np.array
+
+    What is going on?!?
+
+    We have the predictions that have been made after they've been scaled.
+    And we want to convert them back to just a log scale.
+
+    Could calculate then inverse and then log. But yeah we just do the inverse
+    of the second part.
+
+    One issue is that I am assuming the global min is in train and global max
+    is in validation. This is defo a problem and I can solve it.
+    """
+    if scaler.lower().startswith('log_and_divide'):
+        divisor = float(scaler.split('_')[-1])
+        values_scaled = [divisor * v for v in values]
+    elif scaler.lower().startswith('log_and_range'):
+        # Split scaler on underscores to extract the min and max values for the range
+        elements = scaler.split('_')
+        # Calc args for _scale_seq_to_range
+        min_value = float(elements[-2])
+        max_value = float(elements[-1])
+        a = min(train)
+        b = max(val)
+        # Change name
+        args = [a, b, min_value, max_value]
+        # may make sense to do this as a for loop (since first 2 will be iteratbles)
+        # and next two are just values
+                        # Scale the values to values
+        values_scaled = [_scale_one_value(v, *args) if isinstance(v, (int, float)) \
+                        else _scale_seq_to_range(v, *args) \
+                        for v in values]
+    elif scaler.lower() == 'log':
+        values_scaled = values
+    else:
+        raise ValueError(f'''You entered {scaler} but the supported scaling
+                             types are: log, log_and_divide_a (first take log,
+                             then divide by a), or log_and_range_a_b (first
+                             take log then scale to range [a, b]).''')
+    return values_scaled
+
+
 """########## RESHAPE ##########"""
 def _series_to_supervised(
         univar_time_series,
@@ -1012,7 +1057,13 @@ def train_and_validate(config):
     # Store history on wandb
     upload_history_to_wandb(history)
     # Calc predictions
-    y_pred_train, y_pred_val = calculate_predictions(config, model, X_train, X_val, y_train, y_val)
+    y_pred_train, y_pred_val = calculate_predictions(model,
+                                                    X_train,
+                                                    X_val,
+                                                    y_train,
+                                                    y_val,
+                                                    model_type=config.model_type,
+                                                    batch_size=config.batch_size,)
     # Convert y_pred_train and y_pred_val into a log scale to enable comparison
     # between different scaling types
     train_log, val_log = scale_train_val(train, val, scaler='log')
