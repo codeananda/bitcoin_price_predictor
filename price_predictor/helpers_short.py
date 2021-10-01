@@ -865,7 +865,7 @@ def plot_metric(history, metric='loss', ylim=None, start_epoch=0):
 
     Parameters
     ----------
-    history : Keras history
+    history : tf.keras.callbacks.History
         History object obtained from training
     metric : str, optional
         Metric monitored in training, by default 'loss'
@@ -908,6 +908,24 @@ def plot_metric(history, metric='loss', ylim=None, start_epoch=0):
     ax.legend()
     wandb.log({title: wandb.Image(fig)})
     plt.show()
+
+
+"""########## WANDB ##########"""
+
+def upload_history_to_wandb(history):
+    """Convenience function to upload a Keras history to W&B
+
+    Parameters
+    ----------
+    history : tf.keras.callbacks.History
+        History object obtained from training
+    """
+    # Turn into df
+    history_df = pd.DataFrame.from_dict(history.history)
+    # Turn into wandb Table
+    history_table = wandb.Table(dataframe=history_df)
+    # Log
+    wandb.log({'history': history_table})
 
 
 """########## FULL PROCESS ##########"""
