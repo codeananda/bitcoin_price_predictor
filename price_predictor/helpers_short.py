@@ -909,6 +909,54 @@ def plot_metric(history, metric='loss', ylim=None, start_epoch=0):
     wandb.log({title: wandb.Image(fig)})
     plt.show()
 
+"""########### EVALUATE ##########"""
+def calculate_predictions(model,
+                          X_train,
+                          X_val,
+                          y_train=None,
+                          y_val=None,
+                          model_type='LSTM',
+                          batch_size=500):
+    """Calculate and return predictions on training and validation data for
+    the given model and model_type
+
+    Parameters
+    ----------
+    model : Keras Model
+        Model already fit on data
+    X_train : np.ndarray
+        Training feature array
+    X_val : np.ndarray
+        Validation feature array
+    y_train : np.ndarray, optional
+        Training target array (only needed for model_type='LSTM'), by
+        default None
+    y_val : np.ndarray, optional
+        Validation target array (only needed for model_type='LSTM'), by
+        default None
+    model_type : str, optional
+        The type of model you want to make predictions on, by default 'LSTM'
+    batch_size : int, optional
+        The number of sequences fed into the model on each batch (only needed
+        for model_type='LSTM'), by default 500
+    """
+    if model_type.upper() == 'LSTM':
+        # Create train and val tf.data.Datasets and batch to correct size
+        train_ds = tf.data.Dataset.from_tensor_slices((X_train, y_train))
+        train_ds = train_ds.batch(batch_size, drop_remainder=True)
+        val_ds = tf.data.Dataset.from_tensor_slices((X_val, y_val))
+        val_ds = val_ds.batch(batch_size, drop_remainder=True)
+
+        y_pred_train = model.predict(train_ds)
+        y_pred_val = model.predict(val_ds)
+    elif model_type.upper() == 'MLP':
+        y_pred_train = model.predict(X_train)
+        y_pred_val = model.predict(X_val)
+    else:
+        raise ValueError(f'''You entered {model_type} but the only supported
+                            model_types are: MLP or LSTM.''')
+    return y_pred_train, y_pred_val
+
 
 """########## WANDB ##########"""
 
@@ -964,7 +1012,7 @@ def train_and_validate(config):
     # Store history on wandb
     upload_history_to_wandb(history)
     # Calc predictions
-    y_pred_train, y_pred_val = get_preds(config, model, X_train, X_val, y_train, y_val)
+    y_pred_train, y_pred_val = calculate_predictions(config, model, X_train, X_val, y_train, y_val)
     # Convert y_pred_train and y_pred_val into a log scale to enable comparison
     # between different scaling types
     train_log, val_log = scale_train_val(train, val, scaler='log')
