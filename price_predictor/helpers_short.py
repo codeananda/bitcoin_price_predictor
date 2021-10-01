@@ -386,8 +386,8 @@ def _scale_log_and_range(train, val, scaler='log_and_range_0_1'):
         raise ValueError(f'''You are trying to scale to the range [a, b] where
                         a = {scaled_min} and b = {scaled_max}. Please choose
                         different values such that a < b.''')
-    global_min_value = min(train_log)
-    global_max_value = max(val_log)
+    global_min_value = min(min(train_log), min(val_log))
+    global_max_value = max(max(train_log), max(val_log))
 
     scaling_args = [scaled_min, scaled_max, global_min_value, global_max_value]
 
@@ -422,8 +422,8 @@ def convert_to_log(values, scaler, train, val):
         # Calc args for _scale_seq_to_range
         min_value = float(elements[-2])
         max_value = float(elements[-1])
-        a = min(train)
-        b = max(val)
+        a = min(min(train), min(val))
+        b = max(max(train), max(val))
         # Change name
         args = [a, b, min_value, max_value]
         # may make sense to do this as a for loop (since first 2 will be iteratbles)
