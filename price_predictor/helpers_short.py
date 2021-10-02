@@ -420,12 +420,12 @@ def convert_to_log(values, scaler, train, val):
         # Split scaler on underscores to extract the min and max values for the range
         elements = scaler.split('_')
         # Calc args for _scale_seq_to_range
-        min_value = float(elements[-2])
-        max_value = float(elements[-1])
-        a = min(min(train), min(val))
-        b = max(max(train), max(val))
+        global_min_value = float(elements[-2])
+        global_max_value = float(elements[-1])
+        scaled_min = min(min(train), min(val))
+        scaled_max = max(max(train), max(val))
         # Change name
-        args = [a, b, min_value, max_value]
+        args = [scaled_min, scaled_max, global_min_value, global_max_value]
         # may make sense to do this as a for loop (since first 2 will be iteratbles)
         # and next two are just values
                         # Scale the values to values
