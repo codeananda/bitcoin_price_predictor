@@ -157,12 +157,11 @@ def scale_train_val(train, val, scaler='log'):
     scaler: str, optional {'log', 'log_and_divide_a', 'log_and_range_a_b'}
         Scaling to apply to train and validation datasets. Options:
 
-            * 'log' - apply a log transforma
+            * 'log' - apply a log transform
             * 'log_and_divide_a' - first apply a log transform, then divide by
                a (a can be any numeric value)
             * 'log_and_range_a_b' - first apply a log transform, then
-               scale the dataset to be in the range [a, b]
-               (a and b can be any numeric value but you must have a < b)
+               scale the dataset to the range [a, b], (must have a < b)
 
         Note: a and b can be any numeric value e.g. 'log_and_divide_20'
         applies a log transformation, then divides the datasets by 20.
@@ -398,21 +397,38 @@ def _scale_log_and_range(train, val, scaler='log_and_range_0_1'):
 
 
 def convert_to_log_scale(datasets, scaler='log', log_datasets=None):
-# values, scaler, train, val):
-    """
-    values = [y_pred_train, y_pred_val]
-    y_pred_train, y_pred_val are type np.array
+    """Convert datasets to a log scale. We assume datasets have previously
+    been scaled using scaler, this function undoes the divide or range part of
+    scaler and returns a list of log-scaled datasets
 
-    What is going on?!?
+    Parameters
+    ----------
+    datasets : List-like
+        Array of datasets that have been scaled with scaler
+    scaler: str, optional {'log', 'log_and_divide_a', 'log_and_range_a_b'}
+        Scaling that has been applied to datasets. This will be reversed
+        and the dataset will be converted to log scale. Options:
 
-    We have the predictions that have been made after they've been scaled.
-    And we want to convert them back to just a log scale.
+            * 'log' - a log transform has been applied, so we return datasets
+                      without modification
+            * 'log_and_divide_a' - first a log transform, then division by
+               a. So, we multiply datasets by a.
+            * 'log_and_range_a_b' - first a log transform, then
+               scaled to the range [a, b] (must have a < b). So, we scale
+               datasets to the min/max values given in log_datasets.
 
-    Could calculate then inverse and then log. But yeah we just do the inverse
-    of the second part.
+        Note: a and b can be any numeric value e.g. 'log_and_divide_20'
+        applies a log transformation, then divides the datasets by 20.
+    log_datasets : List-like, optional
+        Datasets that are already in a log scale. Only used if scaler is
+        'log_and_range_a_b', by default None.
 
-    One issue is that I am assuming the global min is in train and global max
-    is in validation. This is defo a problem and I can solve it.
+    Raises
+    ------
+    ValueError
+        1. If you enter an unsupported scaling type
+        2. If you enter scaler of type 'log_and_range_a_b' without also
+           passing log_datasets
     """
     if scaler.lower().startswith('log_and_divide'):
         divisor = float(scaler.split('_')[-1])
@@ -428,8 +444,8 @@ def convert_to_log_scale(datasets, scaler='log', log_datasets=None):
         global_max_value = float(elements[-1])
         scaled_min = min([min(log_d) for log_d in log_datasets])
         scaled_max = max([max(log_d) for log_d in log_datasets])
-        args = [scaled_min, scaled_max, global_min_value, global_max_value]
 
+        args = [scaled_min, scaled_max, global_min_value, global_max_value]
         datasets_scaled = [_scale_seq_to_range(d, *args) for d in datasets]
     elif scaler.lower() == 'log':
         datasets_scaled = datasets
