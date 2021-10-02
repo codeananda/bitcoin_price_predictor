@@ -397,7 +397,7 @@ def _scale_log_and_range(train, val, scaler='log_and_range_0_1'):
     return train_log_and_range, val_log_and_range
 
 
-def convert_to_log_scale(datasets, log_datasets, scaler='log'):
+def convert_to_log_scale(datasets, scaler='log', log_datasets=None):
 # values, scaler, train, val):
     """
     values = [y_pred_train, y_pred_val]
@@ -416,25 +416,29 @@ def convert_to_log_scale(datasets, log_datasets, scaler='log'):
     """
     if scaler.lower().startswith('log_and_divide'):
         divisor = float(scaler.split('_')[-1])
-        values_scaled = [divisor * v for v in values]
+        datasets_scaled = [divisor * d for d in datasets]
     elif scaler.lower().startswith('log_and_range'):
+        if log_datasets is None:
+            raise ValueError(f'''You entered scaler {scaler} but have not
+                                provided any log_datasets. We need thes to
+                                calculate the scaling parameters.''')
         # Calculate scaling parameters
         elements = scaler.split('_')
         global_min_value = float(elements[-2])
         global_max_value = float(elements[-1])
-        scaled_min = min(min(train), min(val))
-        scaled_max = max(max(train), max(val))
+        scaled_min = min([min(log_d) for log_d in log_datasets])
+        scaled_max = max([max(log_d) for log_d in log_datasets])
         args = [scaled_min, scaled_max, global_min_value, global_max_value]
-        # Scale the values to values
-        values_scaled = [_scale_seq_to_range(v, *args) for v in values]
+
+        datasets_scaled = [_scale_seq_to_range(d, *args) for d in datasets]
     elif scaler.lower() == 'log':
-        values_scaled = values
+        datasets_scaled = datasets
     else:
         raise ValueError(f'''You entered {scaler} but the supported scaling
                              types are: log, log_and_divide_a (first take log,
                              then divide by a), or log_and_range_a_b (first
                              take log then scale to range [a, b]).''')
-    return values_scaled
+    return datasets_scaled
 
 
 """########## RESHAPE ##########"""
