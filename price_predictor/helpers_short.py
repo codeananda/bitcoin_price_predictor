@@ -417,21 +417,15 @@ def convert_to_log(values, scaler, train, val):
         divisor = float(scaler.split('_')[-1])
         values_scaled = [divisor * v for v in values]
     elif scaler.lower().startswith('log_and_range'):
-        # Split scaler on underscores to extract the min and max values for the range
+        # Calculate scaling parameters
         elements = scaler.split('_')
-        # Calc args for _scale_seq_to_range
         global_min_value = float(elements[-2])
         global_max_value = float(elements[-1])
         scaled_min = min(min(train), min(val))
         scaled_max = max(max(train), max(val))
-        # Change name
         args = [scaled_min, scaled_max, global_min_value, global_max_value]
-        # may make sense to do this as a for loop (since first 2 will be iteratbles)
-        # and next two are just values
-                        # Scale the values to values
-        values_scaled = [_scale_one_value(v, *args) if isinstance(v, (int, float)) \
-                        else _scale_seq_to_range(v, *args) \
-                        for v in values]
+        # Scale the values to values
+        values_scaled = [_scale_seq_to_range(v, *args) for v in values]
     elif scaler.lower() == 'log':
         values_scaled = values
     else:
