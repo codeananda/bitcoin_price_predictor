@@ -397,7 +397,8 @@ def _scale_log_and_range(train, val, scaler='log_and_range_0_1'):
     return train_log_and_range, val_log_and_range
 
 
-def convert_to_log(values, scaler, train, val):
+def convert_to_log_scale(datasets, log_datasets, scaler='log'):
+# values, scaler, train, val):
     """
     values = [y_pred_train, y_pred_val]
     y_pred_train, y_pred_val are type np.array
@@ -1061,7 +1062,7 @@ def train_and_validate(config):
     # Convert y_pred_train and y_pred_val into a log scale to enable comparison
     # between different scaling types
     train_log, val_log = scale_train_val(train, val, scaler='log')
-    y_pred_train_log, y_pred_val_log = convert_to_log([y_pred_train, y_pred_val],
+    y_pred_train_log, y_pred_val_log = convert_to_log_scale([y_pred_train, y_pred_val],
                                                        config.scaler,
                                                        train_log,
                                                        val_log)
