@@ -1083,9 +1083,8 @@ def train_and_validate(config):
     # between different scaling types
     train_log, val_log = scale_train_val(train, val, scaler='log')
     y_pred_train_log, y_pred_val_log = convert_to_log_scale([y_pred_train, y_pred_val],
-                                                       config.scaler,
-                                                       train_log,
-                                                       val_log)
+                                                            scaler=config.scaler,
+                                                            log_datasets=[train_log, val_log])
     # Create y_train and y_val in log form
     _, _, y_train_log, y_val_log = timeseries_to_keras_input(
                                                         config,
