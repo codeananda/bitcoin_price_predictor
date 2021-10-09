@@ -13,6 +13,8 @@ I finished this project in June 2021 and am in the process of tidying everything
 
 However, I hope it gives you an idea of how I approached this project and demonstrates I can build and tune Tensorflow/Keras models on univariate time-series data.
 
+Note: I am currently moving all the functions I actually used from [`helpers.py`](https://github.com/theadammurphy/bitcoin_price_predictor/blob/main/price_predictor/helpers.py) into [`helpers_short.py`](https://github.com/theadammurphy/bitcoin_price_predictor/blob/main/price_predictor/helpers_short.py). The former contains all the functions I wrote for the project but several of them were written and not used in model training. I want to create one file that contains all the functions I actually used. Moreover, I am also adding docstrings to every function since I didn't write many the first time around. I realise now how grave an error this was!
+
 # Results
 
 The best results were obtained by an LSTM with 5 layers each getting sequentially smaller. I ran multiple tests on wandb and got the lowest loss on the validation set to be 0.01816 RMSE.
