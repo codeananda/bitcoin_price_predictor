@@ -969,6 +969,71 @@ def plot_metric(history, metric='loss', ylim=None, start_epoch=0):
     wandb.log({title: wandb.Image(fig)})
     plt.show()
 
+
+def _plot_actual_vs_pred(y_true, y_pred, rmse=None, repeat=None, name=None,
+                         logy=False):
+    fig, ax = plt.subplots(figsize=(16, 12))
+    ax.plot(y_true, 'b', label='Test data')
+    ax.plot(y_pred, 'r', label='Preds')
+    ax.legend()
+
+    if rmse is not None and repeat is not None:
+        fig_title = f'Actuals vs. Preds - RMSE {rmse:.5f} - Repeat #{repeat}'
+        log_title = f'Actuals vs. Preds #{repeat}'
+    elif rmse is not None and repeat is None:
+        fig_title = f'Actuals vs. Preds - {name} - RMSE {rmse:.5f}'
+        log_title = f'Actuals vs. Preds - {name}'
+    elif rmse is None and repeat is not None:
+        raise Exception('Cannot enter repeat on its own')
+    else:
+        fig_title = f'Actuals vs. Preds - {name}'
+        log_title = fig_title
+
+    ylabel = 'BTC Price ($)'
+    if logy:
+        ylabel = 'log(BTC Price USD)'
+
+    ax.set(xlabel='Hours', ylabel=ylabel,
+           title=fig_title)
+    wandb.log({log_title: wandb.Image(fig)})
+    plt.show()
+
+
+def _plot_preds_grid(y_true, y_pred, rmse):
+    """
+    Built to make a 2x4 grid of preds vs actuals for X_train
+    """
+    fig = plt.figure(figsize=(20, 10))
+    # Plot full predictions
+    if len(y_true) > 80000:
+        plt.subplot(2, 5, 1)
+    else:
+        plt.subplot(2, 4, 1)
+    plt.plot(y_true, 'b', label='Actual')
+    plt.plot(y_pred, 'r', label='Preds')
+    plt.legend()
+    if len(y_true) > 80000:
+        plt.xticks(np.arange(0, 100000, 20000))
+    else:
+        plt.xticks(np.arange(0, 84000, 14000))
+    # Plot predictions for each 10k hours
+    for i in range(0, len(y_true) // 10000 + 1):
+        if len(y_true) > 80000:
+            plt.subplot(2, 5, 2+i)
+        else:
+            plt.subplot(2, 4, 2+i)
+        plt.plot(y_true[i * 10000: (i+1) * 10000], 'b')
+        plt.plot(y_pred[i * 10000: (i+1) * 10000], 'r')
+        plt.xticks(ticks=np.arange(0, 12000, 2000),
+                   labels=np.arange(i * 10000, (i+1) * 10000 + 2000, 2000))
+        if i == 1:
+            title = f'X_train predictions (broken down) - X_train RMSE {rmse:.5f}'
+            plt.title(title)
+    plt.tight_layout()
+    log_title = 'X_train predictions (broken down)'
+    wandb.log({log_title: wandb.Image(fig)})
+    plt.show()
+
 """########### EVALUATE ##########"""
 def calculate_predictions(model,
                           X_train,
