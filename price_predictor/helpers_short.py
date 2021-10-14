@@ -973,7 +973,6 @@ def plot_metric(history, metric='loss', ylim=None, start_epoch=0):
 def _plot_actual_vs_pred(y_true,
                          y_pred,
                          rmse=None,
-                         fold_num=None,
                          dataset_name=None,
                          logy=False):
     fig, ax = plt.subplots(figsize=(16, 12))
@@ -981,19 +980,12 @@ def _plot_actual_vs_pred(y_true,
     ax.plot(y_pred, 'r', label='Preds')
     ax.legend()
 
-    if rmse is not None and fold_num is not None:
-        fig_title = f'Actuals vs. Preds - RMSE {rmse:.5f} - Repeat #{fold_num}'
-        log_title = f'Actuals vs. Preds #{fold_num}'
-    elif rmse is not None and fold_num is None:
-        fig_title = f'Actuals vs. Preds - {dataset_name} - RMSE {rmse:.5f}'
-        log_title = f'Actuals vs. Preds - {dataset_name}'
-    elif rmse is None and fold_num is not None:
-        raise ValueError('''You entered a fold_num but did not specify an rmse
-                            value. You can enter both or just rmse but not
-                            fold_num on its own.''')
-    else:
+    if rmse is None:
         fig_title = f'Actuals vs. Preds - {dataset_name}'
         log_title = fig_title
+    else:
+        fig_title = f'Actuals vs. Preds - {dataset_name} - RMSE {rmse:.5f}'
+        log_title = f'Actuals vs. Preds - {dataset_name}'
 
     ylabel = 'BTC Price ($)'
     if logy:
