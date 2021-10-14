@@ -970,21 +970,27 @@ def plot_metric(history, metric='loss', ylim=None, start_epoch=0):
     plt.show()
 
 
-def _plot_actual_vs_pred(y_true, y_pred, rmse=None, repeat=None, name=None,
+def _plot_actual_vs_pred(y_true,
+                         y_pred,
+                         rmse=None,
+                         fold_num=None,
+                         name=None,
                          logy=False):
     fig, ax = plt.subplots(figsize=(16, 12))
     ax.plot(y_true, 'b', label='Test data')
     ax.plot(y_pred, 'r', label='Preds')
     ax.legend()
 
-    if rmse is not None and repeat is not None:
-        fig_title = f'Actuals vs. Preds - RMSE {rmse:.5f} - Repeat #{repeat}'
-        log_title = f'Actuals vs. Preds #{repeat}'
-    elif rmse is not None and repeat is None:
+    if rmse is not None and fold_num is not None:
+        fig_title = f'Actuals vs. Preds - RMSE {rmse:.5f} - Repeat #{fold_num}'
+        log_title = f'Actuals vs. Preds #{fold_num}'
+    elif rmse is not None and fold_num is None:
         fig_title = f'Actuals vs. Preds - {name} - RMSE {rmse:.5f}'
         log_title = f'Actuals vs. Preds - {name}'
-    elif rmse is None and repeat is not None:
-        raise Exception('Cannot enter repeat on its own')
+    elif rmse is None and fold_num is not None:
+        raise ValueError('''You entered a fold_num but did not specify an rmse
+                            value. You can enter both or just rmse but not
+                            fold_num on its own.''')
     else:
         fig_title = f'Actuals vs. Preds - {name}'
         log_title = fig_title
