@@ -974,7 +974,7 @@ def _plot_actual_vs_pred(y_true,
                          y_pred,
                          rmse=None,
                          fold_num=None,
-                         name=None,
+                         dataset_name=None,
                          logy=False):
     fig, ax = plt.subplots(figsize=(16, 12))
     ax.plot(y_true, 'b', label='Test data')
@@ -985,14 +985,14 @@ def _plot_actual_vs_pred(y_true,
         fig_title = f'Actuals vs. Preds - RMSE {rmse:.5f} - Repeat #{fold_num}'
         log_title = f'Actuals vs. Preds #{fold_num}'
     elif rmse is not None and fold_num is None:
-        fig_title = f'Actuals vs. Preds - {name} - RMSE {rmse:.5f}'
-        log_title = f'Actuals vs. Preds - {name}'
+        fig_title = f'Actuals vs. Preds - {dataset_name} - RMSE {rmse:.5f}'
+        log_title = f'Actuals vs. Preds - {dataset_name}'
     elif rmse is None and fold_num is not None:
         raise ValueError('''You entered a fold_num but did not specify an rmse
                             value. You can enter both or just rmse but not
                             fold_num on its own.''')
     else:
-        fig_title = f'Actuals vs. Preds - {name}'
+        fig_title = f'Actuals vs. Preds - {dataset_name}'
         log_title = fig_title
 
     ylabel = 'BTC Price ($)'
@@ -1168,8 +1168,8 @@ def train_and_validate(config):
 
     # Plot actuals vs. predictions for train and val data (both in log scale)
     _plot_actual_vs_pred(y_train_log, y_pred_train_log, rmse=rmse_train_log,
-                         name='X_train preds', logy=True)
+                         dataset_name='X_train preds', logy=True)
     _plot_actual_vs_pred(y_val_log, y_pred_val_log, rmse=rmse_val_log,
-                         name='X_val preds', logy=True)
+                         dataset_name='X_val preds', logy=True)
     _plot_preds_grid(y_train_log, y_pred_train_log, rmse_train_log)
     return history
