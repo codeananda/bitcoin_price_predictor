@@ -1020,34 +1020,45 @@ def _plot_preds_grid(y_true, y_pred, rmse):
     Built to make a 2x4 grid of preds vs actuals for X_train
     """
     fig = plt.figure(figsize=(20, 10))
-    # Plot full predictions
-    if len(y_true) > 80000:
+    all_samples_included = len(y_true) > 80000
+    # Plot full preds vs. actuals on first axes
+    if all_samples_included:
+        # Create bigger plot if all samples included
         plt.subplot(2, 5, 1)
     else:
         plt.subplot(2, 4, 1)
     plt.plot(y_true, 'b', label='Actual')
     plt.plot(y_pred, 'r', label='Preds')
     plt.legend()
-    if len(y_true) > 80000:
+    if all_samples_included:
         plt.xticks(np.arange(0, 100000, 20000))
     else:
         plt.xticks(np.arange(0, 84000, 14000))
-    # Plot predictions for each 10k hours
-    for i in range(0, len(y_true) // 10000 + 1):
-        if len(y_true) > 80000:
+
+    # Plot broken down predictions in 10k hour chunks
+    chunk = 10000
+    for i in range(0, len(y_true) // chunk + 1):
+        # Select subplot
+        if all_samples_included:
             plt.subplot(2, 5, 2+i)
         else:
             plt.subplot(2, 4, 2+i)
-        plt.plot(y_true[i * 10000: (i+1) * 10000], 'b')
-        plt.plot(y_pred[i * 10000: (i+1) * 10000], 'r')
-        plt.xticks(ticks=np.arange(0, 12000, 2000),
-                   labels=np.arange(i * 10000, (i+1) * 10000 + 2000, 2000))
+        # Plot
+        plt.plot(y_true[i * chunk : (i+1) * chunk], 'b')
+        plt.plot(y_pred[i * chunk : (i+1) * chunk], 'r')
+        # Create xticks and xticklabels
+        tick_chunk = 2000
+        xticks = np.arange(0, chunk + tick_chunk, tick_chunk)
+        xticklabels = np.arange(i * chunk,
+                               (i+1) * chunk + tick_chunk,
+                               tick_chunk)
+        plt.xticks(ticks=xticks, labels=xticklabels)
         if i == 1:
-            title = f'X_train predictions (broken down) - X_train RMSE {rmse:.5f}'
+            title = f'X_train predictions (broken down) - RMSE {rmse:.5f}'
             plt.title(title)
     plt.tight_layout()
-    log_title = 'X_train predictions (broken down)'
-    wandb.log({log_title: wandb.Image(fig)})
+    wandb_title = 'X_train predictions (broken down)'
+    wandb.log({wandb_title: wandb.Image(fig)})
     plt.show()
 
 """########### EVALUATE ##########"""
