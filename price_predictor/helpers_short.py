@@ -35,8 +35,9 @@ def get_download_and_data_dirs(notebook='local'):
         Filepaths to the download and data directories respectively
     """
     if notebook.lower() == 'colab':
-        DOWNLOAD_DIR = Path('/content/drive/MyDrive/1 Projects/bitcoin_price_predictor/download')
-        DATA_DIR = Path('/content/drive/MyDrive/1 Projects/bitcoin_price_predictor/data')
+        projects_dir = '/content/drive/MyDrive/1 Projects/'
+        DOWNLOAD_DIR = Path(projects_dir + 'bitcoin_price_predictor/download')
+        DATA_DIR = Path(projects_dir + 'bitcoin_price_predictor/data')
     elif notebook.lower() == 'local':
         DOWNLOAD_DIR = Path('../download')
         DATA_DIR = Path('../data')
