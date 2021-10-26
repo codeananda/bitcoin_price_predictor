@@ -975,6 +975,25 @@ def _plot_actual_vs_pred(y_true,
                          rmse=None,
                          dataset_name=None,
                          logy=False):
+    """Plot y_true and y_pred on the same axis with descriptive titles and
+    upload to wandb.
+
+    Parameters
+    ----------
+    y_true : np.ndarray
+        Array of true values
+    y_pred : np.ndarray
+        Array of predicted values
+    rmse : float, optional
+        The rmse between the two datasets, if given it is included in the
+        title for easy manual comparison of plots, by default None
+    dataset_name : str, optional
+        Name you wish to identify your plots by in WandB and to aid manual
+        comparisons. Good choices are 'X_train preds' and 'X_val preds', by
+        default None
+    logy : bool, optional
+        If True the ylabel tells you it is in log scale, by default False
+    """
     fig, ax = plt.subplots(figsize=(16, 12))
     ax.plot(y_true, 'b', label='Actual')
     ax.plot(y_pred, 'r', label='Preds')
