@@ -976,16 +976,15 @@ def _plot_actual_vs_pred(y_true,
                          dataset_name=None,
                          logy=False):
     fig, ax = plt.subplots(figsize=(16, 12))
-    ax.plot(y_true, 'b', label='Test data')
+    ax.plot(y_true, 'b', label='Actual')
     ax.plot(y_pred, 'r', label='Preds')
     ax.legend()
 
-    if rmse is None:
-        fig_title = f'Actuals vs. Preds - {dataset_name}'
-        log_title = fig_title
-    else:
-        fig_title = f'Actuals vs. Preds - {dataset_name} - RMSE {rmse:.5f}'
-        log_title = f'Actuals vs. Preds - {dataset_name}'
+    fig_title = f'Actuals vs. Preds - {dataset_name}'
+    wandb_title = fig_title
+    # Add RMSE to title if given
+    if rmse is not None:
+        fig_title = fig_title + f' - RMSE {rmse:.5f}'
 
     ylabel = 'BTC Price ($)'
     if logy:
@@ -993,7 +992,7 @@ def _plot_actual_vs_pred(y_true,
 
     ax.set(xlabel='Hours', ylabel=ylabel,
            title=fig_title)
-    wandb.log({log_title: wandb.Image(fig)})
+    wandb.log({wandb_title: wandb.Image(fig)})
     plt.show()
 
 
