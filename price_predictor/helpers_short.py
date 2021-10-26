@@ -13,13 +13,14 @@ from tensorflow.keras.optimizers import Adam, RMSprop
 from tensorflow.keras.callbacks import EarlyStopping, LearningRateScheduler
 
 # We use hourly close data and want to feed in 1 week of data for each hour of
-# predictions. There are 168 hours in a week
+# predictions. There are 168 hours in a week
 TIMESTEPS = 168
 
 
 """########## LOAD DATA ##########"""
 
-def get_download_and_data_dirs(notebook='local'):
+
+def get_download_and_data_dirs(notebook="local"):
     """
     Return DOWNLOAD_DIR and DATA_DIR depending on the type of notebook being
     used.
@@ -34,20 +35,22 @@ def get_download_and_data_dirs(notebook='local'):
     DOWNLOAD_DIR, DATA_DIR : tuple of Path objects
         Filepaths to the download and data directories respectively
     """
-    if notebook.lower() == 'colab':
-        projects_dir = '/content/drive/MyDrive/1 Projects/'
-        DOWNLOAD_DIR = Path(projects_dir + 'bitcoin_price_predictor/download')
-        DATA_DIR = Path(projects_dir + 'bitcoin_price_predictor/data')
-    elif notebook.lower() == 'local':
-        DOWNLOAD_DIR = Path('../download')
-        DATA_DIR = Path('../data')
+    if notebook.lower() == "colab":
+        projects_dir = "/content/drive/MyDrive/1 Projects/"
+        DOWNLOAD_DIR = Path(projects_dir + "bitcoin_price_predictor/download")
+        DATA_DIR = Path(projects_dir + "bitcoin_price_predictor/data")
+    elif notebook.lower() == "local":
+        DOWNLOAD_DIR = Path("../download")
+        DATA_DIR = Path("../data")
     else:
-        raise ValueError(f'''You entered {notebook} but the only supported
-                             notebook types are: colab or local''')
+        raise ValueError(
+            f"""You entered {notebook} but the only supported
+                notebook types are: colab or local"""
+        )
     return DOWNLOAD_DIR, DATA_DIR
 
 
-def load_dataset_1(notebook='local', drop_first_900_train_elements=True):
+def load_dataset_1(notebook="local", drop_first_900_train_elements=True):
     """Load dataset 1 as defined in data/define_datasets_1_and_2.png
 
     Parameters
@@ -67,21 +70,21 @@ def load_dataset_1(notebook='local', drop_first_900_train_elements=True):
         price datasets as defined in data/define_datasets_1_and_2.png
     """
     _, DATA_DIR = get_download_and_data_dirs(notebook)
-    with open(DATA_DIR / 'train_1.pkl', 'rb') as f:
+    with open(DATA_DIR / "train_1.pkl", "rb") as f:
         train_1 = pickle.load(f)
         if drop_first_900_train_elements:
             train_1 = train_1[900:]
 
-    with open(DATA_DIR / 'val_1.pkl', 'rb') as f:
+    with open(DATA_DIR / "val_1.pkl", "rb") as f:
         val_1 = pickle.load(f)
 
-    with open(DATA_DIR / 'test_1.pkl', 'rb') as f:
+    with open(DATA_DIR / "test_1.pkl", "rb") as f:
         test_1 = pickle.load(f)
 
     return train_1, val_1, test_1
 
 
-def load_dataset_2(notebook='local'):
+def load_dataset_2(notebook="local"):
     """Load dataset 2 as defined in data/define_datasets_1_and_2.png
 
     Parameters
@@ -99,18 +102,18 @@ def load_dataset_2(notebook='local'):
         data available after train_2 ends.
     """
     _, DATA_DIR = get_download_and_data_dirs(notebook)
-    with open(DATA_DIR / 'train_2.pkl', 'rb') as f:
+    with open(DATA_DIR / "train_2.pkl", "rb") as f:
         train_2 = pickle.load(f)
 
-    with open(DATA_DIR / 'val_2.pkl', 'rb') as f:
+    with open(DATA_DIR / "val_2.pkl", "rb") as f:
         val_2 = pickle.load(f)
 
     return train_2, val_2
 
 
-def load_train_and_val_data(dataset=1,
-                            notebook='local',
-                            drop_first_900_train_elements_dataset_1=True):
+def load_train_and_val_data(
+    dataset=1, notebook="local", drop_first_900_train_elements_dataset_1=True
+):
     """Convenience function to load just the train and val datasets from
     either dataset 1 or 2 (as defined in data/define_datasets_1_and_2.png)
 
@@ -134,19 +137,23 @@ def load_train_and_val_data(dataset=1,
         datasets as defined in data/define_datasets_1_and_2.png
     """
     if dataset == 1:
-        train, val, _ = load_dataset_1(notebook,
-                                    drop_first_900_train_elements_dataset_1)
+        train, val, _ = load_dataset_1(
+            notebook, drop_first_900_train_elements_dataset_1
+        )
     elif dataset == 2:
         train, val = load_dataset_2(notebook)
     else:
-        raise ValueError(f'''You entered {dataset} for dataset but the only
-                             supported values are: 1 or 2''')
+        raise ValueError(
+            f"""You entered {dataset} for dataset but the only
+                             supported values are: 1 or 2"""
+        )
     return train, val
 
 
 """########## SCALE ##########"""
 
-def scale_train_val(train, val, scaler='log'):
+
+def scale_train_val(train, val, scaler="log"):
     """Scaled the train and validation datasets based on the scaler type
     specified.
 
@@ -173,17 +180,19 @@ def scale_train_val(train, val, scaler='log'):
     train_scaled, val_scaled : Tuple of numpy arrays
         Scaled copies of input train and val as dictated by scaler.
     """
-    if scaler.lower() == 'log':
+    if scaler.lower() == "log":
         train_scaled, val_scaled = _scale_log(train, val)
-    elif scaler.lower().startswith('log_and_divide'):
+    elif scaler.lower().startswith("log_and_divide"):
         train_scaled, val_scaled = _scale_log_and_divide(train, val, scaler)
-    elif scaler.lower().startswith('log_and_range'):
+    elif scaler.lower().startswith("log_and_range"):
         train_scaled, val_scaled = _scale_log_and_range(train, val, scaler)
     else:
-        raise ValueError('''Please enter a supported scaling type: log,
+        raise ValueError(
+            """Please enter a supported scaling type: log,
                         log_and_divide_a (first take log, then divide by a),
                         or log_and_range_a_b (first take log then scale to
-                        range [a, b]).''')
+                        range [a, b])."""
+        )
     return train_scaled, val_scaled
 
 
@@ -213,13 +222,7 @@ def _scale_log(train, val, test=None):
         return train_log, val_log
 
 
-def _scale_one_value(
-        value,
-        scaled_min,
-        scaled_max,
-        global_min,
-        global_max
-        ):
+def _scale_one_value(value, scaled_min, scaled_max, global_min, global_max):
     """Scale value to the range [scaled_min, scaled_max]. The min/max
     of the sequence/population that value comes from are global_min and
     global_max.
@@ -254,13 +257,7 @@ def _scale_one_value(
     return scaled_value
 
 
-def _scale_seq_to_range(
-        seq,
-        scaled_min,
-        scaled_max,
-        global_min=None,
-        global_max=None
-        ):
+def _scale_seq_to_range(seq, scaled_min, scaled_max, global_min=None, global_max=None):
     """Given a sequence of numbers - seq - scale its values to the range
     [scaled_min, scaled_max].
 
@@ -303,14 +300,17 @@ def _scale_seq_to_range(
     if global_min is None:
         global_min = np.min(seq)
 
-    scaled_seq = np.array([_scale_one_value(value, scaled_min, scaled_max,
-                                                    global_min, global_max) \
-                            for value in seq])
+    scaled_seq = np.array(
+        [
+            _scale_one_value(value, scaled_min, scaled_max, global_min, global_max)
+            for value in seq
+        ]
+    )
 
     return scaled_seq
 
 
-def _scale_log_and_divide(train, val, scaler='log_and_divide_20'):
+def _scale_log_and_divide(train, val, scaler="log_and_divide_20"):
     """First apply a log transform, then divide by the value specified in
     scaler to sequences train and val.
 
@@ -334,20 +334,22 @@ def _scale_log_and_divide(train, val, scaler='log_and_divide_20'):
     train_log_and_divide, val_log_and_divide : Tuple of numpy arrays
         Scaled copies of inputs train and val as dictated by scaler.
     """
-    if 'log_and_divide' not in scaler:
-        raise ValueError(f"""scaler must be of the form 'log_and_divide_a' for
-                        some number a. You entered {scaler}""")
+    if "log_and_divide" not in scaler:
+        raise ValueError(
+            f"""scaler must be of the form 'log_and_divide_a' for
+                        some number a. You entered {scaler}"""
+        )
     # Take log
     train_log, val_log = _scale_log(train, val)
     # The last element of the scaler string the divisor
-    divisor = scaler.split('_')[-1]
+    divisor = scaler.split("_")[-1]
     # Divide by divisor
     train_log_and_divide = train_log / divisor
     val_log_and_divide = val_log / divisor
     return train_log_and_divide, val_log_and_divide
 
 
-def _scale_log_and_range(train, val, scaler='log_and_range_0_1'):
+def _scale_log_and_range(train, val, scaler="log_and_range_0_1"):
     """First apply a log transform, then scale train and val sequences to
     the range dicated by scaler. The default ('log_and_range_0_1') scales
     inputs to [0, 1].
@@ -373,25 +375,28 @@ def _scale_log_and_range(train, val, scaler='log_and_range_0_1'):
     train_log_and_divide, val_log_and_divide : Tuple of numpy arrays
         Scaled copies of inputs train and val as dictated by scaler.
     """
-    if 'log_and_range' not in scaler:
-        raise ValueError(f"""scaler must be of the form 'log_and_range_a_b'
-                        for some numbers a and b. You entered {scaler}""")
+    if "log_and_range" not in scaler:
+        raise ValueError(
+            f"""scaler must be of the form 'log_and_range_a_b'
+                        for some numbers a and b. You entered {scaler}"""
+        )
     # Log scale
     train_log, val_log = _scale_log(train, val)
 
     # Calculate scaling parameters for _scale_seq_to_range
-    scaler_elements = scaler.split('_')
+    scaler_elements = scaler.split("_")
     scaled_min = float(scaler_elements[-2])
     scaled_max = float(scaler_elements[-1])
     if not scaled_min < scaled_max:
-        raise ValueError(f'''You are trying to scale to the range [a, b] where
+        raise ValueError(
+            f"""You are trying to scale to the range [a, b] where
                         a = {scaled_min} and b = {scaled_max}. Please choose
-                        different values such that a < b.''')
+                        different values such that a < b."""
+        )
     global_min_value = min(min(train_log), min(val_log))
     global_max_value = max(max(train_log), max(val_log))
 
-    scaling_args = [scaled_min, scaled_max,
-                    global_min_value, global_max_value]
+    scaling_args = [scaled_min, scaled_max, global_min_value, global_max_value]
 
     train_log_and_range = _scale_seq_to_range(train_log, *scaling_args)
     val_log_and_range = _scale_seq_to_range(val_log, *scaling_args)
@@ -399,7 +404,7 @@ def _scale_log_and_range(train, val, scaler='log_and_range_0_1'):
     return train_log_and_range, val_log_and_range
 
 
-def convert_to_log_scale(datasets, scaler='log', log_datasets=None):
+def convert_to_log_scale(datasets, scaler="log", log_datasets=None):
     """Convert datasets to a log scale. We assume datasets have previously
     been scaled using scaler, this function undoes the divide or range part of
     scaler and returns a list of log-scaled datasets
@@ -433,16 +438,18 @@ def convert_to_log_scale(datasets, scaler='log', log_datasets=None):
         2. If you enter scaler of type 'log_and_range_a_b' without also
            passing log_datasets
     """
-    if scaler.lower().startswith('log_and_divide'):
-        divisor = float(scaler.split('_')[-1])
+    if scaler.lower().startswith("log_and_divide"):
+        divisor = float(scaler.split("_")[-1])
         datasets_scaled = [divisor * d for d in datasets]
-    elif scaler.lower().startswith('log_and_range'):
+    elif scaler.lower().startswith("log_and_range"):
         if log_datasets is None:
-            raise ValueError(f'''You entered scaler {scaler} but have not
+            raise ValueError(
+                f"""You entered scaler {scaler} but have not
                                 provided any log_datasets. We need thes to
-                                calculate the scaling parameters.''')
+                                calculate the scaling parameters."""
+            )
         # Calculate scaling parameters
-        elements = scaler.split('_')
+        elements = scaler.split("_")
         global_min_value = float(elements[-2])
         global_max_value = float(elements[-1])
         scaled_min = min([min(log_d) for log_d in log_datasets])
@@ -450,21 +457,22 @@ def convert_to_log_scale(datasets, scaler='log', log_datasets=None):
 
         args = [scaled_min, scaled_max, global_min_value, global_max_value]
         datasets_scaled = [_scale_seq_to_range(d, *args) for d in datasets]
-    elif scaler.lower() == 'log':
+    elif scaler.lower() == "log":
         datasets_scaled = datasets
     else:
-        raise ValueError(f'''You entered {scaler} but the supported scaling
+        raise ValueError(
+            f"""You entered {scaler} but the supported scaling
                              types are: log, log_and_divide_a (first take log,
                              then divide by a), or log_and_range_a_b (first
-                             take log then scale to range [a, b]).''')
+                             take log then scale to range [a, b])."""
+        )
     return datasets_scaled
 
 
 """########## RESHAPE ##########"""
-def _series_to_supervised(
-        univar_time_series,
-        input_seq_length=1,
-        output_seq_length=1):
+
+
+def _series_to_supervised(univar_time_series, input_seq_length=1, output_seq_length=1):
     """Transform a univariate time-series dataset to a supervised ML problem.
     The number of timesteps in each input sequence is input_seq_length and
     the number of timesteps forcasted is output_seq_length.
@@ -506,11 +514,8 @@ def _series_to_supervised(
 
 
 def create_rnn_numpy_batches(
-        array,
-        batch_size=500,
-        timesteps=TIMESTEPS,
-        features=1,
-        array_type='X'):
+    array, batch_size=500, timesteps=TIMESTEPS, features=1, array_type="X"
+):
     """Transform a numpy array, so that it can be fed into an RNN.
 
     RNNs require all batches to be the exact same length. This function
@@ -559,26 +564,28 @@ def create_rnn_numpy_batches(
     # where total_num_batches = int(len(array) / batch_size)
     a_numpy = np.array(a_list)
     # Reshape into Keras-acceptable shapes
-    if array_type.upper() == 'X':
+    if array_type.upper() == "X":
         # Reshape to (samples, timesteps, features) if it's an X array
         a_rnn = a_numpy.reshape((-1, timesteps, features))
-    elif array_type.lower() == 'y':
+    elif array_type.lower() == "y":
         # Reshape to (num_samples, timesteps)
         a_rnn = a_numpy.reshape((-1, timesteps))
     else:
-        raise ValueError(f'''You entered {array_type} but the only supported
-                             array_type values are: 'X' and 'y' ''')
+        raise ValueError(
+            f"""You entered {array_type} but the only supported
+                             array_type values are: 'X' and 'y' """
+        )
     return a_rnn
 
 
-
 def timeseries_to_keras_input(
-        train,
-        val,
-        input_seq_length=TIMESTEPS,
-        output_seq_length=1,
-        is_rnn=True,
-        batch_size=9):
+    train,
+    val,
+    input_seq_length=TIMESTEPS,
+    output_seq_length=1,
+    is_rnn=True,
+    batch_size=9,
+):
     """Given univariate timeseries datasets train and val, transform them into
     a supervised ML problem and (if is_rnn=True) ensure all batches are the
     same length.
@@ -610,49 +617,55 @@ def timeseries_to_keras_input(
         Numpy arrays correctly shaped and batched for Keras MLPs or RNNs.
     """
     # Transform timeseries into a supervised ML problem
-    train_data = _series_to_supervised(train,
-                                       input_seq_length=input_seq_length,
-                                       output_seq_length=1)
-    val_data = _series_to_supervised(val,
-                                     input_seq_length=input_seq_length,
-                                     output_seq_length=1)
+    train_data = _series_to_supervised(
+        train, input_seq_length=input_seq_length, output_seq_length=1
+    )
+    val_data = _series_to_supervised(
+        val, input_seq_length=input_seq_length, output_seq_length=1
+    )
     # Create X and y vars (note: batches may not be the same length)
     X_train, y_train = train_data[:, :-1], train_data[:, -1]
     X_val, y_val = val_data[:, :-1], val_data[:, -1]
     # Ensure all batches are the same length if RNN.
     if is_rnn:
         # Transform into RNN-acceptable shapes
-        X_train = create_rnn_numpy_batches(X_train,
-                                          batch_size=batch_size,
-                                          timesteps=input_seq_length,
-                                          features=1,
-                                          array_type='X')
-        X_val = create_rnn_numpy_batches(X_val,
-                                         batch_size=batch_size,
-                                         timesteps=input_seq_length,
-                                         features=1,
-                                         array_type='X')
-        y_train = create_rnn_numpy_batches(y_train,
-                                         batch_size=batch_size,
-                                         timesteps=input_seq_length,
-                                         features=1,
-                                         array_type='y')
-        y_val = create_rnn_numpy_batches(y_val,
-                                         batch_size=batch_size,
-                                         timesteps=input_seq_length,
-                                         features=1,
-                                         array_type='y')
+        X_train = create_rnn_numpy_batches(
+            X_train,
+            batch_size=batch_size,
+            timesteps=input_seq_length,
+            features=1,
+            array_type="X",
+        )
+        X_val = create_rnn_numpy_batches(
+            X_val,
+            batch_size=batch_size,
+            timesteps=input_seq_length,
+            features=1,
+            array_type="X",
+        )
+        y_train = create_rnn_numpy_batches(
+            y_train,
+            batch_size=batch_size,
+            timesteps=input_seq_length,
+            features=1,
+            array_type="y",
+        )
+        y_val = create_rnn_numpy_batches(
+            y_val,
+            batch_size=batch_size,
+            timesteps=input_seq_length,
+            features=1,
+            array_type="y",
+        )
     return X_train, X_val, y_train, y_val
 
 
 """########## MODEL BUILD AND FIT ##########"""
 
 
-def build_model(model_type='LSTM',
-                optimizer='adam',
-                learning_rate=1e-4,
-                loss='mse',
-                **kwargs):
+def build_model(
+    model_type="LSTM", optimizer="adam", learning_rate=1e-4, loss="mse", **kwargs
+):
     """Build, compile and return a model of the given type with the given
     params
 
@@ -681,19 +694,21 @@ def build_model(model_type='LSTM',
         If you pass a model type that is not one of 'MLP' or 'LSTM'
         (case insensitive)
     """
-    if model_type.upper() == 'MLP':
-        model = build_MLP(optimizer=optimizer, learning_rate=learning_rate,
-                          loss=loss)
-    elif model_type.upper() == 'LSTM':
-        model = build_LSTM(optimizer=optimizer, learning_rate=learning_rate,
-                          loss=loss, **kwargs)
+    if model_type.upper() == "MLP":
+        model = build_MLP(optimizer=optimizer, learning_rate=learning_rate, loss=loss)
+    elif model_type.upper() == "LSTM":
+        model = build_LSTM(
+            optimizer=optimizer, learning_rate=learning_rate, loss=loss, **kwargs
+        )
     else:
-        raise ValueError(f'''Supported model types are: MLP or LSTM. You
-                             entered {model_type}''')
+        raise ValueError(
+            f"""Supported model types are: MLP or LSTM. You
+                             entered {model_type}"""
+        )
     return model
 
 
-def build_MLP(optimizer='adam', learning_rate=1e-4, loss='mse'):
+def build_MLP(optimizer="adam", learning_rate=1e-4, loss="mse"):
     """Build, compile and return an MLP model of with the given params
 
     Parameters
@@ -711,26 +726,34 @@ def build_MLP(optimizer='adam', learning_rate=1e-4, loss='mse'):
     model
         MLP sequential Keras model compiled with given params
     """
-    model = Sequential([
-        Dense(500, activation='relu'),
-        Dense(250, activation='relu'),
-        Dense(125, activation='relu'),
-        Dense(62, activation='relu'),
-        Dense(30, activation='relu'),
-        Dense(15, activation='relu'),
-        Dense(7, activation='relu'),
-        Dense(1)
-    ])
-    optimizer_object = get_optimizer(optimizer=optimizer,
-                                    learning_rate=learning_rate)
-    model.compile(loss=loss,
-                  optimizer=optimizer_object,
-                  metrics=[RootMeanSquaredError()])
+    model = Sequential(
+        [
+            Dense(500, activation="relu"),
+            Dense(250, activation="relu"),
+            Dense(125, activation="relu"),
+            Dense(62, activation="relu"),
+            Dense(30, activation="relu"),
+            Dense(15, activation="relu"),
+            Dense(7, activation="relu"),
+            Dense(1),
+        ]
+    )
+    optimizer_object = get_optimizer(optimizer=optimizer, learning_rate=learning_rate)
+    model.compile(
+        loss=loss, optimizer=optimizer_object, metrics=[RootMeanSquaredError()]
+    )
     return model
 
 
-def build_LSTM(optimizer='adam', learning_rate=1e-4, loss='mse',
-              num_nodes=50, batch_size=9, timesteps=168, num_layers=2):
+def build_LSTM(
+    optimizer="adam",
+    learning_rate=1e-4,
+    loss="mse",
+    num_nodes=50,
+    batch_size=9,
+    timesteps=168,
+    num_layers=2,
+):
     """Build, compile and return an LSTM model of with the given params
 
     Parameters
@@ -759,30 +782,37 @@ def build_LSTM(optimizer='adam', learning_rate=1e-4, loss='mse',
     """
     ## BUILD LSTM
     # Add (num_layers - 1) layers that return sequences
-    lstm_list = [LSTM(num_nodes,
-                      return_sequences=True,
-                      stateful=True,
-                      batch_input_shape=(batch_size, timesteps, 1)
-                      ) for _ in range(num_layers - 1)]
+    lstm_list = [
+        LSTM(
+            num_nodes,
+            return_sequences=True,
+            stateful=True,
+            batch_input_shape=(batch_size, timesteps, 1),
+        )
+        for _ in range(num_layers - 1)
+    ]
     # Add a final layer that does not return sequences
-    lstm_list.append(LSTM(num_nodes,
-                      return_sequences=False,
-                      stateful=True,
-                      batch_input_shape=(batch_size, timesteps, 1)))
+    lstm_list.append(
+        LSTM(
+            num_nodes,
+            return_sequences=False,
+            stateful=True,
+            batch_input_shape=(batch_size, timesteps, 1),
+        )
+    )
     # Single node output layer
     lstm_list.append(Dense(1))
     model = Sequential(lstm_list)
 
     ## COMPILE LSTM
-    optimizer_object = get_optimizer(optimizer=optimizer,
-                              learning_rate=learning_rate)
-    model.compile(loss=loss,
-                  optimizer=optimizer_object,
-                  metrics=[RootMeanSquaredError()])
+    optimizer_object = get_optimizer(optimizer=optimizer, learning_rate=learning_rate)
+    model.compile(
+        loss=loss, optimizer=optimizer_object, metrics=[RootMeanSquaredError()]
+    )
     return model
 
 
-def get_optimizer(optimizer='adam', learning_rate=1e-4):
+def get_optimizer(optimizer="adam", learning_rate=1e-4):
     """Given an optimizer and a learning rate, return the optimizer
     object with the learning rate set.
 
@@ -798,23 +828,26 @@ def get_optimizer(optimizer='adam', learning_rate=1e-4):
     optimizer: tf.keras.optimizer object
         Optimizer object with the given learning rate
     """
-    if optimizer.lower() == 'adam':
+    if optimizer.lower() == "adam":
         optimizer = Adam(learning_rate=learning_rate)
-    elif optimizer.lower() == 'rmsprop':
+    elif optimizer.lower() == "rmsprop":
         optimizer = RMSprop(learning_rate=learning_rate)
     else:
-        raise ValueError(f'''You entered {optimizer} but the only supporterd
+        raise ValueError(
+            f"""You entered {optimizer} but the only supporterd
                              optimizers are: Adam and RMSprop (case
-                             insensitive)''')
+                             insensitive)"""
+        )
     return optimizer
 
 
-
-def get_callbacks(patience=10,
-                  restore_best_weights=True,
-                  baseline=None,
-                  custom_lr_scheduler=None,
-                  model_type='LSTM'):
+def get_callbacks(
+    patience=10,
+    restore_best_weights=True,
+    baseline=None,
+    custom_lr_scheduler=None,
+    model_type="LSTM",
+):
     """Return a list of callbacks containing EarlyStopping, WandB and
     (optionally) a custom learning rate scheduler with the given params
 
@@ -843,9 +876,9 @@ def get_callbacks(patience=10,
         (optionally) a custom learning rate scheduler with the given params
     """
     # EarlyStopping
-    early_stop_cb = EarlyStopping(patience=patience,
-                                  restore_best_weights=restore_best_weights,
-                                  baseline=baseline)
+    early_stop_cb = EarlyStopping(
+        patience=patience, restore_best_weights=restore_best_weights, baseline=baseline
+    )
     # WandB
     callbacks_list = [WandbCallback(), early_stop_cb]
     # Custom learning rate scheduler
@@ -855,7 +888,7 @@ def get_callbacks(patience=10,
     return callbacks_list
 
 
-def get_custom_lr_scheduler(model_type='LSTM'):
+def get_custom_lr_scheduler(model_type="LSTM"):
     """For the given model_type, return a custom LR scheduling callback
 
     Parameters
@@ -868,13 +901,15 @@ def get_custom_lr_scheduler(model_type='LSTM'):
     lrs: Callback
         Custom learning rate scheduler callback ready for use in training
     """
-    if model_type.upper() == 'MLP':
+    if model_type.upper() == "MLP":
         lrs = LearningRateScheduler(custom_MLP_lr_scheduler)
-    elif model_type.upper() == 'LSTM':
+    elif model_type.upper() == "LSTM":
         lrs = LearningRateScheduler(custom_LSTM_lr_scheduler)
     else:
-        raise ValueError(f'''Supported model types are: MLP or LSTM. You
-                             entered {model_type}''')
+        raise ValueError(
+            f"""Supported model types are: MLP or LSTM. You
+                             entered {model_type}"""
+        )
     return lrs
 
 
@@ -926,7 +961,8 @@ def custom_LSTM_lr_scheduler(epoch, lr):
 
 """########## PLOT ##########"""
 
-def plot_metric(history, metric='loss', ylim=None, start_epoch=0):
+
+def plot_metric(history, metric="loss", ylim=None, start_epoch=0):
     """Plot the given metric from a Keras history
 
     Parameters
@@ -943,12 +979,12 @@ def plot_metric(history, metric='loss', ylim=None, start_epoch=0):
         impossible, by default 0
     """
     # Define plot attrs here as we modify metric later
-    title = f'{metric.title()} - Training and Validation'
-    ylabel = f'{metric.title()}'
+    title = f"{metric.title()} - Training and Validation"
+    ylabel = f"{metric.title()}"
 
     is_one_minus_metric = False
-    if metric.startswith('1-'):
-        # i.e. we calculate and plot 1 - metric rather than just metric
+    if metric.startswith("1-"):
+        # i.e. we calculate and plot 1 - metric rather than just metric
         is_one_minus_metric = True
         metric = metric[2:]
     metric = metric.lower()
@@ -958,31 +994,22 @@ def plot_metric(history, metric='loss', ylim=None, start_epoch=0):
     epochs = range(1, num_epochs_trained + 1)
 
     values = history.history[metric]
-    val_values = history.history[f'val_{metric}']
+    val_values = history.history[f"val_{metric}"]
 
     if is_one_minus_metric:
         values = 1 - np.array(values)
         val_values = 1 - np.array(val_values)
 
-    ax.plot(epochs[start_epoch:], values[start_epoch:],
-            'b', label='Training')
-    ax.plot(epochs[start_epoch:], val_values[start_epoch:],
-            'r', label='Validation')
+    ax.plot(epochs[start_epoch:], values[start_epoch:], "b", label="Training")
+    ax.plot(epochs[start_epoch:], val_values[start_epoch:], "r", label="Validation")
 
-    ax.set(title=title,
-           xlabel='Epoch',
-           ylabel=ylabel,
-           ylim=ylim)
+    ax.set(title=title, xlabel="Epoch", ylabel=ylabel, ylim=ylim)
     ax.legend()
     wandb.log({title: wandb.Image(fig)})
     plt.show()
 
 
-def _plot_actual_vs_pred(y_true,
-                         y_pred,
-                         rmse=None,
-                         dataset_name=None,
-                         logy=False):
+def _plot_actual_vs_pred(y_true, y_pred, rmse=None, dataset_name=None, logy=False):
     """Plot y_true and y_pred on the same axis with descriptive titles and
     upload to wandb.
 
@@ -1003,22 +1030,21 @@ def _plot_actual_vs_pred(y_true,
         If True the ylabel tells you it is in log scale, by default False
     """
     fig, ax = plt.subplots(figsize=(16, 12))
-    ax.plot(y_true, 'b', label='Actual')
-    ax.plot(y_pred, 'r', label='Preds')
+    ax.plot(y_true, "b", label="Actual")
+    ax.plot(y_pred, "r", label="Preds")
     ax.legend()
 
-    fig_title = f'Actuals vs. Preds - {dataset_name}'
+    fig_title = f"Actuals vs. Preds - {dataset_name}"
     wandb_title = fig_title
     # Add RMSE to title if given
     if rmse is not None:
-        fig_title = fig_title + f' - RMSE {rmse:.5f}'
+        fig_title = fig_title + f" - RMSE {rmse:.5f}"
 
-    ylabel = 'BTC Price ($)'
+    ylabel = "BTC Price ($)"
     if logy:
-        ylabel = 'log(BTC Price USD)'
+        ylabel = "log(BTC Price USD)"
 
-    ax.set(xlabel='Hours', ylabel=ylabel,
-           title=fig_title)
+    ax.set(xlabel="Hours", ylabel=ylabel, title=fig_title)
     wandb.log({wandb_title: wandb.Image(fig)})
     plt.show()
 
@@ -1046,8 +1072,8 @@ def _plot_preds_grid(y_true, y_pred, rmse=None):
         plt.subplot(2, 5, 1)
     else:
         plt.subplot(2, 4, 1)
-    plt.plot(y_true, 'b', label='Actual')
-    plt.plot(y_pred, 'r', label='Preds')
+    plt.plot(y_true, "b", label="Actual")
+    plt.plot(y_pred, "r", label="Preds")
     plt.legend()
     if all_samples_included:
         plt.xticks(np.arange(0, 100000, 20000))
@@ -1059,37 +1085,34 @@ def _plot_preds_grid(y_true, y_pred, rmse=None):
     for i in range(0, len(y_true) // chunk + 1):
         # Select subplot
         if all_samples_included:
-            plt.subplot(2, 5, 2+i)
+            plt.subplot(2, 5, 2 + i)
         else:
-            plt.subplot(2, 4, 2+i)
+            plt.subplot(2, 4, 2 + i)
         # Plot
-        plt.plot(y_true[i * chunk : (i+1) * chunk], 'b')
-        plt.plot(y_pred[i * chunk : (i+1) * chunk], 'r')
+        plt.plot(y_true[i * chunk : (i + 1) * chunk], "b")
+        plt.plot(y_pred[i * chunk : (i + 1) * chunk], "r")
         # Create xticks and xticklabels
         tick_chunk = 2000
         xticks = np.arange(0, chunk + tick_chunk, tick_chunk)
-        xticklabels = np.arange(i * chunk,
-                               (i+1) * chunk + tick_chunk,
-                               tick_chunk)
+        xticklabels = np.arange(i * chunk, (i + 1) * chunk + tick_chunk, tick_chunk)
         plt.xticks(ticks=xticks, labels=xticklabels)
     # Figure title
-    sup_title = 'X_train predictions (broken down)'
+    sup_title = "X_train predictions (broken down)"
     wandb_title = sup_title
     if rmse is not None:
-        sup_title = sup_title + f'- RMSE {rmse:.5f}'
+        sup_title = sup_title + f"- RMSE {rmse:.5f}"
     fig.suptitle(sup_title)
     plt.tight_layout()
     wandb.log({wandb_title: wandb.Image(fig)})
     plt.show()
 
+
 """########### EVALUATE ##########"""
-def calculate_predictions(model,
-                          X_train,
-                          X_val,
-                          y_train=None,
-                          y_val=None,
-                          model_type='LSTM',
-                          batch_size=500):
+
+
+def calculate_predictions(
+    model, X_train, X_val, y_train=None, y_val=None, model_type="LSTM", batch_size=500
+):
     """Calculate and return predictions on training and validation data for
     the given model and model_type
 
@@ -1113,7 +1136,7 @@ def calculate_predictions(model,
         The number of sequences fed into the model on each batch (only needed
         for model_type='LSTM'), by default 500
     """
-    if model_type.upper() == 'LSTM':
+    if model_type.upper() == "LSTM":
         # Create train and val tf.data.Datasets and batch to correct size
         train_ds = tf.data.Dataset.from_tensor_slices((X_train, y_train))
         train_ds = train_ds.batch(batch_size, drop_remainder=True)
@@ -1122,16 +1145,19 @@ def calculate_predictions(model,
 
         y_pred_train = model.predict(train_ds)
         y_pred_val = model.predict(val_ds)
-    elif model_type.upper() == 'MLP':
+    elif model_type.upper() == "MLP":
         y_pred_train = model.predict(X_train)
         y_pred_val = model.predict(X_val)
     else:
-        raise ValueError(f'''You entered {model_type} but the only supported
-                            model_types are: MLP or LSTM.''')
+        raise ValueError(
+            f"""You entered {model_type} but the only supported
+                            model_types are: MLP or LSTM."""
+        )
     return y_pred_train, y_pred_val
 
 
 """########## WANDB ##########"""
+
 
 def upload_history_to_wandb(history):
     """Convenience function to upload a Keras history to W&B
@@ -1146,27 +1172,29 @@ def upload_history_to_wandb(history):
     # Turn into wandb Table
     history_table = wandb.Table(dataframe=history_df)
     # Log
-    wandb.log({'history': history_table})
+    wandb.log({"history": history_table})
 
 
 """########## FULL PROCESS ##########"""
+
+
 def train_and_validate(config):
     # Load data
     train, val = load_train_and_val_data(config)
     # Scale data
-    train_scaled, val_scaled = scale_train_val(train, val,
-                                               scaler=config.scaler)
+    train_scaled, val_scaled = scale_train_val(train, val, scaler=config.scaler)
     # Get data into form Keras needs
-    X_train, X_val, y_train, y_val = timeseries_to_keras_input(config,
-                                                              train_scaled,
-                                                              val_scaled,
-                                                              config.n_input)
+    X_train, X_val, y_train, y_val = timeseries_to_keras_input(
+        config, train_scaled, val_scaled, config.n_input
+    )
     # Build and fit model
     model = build_model(config)
-    callbacks_list = get_callbacks(patience=config.patience,
-                                   restore_best_weights=True,
-                                   custom_lr_scheduler=True,
-                                   model_type='LSTM')
+    callbacks_list = get_callbacks(
+        patience=config.patience,
+        restore_best_weights=True,
+        custom_lr_scheduler=True,
+        model_type="LSTM",
+    )
 
     history = model.fit(
         X_train,
@@ -1176,51 +1204,63 @@ def train_and_validate(config):
         verbose=2,
         shuffle=False,
         validation_data=(X_val, y_val),
-        callbacks=callbacks_list
+        callbacks=callbacks_list,
     )
 
     # Plot loss, rmse, and 1-rmse curves
-    plot_metric(history,
-                metric='loss',
-                start_epoch=config.start_plotting_epoch)
-    plot_metric(history,
-                metric='root_mean_squared_error',
-                start_epoch=config.start_plotting_epoch)
-    plot_metric(history,
-                metric='1-root_mean_squared_error',
-                start_epoch=config.start_plotting_epoch)
+    plot_metric(history, metric="loss", start_epoch=config.start_plotting_epoch)
+    plot_metric(
+        history,
+        metric="root_mean_squared_error",
+        start_epoch=config.start_plotting_epoch,
+    )
+    plot_metric(
+        history,
+        metric="1-root_mean_squared_error",
+        start_epoch=config.start_plotting_epoch,
+    )
     # Store history on wandb
     upload_history_to_wandb(history)
     # Calc predictions
     y_pred_train, y_pred_val = calculate_predictions(
-                                                model,
-                                                X_train,
-                                                X_val,
-                                                y_train,
-                                                y_val,
-                                                model_type=config.model_type,
-                                                batch_size=config.batch_size)
+        model,
+        X_train,
+        X_val,
+        y_train,
+        y_val,
+        model_type=config.model_type,
+        batch_size=config.batch_size,
+    )
     # Convert y_pred_train and y_pred_val to log scale to enable comparison
     # between different scaling types
-    train_log, val_log = scale_train_val(train, val, scaler='log')
+    train_log, val_log = scale_train_val(train, val, scaler="log")
     y_pred_train_log, y_pred_val_log = convert_to_log_scale(
-                                            [y_pred_train, y_pred_val],
-                                            scaler=config.scaler,
-                                            log_datasets=[train_log, val_log])
+        [y_pred_train, y_pred_val],
+        scaler=config.scaler,
+        log_datasets=[train_log, val_log],
+    )
     # Create y_train and y_val in log form
     _, _, y_train_log, y_val_log = timeseries_to_keras_input(
-                                                        config,
-                                                        train_log,
-                                                        val_log,
-                                                        config.n_input)
+        config, train_log, val_log, config.n_input
+    )
     # Calc RMSE between actuals and predictions (both in log scale)
     rmse_train_log = measure_rmse_tf(y_train_log, y_pred_train_log)
     rmse_val_log = measure_rmse_tf(y_val_log, y_pred_val_log)
 
     # Plot actuals vs. predictions for train and val data (both in log scale)
-    _plot_actual_vs_pred(y_train_log, y_pred_train_log, rmse=rmse_train_log,
-                         dataset_name='X_train preds', logy=True)
-    _plot_actual_vs_pred(y_val_log, y_pred_val_log, rmse=rmse_val_log,
-                         dataset_name='X_val preds', logy=True)
+    _plot_actual_vs_pred(
+        y_train_log,
+        y_pred_train_log,
+        rmse=rmse_train_log,
+        dataset_name="X_train preds",
+        logy=True,
+    )
+    _plot_actual_vs_pred(
+        y_val_log,
+        y_pred_val_log,
+        rmse=rmse_val_log,
+        dataset_name="X_val preds",
+        logy=True,
+    )
     _plot_preds_grid(y_train_log, y_pred_train_log, rmse_train_log)
     return history
