@@ -1015,9 +1015,20 @@ def _plot_actual_vs_pred(y_true,
     plt.show()
 
 
-def _plot_preds_grid(y_true, y_pred, rmse):
-    """
-    Built to make a 2x4 grid of preds vs actuals for X_train
+def _plot_preds_grid(y_true, y_pred, rmse=None):
+    """Plot y_true and y_pred on a 2x4 (or 2x5 depending on size) grid.
+    The first subplot shows the entire preds vs. actuals plot. Subsequent
+    subplots show 10k timesteps worth of preds vs. actual comparison.
+
+    Parameters
+    ----------
+    y_true : np.ndarray
+        Array of true values
+    y_pred : np.ndarray
+        Array of predicted values
+    rmse : float, optional
+        The rmse between the two datasets, if given it is included in the
+        title for easy manual comparison of plots, by default None
     """
     fig = plt.figure(figsize=(20, 10))
     all_samples_included = len(y_true) > 80000
@@ -1053,11 +1064,13 @@ def _plot_preds_grid(y_true, y_pred, rmse):
                                (i+1) * chunk + tick_chunk,
                                tick_chunk)
         plt.xticks(ticks=xticks, labels=xticklabels)
-        if i == 1:
-            title = f'X_train predictions (broken down) - RMSE {rmse:.5f}'
-            plt.title(title)
+    # Figure title
+    sup_title = 'X_train predictions (broken down)'
+    wandb_title = sup_title
+    if rmse is not None:
+        sup_title = sup_title + f'- RMSE {rmse:.5f}'
+    fig.suptitle(sup_title)
     plt.tight_layout()
-    wandb_title = 'X_train predictions (broken down)'
     wandb.log({wandb_title: wandb.Image(fig)})
     plt.show()
 
