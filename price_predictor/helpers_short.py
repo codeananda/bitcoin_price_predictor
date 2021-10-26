@@ -117,7 +117,8 @@ def load_train_and_val_data(dataset=1,
     Parameters
     ----------
     dataset : int, optional {1, 2}
-        The dataset you wish to load as defined in data/define_datasets_1_and_2.png
+        The dataset you wish to load as defined in
+        data/define_datasets_1_and_2.png
     notebook : str, optional {'local', 'colab'}
         The type of notebook you are working in
     drop_first_900_train_elements_dataset_1 : bool, optional
@@ -389,7 +390,8 @@ def _scale_log_and_range(train, val, scaler='log_and_range_0_1'):
     global_min_value = min(min(train_log), min(val_log))
     global_max_value = max(max(train_log), max(val_log))
 
-    scaling_args = [scaled_min, scaled_max, global_min_value, global_max_value]
+    scaling_args = [scaled_min, scaled_max,
+                    global_min_value, global_max_value]
 
     train_log_and_range = _scale_seq_to_range(train_log, *scaling_args)
     val_log_and_range = _scale_seq_to_range(val_log, *scaling_args)
@@ -484,7 +486,9 @@ def _series_to_supervised(
     np.ndarray
         Numpy array containing the transformed dataset. It has shape
         (num_samples, input_seq_length + output_seq_length)
-        num_samples = len(univar_time_series) - input_seq_length - output_seq_length
+        num_samples = len(univar_time_series) \
+                      - input_seq_length \
+                      - output_seq_length
     """
     df = pd.DataFrame(univar_time_series)
     cols = []
@@ -575,9 +579,9 @@ def timeseries_to_keras_input(
         output_seq_length=1,
         is_rnn=True,
         batch_size=9):
-    """Given univariate timeseries datasets train and val, transform them into a
-    supervised ML problem and (if is_rnn=True) ensure all batches are the same
-    length.
+    """Given univariate timeseries datasets train and val, transform them into
+    a supervised ML problem and (if is_rnn=True) ensure all batches are the
+    same length.
 
     Parameters
     ----------
@@ -674,7 +678,8 @@ def build_model(model_type='LSTM',
     Raises
     ------
     ValueError
-        If you pass a model type that is not one of 'MLP' or 'LSTM' (case insensitive)
+        If you pass a model type that is not one of 'MLP' or 'LSTM'
+        (case insensitive)
     """
     if model_type.upper() == 'MLP':
         model = build_MLP(optimizer=optimizer, learning_rate=learning_rate,
@@ -742,8 +747,8 @@ def build_LSTM(optimizer='adam', learning_rate=1e-4, loss='mse',
     batch_size : int, optional
         The number of sequences fed into the LSTM on each batch, by default 9
     timesteps : int, optional
-        The length of each sequence fed into the model, by default 168 (i.e.
-        one week's worth of hourly data)
+        The length of each sequence fed into the model, by default 168
+        (i.e., one week's worth of hourly data)
     num_layers : int, optional
         The total number of LSTMs to stack, by default 2
 
@@ -959,8 +964,10 @@ def plot_metric(history, metric='loss', ylim=None, start_epoch=0):
         values = 1 - np.array(values)
         val_values = 1 - np.array(val_values)
 
-    ax.plot(epochs[start_epoch:], values[start_epoch:], 'b', label='Training')
-    ax.plot(epochs[start_epoch:], val_values[start_epoch:], 'r', label='Validation')
+    ax.plot(epochs[start_epoch:], values[start_epoch:],
+            'b', label='Training')
+    ax.plot(epochs[start_epoch:], val_values[start_epoch:],
+            'r', label='Validation')
 
     ax.set(title=title,
            xlabel='Epoch',
@@ -1147,7 +1154,8 @@ def train_and_validate(config):
     # Load data
     train, val = load_train_and_val_data(config)
     # Scale data
-    train_scaled, val_scaled = scale_train_val(train, val, scaler=config.scaler)
+    train_scaled, val_scaled = scale_train_val(train, val,
+                                               scaler=config.scaler)
     # Get data into form Keras needs
     X_train, X_val, y_train, y_val = timeseries_to_keras_input(config,
                                                               train_scaled,
@@ -1172,25 +1180,33 @@ def train_and_validate(config):
     )
 
     # Plot loss, rmse, and 1-rmse curves
-    plot_metric(history, metric='loss', start_epoch=config.start_plotting_epoch)
-    plot_metric(history, metric='root_mean_squared_error', start_epoch=config.start_plotting_epoch)
-    plot_metric(history, metric='1-root_mean_squared_error', start_epoch=config.start_plotting_epoch)
+    plot_metric(history,
+                metric='loss',
+                start_epoch=config.start_plotting_epoch)
+    plot_metric(history,
+                metric='root_mean_squared_error',
+                start_epoch=config.start_plotting_epoch)
+    plot_metric(history,
+                metric='1-root_mean_squared_error',
+                start_epoch=config.start_plotting_epoch)
     # Store history on wandb
     upload_history_to_wandb(history)
     # Calc predictions
-    y_pred_train, y_pred_val = calculate_predictions(model,
-                                                    X_train,
-                                                    X_val,
-                                                    y_train,
-                                                    y_val,
-                                                    model_type=config.model_type,
-                                                    batch_size=config.batch_size,)
-    # Convert y_pred_train and y_pred_val into a log scale to enable comparison
+    y_pred_train, y_pred_val = calculate_predictions(
+                                                model,
+                                                X_train,
+                                                X_val,
+                                                y_train,
+                                                y_val,
+                                                model_type=config.model_type,
+                                                batch_size=config.batch_size)
+    # Convert y_pred_train and y_pred_val to log scale to enable comparison
     # between different scaling types
     train_log, val_log = scale_train_val(train, val, scaler='log')
-    y_pred_train_log, y_pred_val_log = convert_to_log_scale([y_pred_train, y_pred_val],
-                                                            scaler=config.scaler,
-                                                            log_datasets=[train_log, val_log])
+    y_pred_train_log, y_pred_val_log = convert_to_log_scale(
+                                            [y_pred_train, y_pred_val],
+                                            scaler=config.scaler,
+                                            log_datasets=[train_log, val_log])
     # Create y_train and y_val in log form
     _, _, y_train_log, y_val_log = timeseries_to_keras_input(
                                                         config,
