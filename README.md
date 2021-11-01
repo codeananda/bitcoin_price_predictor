@@ -3,19 +3,20 @@ For this project, I built Tensorflow/Keras models to predict the price of Bitcoi
 
 A mentor paid me to do this as a toy project to test if we would be a good fit working together. The goal was to demonstrate that I can properly train and tune Tensorflow/Keras models for time series/sequence  problems. I successfully demonstrated this and we worked on a [bigger sequence classification project](https://github.com/theadammurphy/sequence_classification_pytorch) afterwards with a client.
 
-My mentor left the following ⭐⭐⭐⭐⭐ review after completing this project:
+My mentor left the following ⭐⭐⭐⭐⭐ review:
 
 <img width="636" alt="Screenshot 2021-09-01 at 17 19 46" src="https://user-images.githubusercontent.com/51246969/131698489-32a12020-7cd0-4277-9a62-1907f0eff43d.png">
 
-Note: we decided beforehand it would be a fixed price project but I asked to bill it hourly to increase the number of hours billed on my [Upwork profile](https://www.upwork.com/freelancers/~01153ca9fd0099730e).
+Note: I spent more than 8 hours on this but asked to bill it hourly to increase the number of hours billed on my [Upwork profile](https://www.upwork.com/freelancers/~01153ca9fd0099730e).
 
 # This Repo is a Work-in-Progress 🏗
 
 I finished this project in June 2021 and am in the process of tidying everything up so it can be presented to the world in a nice manner. You are one of the lucky souls who gets to see the repo in its raw form. But this means that not everything is as clean or orderly as it should be.
 
-However, I hope it gives you an idea of how I approached this project and demonstrates I can build and tune Tensorflow/Keras models on univariate time-series data.
+# The Goal
 
-Note: I am currently moving all the functions I actually used from [`helpers.py`](https://github.com/theadammurphy/bitcoin_price_predictor/blob/main/price_predictor/helpers.py) into [`helpers_short.py`](https://github.com/theadammurphy/bitcoin_price_predictor/blob/main/price_predictor/helpers_short.py). The former contains all the functions I wrote for the project but several of them were written and not used in model training. I want to create one file that contains all the functions I actually used. Moreover, I am also adding docstrings to every function since I didn't write many the first time around. I realise now how grave an error this was!
+1. Demonstrate I can build and tune Tensorflow/Keras models on time series/sequence classification problems
+2. Demonstrate I can work independently each week and report back on progress
 
 # Results
 
@@ -53,13 +54,6 @@ The vast majority of the code I used is in [`price_predictor/helpers.py`](https:
 
 All model tuning for this project took place with [Weights & Biases](https://wandb.ai/site) (wandb). You can see the results of all 540+ runs on the [bitcoin_price_predictor wandb page](https://wandb.ai/theadammurphy/bitcoin_price_predictor?workspace=user-theadammurphy). As such, the notebooks themselves are not that interesting - I just used them to run wandb experiments and saved everything to the cloud. 
 
-### Docstrings
-
-Not all functions have docstrings and for this I will probably face 🔥 eternal damnation in hell 🔥. In my defence, I was working on this project, alone every day and felt like the names were clear enough. 
-
-🙏 **I promise to add docstrings when I write everything up neatly.** 🙏
-
-In the meantime, check out the scripts from my [PyTorch project](https://github.com/theadammurphy/portfolio/tree/main/electrochem_pytorch/scripts) if you want proof I can write docstrings.
 
 # Improvements
 
