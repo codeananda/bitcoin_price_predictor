@@ -1,7 +1,9 @@
 # Let's Predict the Price of Bitcoin 📈
-For this project, I build models in Tensorflow/Keras to predict the price of Bitcoin over the next few days. I used fully-connected neural nets and LSTMs.
+For this project, I built Tensorflow/Keras models to predict the price of Bitcoin.
 
-This was a paid project on Upwork that lasted several months. The client wanted a proof-of-concept model, so we stuck to univariate time-series forcasting. We were both happy with the results and the client left the following ⭐⭐⭐⭐⭐ review:
+A mentor paid me to do this as a toy project to test if we would be a good fit working together. The goal was to demonstrate that I can properly train and tune Tensorflow/Keras models for time series/sequence  problems. I successfully demonstrated this and we worked on a [bigger sequence classification project](https://github.com/theadammurphy/sequence_classification_pytorch) afterwards with a client.
+
+My mentor left the following ⭐⭐⭐⭐⭐ review after completing this project:
 
 <img width="636" alt="Screenshot 2021-09-01 at 17 19 46" src="https://user-images.githubusercontent.com/51246969/131698489-32a12020-7cd0-4277-9a62-1907f0eff43d.png">
 
