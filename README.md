@@ -1,9 +1,13 @@
 # Let's Predict the Price of Bitcoin 📈
 For this project, I built Tensorflow/Keras models to predict the price of Bitcoin.
 
-A mentor paid me to do this as a toy project to test if we would be a good fit working together. The goal was to demonstrate that I can properly train and tune Tensorflow/Keras models for time series/sequence  problems. I successfully demonstrated this and we worked on a [bigger sequence classification project](https://github.com/theadammurphy/sequence_classification_pytorch) afterwards with a client.
+## Introduction
 
-My mentor left the following ⭐⭐⭐⭐⭐ review:
+One of my mentors had a sequence classification project coming up with a client in a few weeks. He wanted me to demonstrate I could do time series/sequence classification in Tensorflow/Keras. I had never built such a model before, nor had I done a time series problem. Since we both have an interest in cryptocurrency, we thought it would be fun to build a model to predict the price of Bitcoin. 
+
+Disclaimer: since people dedicate their lives to building financial trading models, I thought there was a close to zero percent chance I would build a profitable model. So, I treated this as a project to build my ML skills.
+
+I completed the project much to my mentor's satisfaction (and then we completed the [client's sequence classification project](https://github.com/theadammurphy/sequence_classification_pytorch)) and he left the following ⭐⭐⭐⭐⭐ review:
 
 <img width="636" alt="Screenshot 2021-09-01 at 17 19 46" src="https://user-images.githubusercontent.com/51246969/131698489-32a12020-7cd0-4277-9a62-1907f0eff43d.png">
 
@@ -13,10 +17,16 @@ Note: I spent more than 8 hours on this but asked to bill it hourly to increase 
 
 I finished this project in June 2021 and am in the process of tidying everything up so it can be presented to the world in a nice manner. You are one of the lucky souls who gets to see the repo in its raw form. But this means that not everything is as clean or orderly as it should be.
 
-# The Goal
+# Define
 
 1. Demonstrate I can build and tune Tensorflow/Keras models on time series/sequence classification problems
 2. Demonstrate I can work independently each week and report back on progress
+
+# Discover
+
+# Develop
+
+# Deploy
 
 # Results
 
