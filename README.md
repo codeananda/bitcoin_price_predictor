@@ -1,8 +1,6 @@
-# Let's Predict the Price of Bitcoin with Tensorflow/Keras 📈
+# Let's Predict the Price of Bitcoin - Tensorflow/Keras 📈
 
 > The financial markets generally are unpredictable… The idea that you can actually predict what's going to happen contradicts my way of looking at the market. - George Soros
-
-For this project, I built Tensorflow/Keras models to predict the price of Bitcoin.
 
 ## Introduction
 
