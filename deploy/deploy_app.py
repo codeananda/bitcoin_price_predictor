@@ -14,5 +14,5 @@ if st.button('Get Recent Bitcoin Data'):
 
     response = requests.request("GET", url, headers=headers, data=payload)
 
-    print(response.text)
-    print('Success')
+    response.text
+    'Success'
