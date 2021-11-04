@@ -22,8 +22,12 @@ I finished this project in June 2021 and am in the process of tidying everything
 
 # Define
 
+<details><summary>Click to expand!</summary><p>
+  
 1. Demonstrate I can build and tune Tensorflow/Keras models on time series/sequence classification problems
 2. Demonstrate I can work independently each week and report back on progress
+
+  </p></details>
 
 # Discover
 
