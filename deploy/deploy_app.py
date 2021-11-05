@@ -39,6 +39,8 @@ def get_last_8_days_hourly_bitcoin_data():
     payload = {}
     headers = {'Authorization': 'Bearer bff099f6-aec1-4e2f-8cec-57f8eea14e27'}
     response = requests.request("GET", url, headers=headers, data=payload)
+    response.raise_for_status()
+    response.status_code
 
     json_data = json.loads(response.text.encode("utf8"))
     bitcoin_data = json_data['data']
