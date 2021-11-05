@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 import requests
 import time
-import json
 import matplotlib.pyplot as plt
 import seaborn as sns
 from io import BytesIO
@@ -42,7 +41,7 @@ def get_last_8_days_hourly_bitcoin_data():
     response.raise_for_status()
     response.status_code
 
-    json_data = json.loads(response.text.encode("utf8"))
+    json_data = response.json()
     bitcoin_data = json_data['data']
 
     df = pd.DataFrame(bitcoin_data)
