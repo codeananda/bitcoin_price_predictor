@@ -1151,6 +1151,26 @@ def calculate_predictions(
     return y_pred_train, y_pred_val
 
 
+def measure_rmse_tf(y_true, y_pred):
+    """Calculate the RMSE score between y_true and y_pred and return it.
+
+    Parameters
+    ----------
+    y_true : np.ndarray
+        Array of true values
+    y_pred : np.ndarray
+        Array of predicted values
+
+    Returns
+    -------
+    rmse : float
+        The RMSE between the arrays y_true and y_pred
+    """
+    m = RootMeanSquaredError()
+    m.update_state(y_true, y_pred)
+    rmse = m.result().numpy()
+    return rmse
+
 """########## WANDB ##########"""
 
 
