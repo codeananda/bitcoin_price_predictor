@@ -2,17 +2,64 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import requests
+import time
+import json
+import matplotlib.pyplot as plt
+import seaborn as sns
+from io import BytesIO
+
+sns.set()
 
 st.title("Predict the Price of Bitcoin in 1 Hour's Time")
 
-if st.button('Get Recent Bitcoin Data'):
-    # Get hourly Bitcoin data
-    url = "https://api.coincap.io/v2/assets/bitcoin/history?interval=h1"
+def get_last_8_days_hourly_bitcoin_data():
+    """Call Coincap API and request last 8 days of hourly Bitcoin USD data,
+    return DataFrame with 'date' and 'price' columns.
 
-    payload={}
-    headers = {}
+    Returns
+    -------
+    pd.DataFrame
+        Dataframe (columns: 'date', 'price' with correct types).
+        Price is rounded to 2 decimal places. Last row contains most recent
+        price, first contains price 8 days ago.
+    """
+    num_seconds_in_8_days = 60 * 60 * 24 * 8
+    num_milliseconds_in_8_days = num_seconds_in_8_days * 1000
 
+    now_ns = str(time.time_ns())
+    # Take first 13 digits for milliseconds
+    # Coincap API only accepts milliseconds
+    now_ms = int(now_ns[:13])
+    eight_days_ago = now_ms - num_milliseconds_in_8_days
+
+    # Get Bitcoin data for last 8 days
+    url = (f"https://api.coincap.io/v2/assets/bitcoin/history?interval=h1"
+            f"&start={eight_days_ago}&end={now_ms}")
+
+    payload = {}
+    headers = {'Authorization': 'Bearer bff099f6-aec1-4e2f-8cec-57f8eea14e27'}
     response = requests.request("GET", url, headers=headers, data=payload)
 
-    response.text
-    'Success'
+    json_data = json.loads(response.text.encode("utf8"))
+    bitcoin_data = json_data['data']
+
+    df = pd.DataFrame(bitcoin_data)
+    df = df.loc[:, ['date', 'priceUsd']]
+    df.rename(mapper={'priceUsd': 'price'}, inplace=True, axis=1)
+    df['date'] = df['date'].apply(pd.to_datetime)
+    df['price'] = df['price'].apply(pd.to_numeric)
+    df['price'] = df['price'].round(2)
+    return df
+
+if st.button('Get Recent Bitcoin Data'):
+    bitcoin = get_last_8_days_hourly_bitcoin_data()
+
+    bitcoin
+
+    fig, ax = plt.subplots()
+    bitcoin.plot(x='date', y='price', ax=ax, figsize=(1, 1))
+
+    # Workaround needed to totally control matplotlib figsize
+    buf = BytesIO()
+    fig.savefig(buf, format='png')
+    st.image(buf)
