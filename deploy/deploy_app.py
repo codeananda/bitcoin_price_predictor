@@ -64,3 +64,6 @@ if st.button('Get Recent Bitcoin Data'):
     buf = BytesIO()
     fig.savefig(buf, format='png')
     st.image(buf)
+
+if st.button('Make Prediction for Next Hour'):
+    pass
