@@ -132,9 +132,7 @@ def load_train_and_val_data(
         datasets as defined in data/define_datasets_1_and_2.png
     """
     if dataset == 1:
-        train, val, _ = load_dataset_1(
-            notebook, drop_first_900_elts_dataset_1
-        )
+        train, val, _ = load_dataset_1(notebook, drop_first_900_elts_dataset_1)
     elif dataset == 2:
         train, val = load_dataset_2(notebook)
     else:
@@ -1171,6 +1169,7 @@ def measure_rmse_tf(y_true, y_pred):
     rmse = m.result().numpy()
     return rmse
 
+
 """########## WANDB ##########"""
 
 
@@ -1198,10 +1197,9 @@ def train_and_validate(config):
     # predictions. There are 168 hours in a week
     TIMESTEPS = 168
     BATCH_SIZE = 100
-    scaler = 'scale_and_range_0_1'
+    scaler = "scale_and_range_0_1"
     # Load data
-    train, val = load_train_and_val_data(dataset=2,
-                                        notebook='local')
+    train, val = load_train_and_val_data(dataset=2, notebook="local")
     # Scale data
     train_scaled, val_scaled = scale_train_val(train, val, scaler=scaler)
     # Get data into form Keras needs
@@ -1215,10 +1213,7 @@ def train_and_validate(config):
     )
     # Build and fit model
     model = build_model(
-        model_type='LSTM',
-        optimizer='adam',
-        learning_rate=1e-4,
-        loss='mse'
+        model_type="LSTM", optimizer="adam", learning_rate=1e-4, loss="mse"
     )
     callbacks_list = get_callbacks(
         patience=10,
@@ -1259,7 +1254,7 @@ def train_and_validate(config):
         X_val,
         y_train,
         y_val,
-        model_type='LSTM',
+        model_type="LSTM",
         batch_size=BATCH_SIZE,
     )
     # Convert y_pred_train and y_pred_val to log scale to enable comparison
