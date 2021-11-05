@@ -50,14 +50,14 @@ def get_download_and_data_dirs(notebook="local"):
     return DOWNLOAD_DIR, DATA_DIR
 
 
-def load_dataset_1(notebook="local", drop_first_900_train_elements=True):
+def load_dataset_1(notebook="local", drop_first_900_elts=True):
     """Load dataset 1 as defined in data/define_datasets_1_and_2.png
 
     Parameters
     ----------
     notebook : str, optional {'local', 'colab'}
         The type of notebook you are working in
-    drop_first_900_train_elements : bool, optional
+    drop_first_900_elts : bool, optional
         Whether to drop the first 900 training elements or not. The first 900
         hours (37.5 days) of data contains many missing values. Since it is
         such a small time window, you may want to drop it rather than trying
@@ -72,7 +72,7 @@ def load_dataset_1(notebook="local", drop_first_900_train_elements=True):
     _, DATA_DIR = get_download_and_data_dirs(notebook)
     with open(DATA_DIR / "train_1.pkl", "rb") as f:
         train_1 = pickle.load(f)
-        if drop_first_900_train_elements:
+        if drop_first_900_elts:
             train_1 = train_1[900:]
 
     with open(DATA_DIR / "val_1.pkl", "rb") as f:
@@ -112,7 +112,7 @@ def load_dataset_2(notebook="local"):
 
 
 def load_train_and_val_data(
-    dataset=1, notebook="local", drop_first_900_train_elements_dataset_1=True
+    dataset=1, notebook="local", drop_first_900_elts_dataset_1=True
 ):
     """Convenience function to load just the train and val datasets from
     either dataset 1 or 2 (as defined in data/define_datasets_1_and_2.png)
@@ -124,7 +124,7 @@ def load_train_and_val_data(
         data/define_datasets_1_and_2.png
     notebook : str, optional {'local', 'colab'}
         The type of notebook you are working in
-    drop_first_900_train_elements_dataset_1 : bool, optional
+    drop_first_900_elts_dataset_1 : bool, optional
         Whether to drop the first 900 training elements of dataset 1 or not.
         The first 900 hours (37.5 days) of data contains many missing values.
         Since it is such a small time window, you may want to drop it rather
@@ -138,7 +138,7 @@ def load_train_and_val_data(
     """
     if dataset == 1:
         train, val, _ = load_dataset_1(
-            notebook, drop_first_900_train_elements_dataset_1
+            notebook, drop_first_900_elts_dataset_1
         )
     elif dataset == 2:
         train, val = load_dataset_2(notebook)
@@ -1180,7 +1180,8 @@ def upload_history_to_wandb(history):
 
 def train_and_validate(config):
     # Load data
-    train, val = load_train_and_val_data(config)
+    train, val = load_train_and_val_data(dataset=2,
+                                        notebook='local')
     # Scale data
     train_scaled, val_scaled = scale_train_val(train, val, scaler=config.scaler)
     # Get data into form Keras needs
