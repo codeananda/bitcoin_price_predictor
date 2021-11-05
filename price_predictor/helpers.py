@@ -12,11 +12,6 @@ from tensorflow.keras.metrics import RootMeanSquaredError
 from tensorflow.keras.optimizers import Adam, RMSprop
 from tensorflow.keras.callbacks import EarlyStopping, LearningRateScheduler
 
-# We use hourly close data and want to feed in 1 week of data for each hour of
-# predictions. There are 168 hours in a week
-TIMESTEPS = 168
-
-
 """########## LOAD DATA ##########"""
 
 
@@ -1179,19 +1174,34 @@ def upload_history_to_wandb(history):
 
 
 def train_and_validate(config):
+    # We use hourly close data and want to feed in 1 week of data for each hour of
+    # predictions. There are 168 hours in a week
+    TIMESTEPS = 168
+    BATCH_SIZE = 100
+    scaler = 'scale_and_range_0_1'
     # Load data
     train, val = load_train_and_val_data(dataset=2,
                                         notebook='local')
     # Scale data
-    train_scaled, val_scaled = scale_train_val(train, val, scaler=config.scaler)
+    train_scaled, val_scaled = scale_train_val(train, val, scaler=scaler)
     # Get data into form Keras needs
     X_train, X_val, y_train, y_val = timeseries_to_keras_input(
-        config, train_scaled, val_scaled, config.n_input
+        train_scaled,
+        val_scaled,
+        input_seq_length=TIMESTEPS,
+        output_seq_length=1,
+        is_rnn=True,
+        batch_size=BATCH_SIZE,
     )
     # Build and fit model
-    model = build_model(config)
+    model = build_model(
+        model_type='LSTM',
+        optimizer='adam',
+        learning_rate=1e-4,
+        loss='mse'
+    )
     callbacks_list = get_callbacks(
-        patience=config.patience,
+        patience=10,
         restore_best_weights=True,
         custom_lr_scheduler=True,
         model_type="LSTM",
@@ -1209,16 +1219,16 @@ def train_and_validate(config):
     )
 
     # Plot loss, rmse, and 1-rmse curves
-    plot_metric(history, metric="loss", start_epoch=config.start_plotting_epoch)
+    plot_metric(history, metric="loss", start_epoch=10)
     plot_metric(
         history,
         metric="root_mean_squared_error",
-        start_epoch=config.start_plotting_epoch,
+        start_epoch=10,
     )
     plot_metric(
         history,
         metric="1-root_mean_squared_error",
-        start_epoch=config.start_plotting_epoch,
+        start_epoch=10,
     )
     # Store history on wandb
     upload_history_to_wandb(history)
@@ -1229,20 +1239,25 @@ def train_and_validate(config):
         X_val,
         y_train,
         y_val,
-        model_type=config.model_type,
-        batch_size=config.batch_size,
+        model_type='LSTM',
+        batch_size=BATCH_SIZE,
     )
     # Convert y_pred_train and y_pred_val to log scale to enable comparison
     # between different scaling types
     train_log, val_log = scale_train_val(train, val, scaler="log")
     y_pred_train_log, y_pred_val_log = convert_to_log_scale(
         [y_pred_train, y_pred_val],
-        scaler=config.scaler,
+        scaler=scaler,
         log_datasets=[train_log, val_log],
     )
     # Create y_train and y_val in log form
     _, _, y_train_log, y_val_log = timeseries_to_keras_input(
-        config, train_log, val_log, config.n_input
+        train_log,
+        val_log,
+        input_seq_length=TIMESTEPS,
+        output_seq_length=1,
+        is_rnn=True,
+        batch_size=BATCH_SIZE,
     )
     # Calc RMSE between actuals and predictions (both in log scale)
     rmse_train_log = measure_rmse_tf(y_train_log, y_pred_train_log)
