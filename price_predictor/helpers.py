@@ -138,7 +138,7 @@ def load_train_and_val_data(
     else:
         raise ValueError(
             f"""You entered {dataset} for dataset but the only
-                             supported values are: 1 or 2"""
+            supported values are: 1 or 2"""
         )
     return train, val
 
@@ -182,9 +182,9 @@ def scale_train_val(train, val, scaler="log"):
     else:
         raise ValueError(
             """Please enter a supported scaling type: log,
-                        log_and_divide_a (first take log, then divide by a),
-                        or log_and_range_a_b (first take log then scale to
-                        range [a, b])."""
+            log_and_divide_a (first take log, then divide by a),
+            or log_and_range_a_b (first take log then scale to
+            range [a, b])."""
         )
     return train_scaled, val_scaled
 
