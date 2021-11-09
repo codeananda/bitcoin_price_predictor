@@ -49,4 +49,5 @@ def get_last_8_days_hourly_bitcoin_data():
     df["date"] = df["date"].apply(pd.to_datetime)
     df["price"] = df["price"].apply(pd.to_numeric)
     df["price"] = df["price"].round(2)
+    df.sort_values("date", ascending=False, ignore_index=True, inplace=True)
     return df
