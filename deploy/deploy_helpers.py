@@ -10,7 +10,7 @@ from io import BytesIO
 
 def get_last_8_days_hourly_bitcoin_data():
     """Call Coincap API and request last 8 days of hourly Bitcoin USD data,
-    return DataFrame with 'date' and 'price' columns.
+    return DataFrame with 'date' and 'price' columns. Date column is in UTC.
 
     Returns
     -------
