@@ -21,3 +21,4 @@ __pycache__/
 # Log files
 lightning_logs/
 wandb/
+.spyproject/
