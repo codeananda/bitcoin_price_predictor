@@ -4,6 +4,8 @@
 
 ![stock-market-meme](https://user-images.githubusercontent.com/51246969/139806831-81b387ed-6415-4ea6-81d2-11caf6e56a31.png)
 
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 ## Introduction
 
 One of my mentors had a sequence classification project coming up with a client in a few weeks. He wanted me to demonstrate I could do time series/sequence classification in Tensorflow/Keras. I had never built such a model before, nor had I done a time series problem. Since we both have an interest in cryptocurrency, we thought it would be fun to build a model to predict the price of Bitcoin. 
