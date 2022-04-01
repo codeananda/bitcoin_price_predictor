@@ -22,14 +22,14 @@ TEST_NUM_DAYS = 30
 # How many days into the future to predict the close
 PREDICT_WINDOW_NUM_DAYS = 1
 
-DOWNLOAD_DIR = Path('../download')
+DOWNLOAD_DIR = Path("../download")
 
 sns.set()
 
-price = pd.read_csv(DOWNLOAD_DIR / 'price.csv')
+price = pd.read_csv(DOWNLOAD_DIR / "price.csv")
 # Just use close price data
-close = price.loc[:, 'c']
-close_train = close[-TRAIN_NUM_DAYS : -TEST_NUM_DAYS]
+close = price.loc[:, "c"]
+close_train = close[-TRAIN_NUM_DAYS:-TEST_NUM_DAYS]
 close_test = close[-TEST_NUM_DAYS:]
 
 # Define the range of values for training
@@ -55,11 +55,8 @@ X_train = training_set_std_scale[:-1]
 y_train = training_set_std_scale[1:]
 X_train = X_train.reshape((-1, 1, 1))
 
-regressor = Sequential([
-    LSTM(4),
-    Dense(1)
-])
-regressor.compile(optimizer='adam', loss='mean_squared_error')
+regressor = Sequential([LSTM(4), Dense(1)])
+regressor.compile(optimizer="adam", loss="mean_squared_error")
 history = regressor.fit(X_train, y_train, batch_size=5, epochs=100)
 
 testing_set = close_test.values.reshape((-1, 1))
@@ -70,31 +67,8 @@ predicted_price = regressor.predict(testing_set)
 predicted_price = scaler.inverse_transform(predicted_price)
 
 fig, ax = plt.subplots()
-plt.plot(close_test.values, c='b', label='BTC Price')
-plt.plot(predicted_price, c='r', label='Forecast')
+plt.plot(close_test.values, c="b", label="BTC Price")
+plt.plot(predicted_price, c="r", label="Forecast")
 plt.legend()
-ax.set(xlabel='Days', ylabel='Price (USD)',
-      title='30 Forcasted BTC Price Last 30 Days')
+ax.set(xlabel="Days", ylabel="Price (USD)", title="30 Forcasted BTC Price Last 30 Days")
 plt.show()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
