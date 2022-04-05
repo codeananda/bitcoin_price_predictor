@@ -22,21 +22,6 @@ Note: I spent more than 8 hours on this but asked to bill it hourly to increase 
 
 I finished this project in June 2021 and am in the process of tidying everything up so it can be presented to the world in a nice manner. You are one of the lucky souls who gets to see the repo in its raw form. But this means that not everything is as clean or orderly as it should be.
 
-# Define
-
-<details><summary>Click to expand!</summary><p>
-  
-1. Demonstrate I can build and tune Tensorflow/Keras models on time series/sequence classification problems
-2. Demonstrate I can work independently each week and report back on progress
-
-  </p></details>
-
-# Discover
-
-# Develop
-
-# Deploy
-
 # Results
 
 The best results were obtained by an LSTM with 5 layers each getting sequentially smaller. I ran multiple tests on wandb and got the lowest loss on the validation set to be 0.01816 RMSE.
