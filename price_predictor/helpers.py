@@ -12,6 +12,8 @@ from tensorflow.keras.metrics import RootMeanSquaredError
 from tensorflow.keras.optimizers import Adam, RMSprop
 from tensorflow.keras.callbacks import EarlyStopping, LearningRateScheduler
 
+TIMESTEPS = 168
+
 """########## LOAD DATA ##########"""
 
 
