@@ -21,4 +21,6 @@ if st.button("Get Recent Bitcoin Data"):
     st.plotly_chart(fig)
 
 if st.button("Make Prediction for Next Hour"):
-    pass
+    model = tf.keras.load_model("../model-best-cool-dragon-40.h5")
+    # Preprocess data
+    # model.predict()
