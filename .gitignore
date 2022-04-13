@@ -1,6 +1,8 @@
 # vs-code
 .vscode/
 
+.gdoc
+
 # OS generated files #
 ######################
 .DS_Store
