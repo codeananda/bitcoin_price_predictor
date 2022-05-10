@@ -9,10 +9,21 @@ import tensorflow as tf
 
 from deploy_helpers import get_last_8_days_hourly_bitcoin_data
 
-from .price_predictor.helpers import scale_train_val
+from helpers import scale_train_val, timeseries_to_keras_input
 
 TIMESTEPS = 168
 BATCH_SIZE = 100
+
+title = "Simple Bitcoin Price Predictor"
+st.set_page_config(
+    page_title=title,
+    page_icon="📈",
+    layout="wide",
+)
+
+st.title(title)
+
+left_col, right_col = st.columns(2)
 
 
 def preprocess_data(df):
@@ -32,8 +43,6 @@ def preprocess_data(df):
 
     return X_train
 
-
-st.title("Predict the Price of Bitcoin in 1 Hour's Time")
 
 if st.button("Get Recent Bitcoin Data"):
     bitcoin = get_last_8_days_hourly_bitcoin_data()
