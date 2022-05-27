@@ -24,3 +24,11 @@ __pycache__/
 lightning_logs/
 wandb/
 .spyproject/
+
+# Distribution / packaging
+.Python
+build/
+dist/
+.eggs/
+*.egg-info/
+*.egg
