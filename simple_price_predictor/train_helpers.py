@@ -3,7 +3,7 @@ from simple_price_predictor.constants import HISTORICAL_BITCOIN_CSV_FILEPATH
 import os
 
 
-def load_bitcoin_df():
+def load_raw_bitcoin_df():
     """Load the downloads/price.csv dataset of historical BTC data from 2010-2021
     and return as a dataframe without an NaN values.
 

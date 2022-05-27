@@ -1,5 +1,5 @@
 from simple_price_predictor.constants import HISTORICAL_BITCOIN_CSV_FILEPATH
-from simple_price_predictor.train_helpers import load_bitcoin_df
+from simple_price_predictor.train_helpers import load_raw_bitcoin_df
 import os
 
 
@@ -8,4 +8,4 @@ def test_historical_bitcoin_csv_filepath_exists():
 
 
 def test_load_bitcoin_df():
-    load_bitcoin_df()
+    load_raw_bitcoin_df()
