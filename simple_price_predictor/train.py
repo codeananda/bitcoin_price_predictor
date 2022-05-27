@@ -1,11 +1,11 @@
 import pandas as pd
 import numpy as np
 import tensorflow as tf
-from fastquant import get_crypto_data
 
-# Data starts 08/2017 but good enough for now.
-bitcoin = get_crypto_data("BTC/USDT", "2008-01-01", "2022-05-15")
-bitcoin = bitcoin.close
+from simple_price_predictor.train_helpers import load_bitcoin_df
+
+
+bitcoin = load_bitcoin_df()
 
 # Processing steps to take
 # 1. Scale - scale_train_val - log_and_range_0_1 the best

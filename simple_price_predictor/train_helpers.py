@@ -1,5 +1,5 @@
 import pandas as pd
-from constants import HISTORICAL_BITCOIN_CSV_FILEPATH
+from simple_price_predictor.constants import HISTORICAL_BITCOIN_CSV_FILEPATH
 import os
 
 
