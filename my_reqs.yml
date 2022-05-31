@@ -1,0 +1,30 @@
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - ipython
+  - numpy
+  - seaborn
+  - jupyter
+  - pip
+  - python
+  - matplotlib
+  - pandas
+  - tqdm
+  - wandb
+  - scikit-learn
+  - pylint
+  - black
+  - mamba
+  - streamlit
+  - tensorflow
+  - requests
+  - scikit-learn-intelex
+  - plotly
+  - git
+  - pytest
+  - mypy
+  - pydantic
+  - hypothesis
+  - optuna
+  - ploomber
