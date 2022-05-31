@@ -67,6 +67,9 @@ jobs:
         
       - name: Install repo as package to enable absolute imports
         run: pip install .
+        
+      - name: Check simple-price-predictor is installed
+        run: conda list simple
 
       - name: Run tests
         shell: bash -l {0}
