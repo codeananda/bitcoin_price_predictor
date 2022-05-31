@@ -64,6 +64,7 @@ jobs:
       - name: Update environment
         run: |
           mamba env update -n bitcoin -f my_reqs.yml
+          conda init bash
           conda activate bitcoin
         if: steps.cache.outputs.cache-hit != 'true'
         
