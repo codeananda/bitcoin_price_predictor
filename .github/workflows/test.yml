@@ -62,7 +62,7 @@ jobs:
         id: cache
         
       - name: Update environment
-        run: mamba env update -n bitcoin -f my_reqs.yml -y
+        run: mamba env update -y -n bitcoin -f my_reqs.yml
         if: steps.cache.outputs.cache-hit != 'true'
         
       - name: Install repo as package to enable absolute imports
