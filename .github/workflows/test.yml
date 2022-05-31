@@ -64,6 +64,9 @@ jobs:
       - name: Update environment
         run: mamba env update -n bitcoin -f my_reqs.yml -y
         if: steps.cache.outputs.cache-hit != 'true'
+        
+      - name: Install repo as package to enable absolute imports
+        run: pip install .
 
       - name: Run tests
         shell: bash -l {0}
