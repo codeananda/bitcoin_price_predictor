@@ -74,7 +74,7 @@ jobs:
           conda activate bitcoin
           conda list
           which pip
-          /usr/share/miniconda3/envs/bitcoin/bin/pip install .
+          ${{ matrix.prefix }}/bin/pip install .
         
       - name: Check simple-price-predictor is installed
         shell: bash -l {0}
