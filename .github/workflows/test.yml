@@ -72,10 +72,17 @@ jobs:
         shell: bash -l {0}
         run: |
           conda activate bitcoin
-          pip install .
+          conda list
+          which pip
+          /Users/runner/miniconda3/envs/bitcoin/bin/pip install .
         
       - name: Check simple-price-predictor is installed
+        shell: bash -l {0}
         run: conda list simple
+        
+      - name: Check installed conda envs
+        shell: bash -l {0}
+        run: conda env list
 
       - name: Run tests
         shell: bash -l {0}
