@@ -68,22 +68,10 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         
         
-      - name: Install repo as package to enable absolute imports
+      - name: Install repo as package and run tests
         shell: bash -l {0}
         run: |
           conda activate bitcoin
-          conda list
-          which pip
-          ${{ matrix.prefix }}/bin/pip install .
-        
-      - name: Check simple-price-predictor is installed
-        shell: bash -l {0}
-        run: conda list simple
-        
-      - name: Check installed conda envs
-        shell: bash -l {0}
-        run: conda env list
-
-      - name: Run tests
-        shell: bash -l {0}
-        run: pytest
+          pip install .
+          conda list simple
+          pytest
