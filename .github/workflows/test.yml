@@ -64,11 +64,15 @@ jobs:
       - name: Update environment
         run: |
           mamba env update -n bitcoin -f my_reqs.yml
-          /usr/share/miniconda3/bin/activate bitcoin
+          conda init bash
         if: steps.cache.outputs.cache-hit != 'true'
         
+        
       - name: Install repo as package to enable absolute imports
-        run: pip install .
+        shell: bash -l {0}
+        run: |
+          conda activate bitcoin
+          pip install .
         
       - name: Check simple-price-predictor is installed
         run: conda list simple
