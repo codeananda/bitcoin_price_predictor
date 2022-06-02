@@ -58,12 +58,12 @@ jobs:
       - uses: actions/cache@v2
         with:
           path: ${{ matrix.prefix }}
-          key: ${{ matrix.label }}-conda-${{ hashFiles('my_reqs.yml') }}-${{ env.DATE }}-${{ env.CACHE_NUMBER }}
+          key: ${{ matrix.label }}-conda-${{ hashFiles('environment.yml') }}-${{ env.DATE }}-${{ env.CACHE_NUMBER }}
         id: cache
         
       - name: Update environment
         run: |
-          mamba env update -n bitcoin -f my_reqs.yml
+          mamba env update -n bitcoin -f environment.yml
           conda init bash
         if: steps.cache.outputs.cache-hit != 'true'
         
