@@ -4,7 +4,7 @@
 # Helpful article to cache anaconda envs and install using mamba
 # https://dev.to/epassaro/caching-anaconda-environments-in-github-actions-5hde
 
-name: Test
+name: Pytest
 
 on:
   push:
