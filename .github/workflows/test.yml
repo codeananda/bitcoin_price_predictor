@@ -62,12 +62,15 @@ jobs:
         id: cache
         
       - name: Update environment
-        run: mamba env update -n bitcoin -f my_reqs.yml
+        run: |
+          mamba env update -n bitcoin -f my_reqs.yml
+          conda init bash
         if: steps.cache.outputs.cache-hit != 'true'
         
-      - name: Install repo as package to enable absolute imports
-        run: pip install .
-
-      - name: Run tests
+        
+      - name: Install repo as package and run tests
         shell: bash -l {0}
-        run: pytest
+        run: |
+          conda activate bitcoin
+          pip install --use-feature=in-tree-build . 
+          pytest
