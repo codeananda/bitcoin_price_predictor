@@ -28,3 +28,6 @@ dependencies:
   - hypothesis
   - optuna
   - ploomber
+  - pystan
+  - prophet
+  - sktime-all-extras
