@@ -28,7 +28,7 @@ def load_raw_bitcoin_df():
 
 def make_tf_dataset(
     array: np.ndarray, input_seq_length: int, output_seq_length: int, batch_size: int,
-) -> tf.python.data.ops.dataset_ops.PrefetchDataset:
+) -> tf.data.Dataset:
     """Return tf.data.Dataset that yeilds a tuple of input and output sequences
     of specified length. All batches are the same length.
 
