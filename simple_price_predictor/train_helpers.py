@@ -4,6 +4,12 @@ import os
 import tensorflow as tf
 import numpy as np
 
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, LSTM
+from tensorflow.keras.metrics import RootMeanSquaredError
+from tensorflow.keras.optimizers import Adam, RMSprop
+from tensorflow.keras.callbacks import EarlyStopping, LearningRateScheduler
+
 
 def load_raw_bitcoin_df():
     """Load the downloads/price.csv dataset of historical BTC data from 2010-2021
@@ -82,3 +88,99 @@ def make_tf_dataset(
         .prefetch(tf.data.AUTOTUNE)
     )
     return ds
+
+
+def build_LSTM_training(
+    optimizer="adam",
+    learning_rate=1e-4,
+    loss="mse",
+    num_nodes=50,
+    batch_size=9,
+    timesteps=168,
+    num_layers=2,
+):
+    """Build, compile and return an LSTM model of with the given params
+
+    Parameters
+    ----------
+    optimizer : str, optional {'adam', 'rmsprop'}
+        The Keras optimizer you would like to use (case insensitive input), by
+        default 'adam'
+    learning_rate : float, optional
+        The learning rate, by default 1e-4
+    loss : str, optional {all keras losses are accepted}
+        Keras loss to use, by default 'mse'
+    num_nodes : int, optional
+        The number of nodes in each LSTM layer, by default 50
+    batch_size : int, optional
+        The number of sequences fed into the LSTM on each batch, by default 9
+    timesteps : int, optional
+        The length of each sequence fed into the model, by default 168
+        (i.e., one week's worth of hourly data)
+    num_layers : int, optional
+        The total number of LSTMs to stack, by default 2
+
+    Returns
+    -------
+    model
+        Built and compiled LSTM model with the given params.
+    """
+    ## BUILD LSTM
+    # Add (num_layers - 1) layers that return sequences
+    lstm_list = [
+        LSTM(
+            num_nodes,
+            return_sequences=True,
+            stateful=True,
+            batch_input_shape=(batch_size, timesteps, 1),
+        )
+        for _ in range(num_layers - 1)
+    ]
+    # Add a final layer that does not return sequences
+    lstm_list.append(
+        LSTM(
+            num_nodes,
+            return_sequences=False,
+            stateful=True,
+            batch_input_shape=(batch_size, timesteps, 1),
+        )
+    )
+    # Single node output layer
+    lstm_list.append(Dense(1))
+    model = Sequential(lstm_list)
+
+    optimizers = {"adam": Adam()}
+
+    ## COMPILE LSTM
+    optimizer_object = get_optimizer(optimizer=optimizer, learning_rate=learning_rate)
+    model.compile(
+        loss=loss, optimizer=optimizer_object, metrics=[RootMeanSquaredError()]
+    )
+    return model
+
+
+def get_optimizer(optimizer="adam", learning_rate=1e-4):
+    """Given an optimizer and a learning rate, return the optimizer
+    object with the learning rate set.
+
+    Parameters
+    ----------
+    optimizer : str, optional {'adam', 'rmsprop'}
+        The Keras optimizer you would like to use (case insensitive input)
+    learning_rate : float, optional, default 1e-4
+        The learning rate
+
+    Returns
+    -------
+    optimizer: tf.keras.optimizer object
+        Optimizer object with the given learning rate
+    """
+    if optimizer.lower() == "adam":
+        optimizer = Adam(learning_rate=learning_rate)
+    elif optimizer.lower() == "rmsprop":
+        optimizer = RMSprop(learning_rate=learning_rate)
+    else:
+        raise ValueError(
+            f"Supported optimizers are: Adam and RMSprop. Received: {optimizer}"
+        )
+    return optimizer
