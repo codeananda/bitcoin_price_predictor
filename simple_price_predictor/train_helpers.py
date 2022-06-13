@@ -35,6 +35,8 @@ def make_tf_dataset(
     """Return tf.data.Dataset that yeilds a tuple of input and output sequences
     of specified length. All batches are the same length.
 
+    Can be used for train, val, and test data.
+
     Parameters
     ----------
     array : np.ndarray
