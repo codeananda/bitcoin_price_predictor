@@ -27,7 +27,10 @@ def load_raw_bitcoin_df():
 
 
 def make_tf_dataset(
-    array: np.ndarray, input_seq_length: int, output_seq_length: int, batch_size: int,
+    array: np.ndarray,
+    input_seq_length: int = 200,
+    output_seq_length: int = 1,
+    batch_size: int = 20,
 ) -> tf.data.Dataset:
     """Return tf.data.Dataset that yeilds a tuple of input and output sequences
     of specified length. All batches are the same length.
@@ -68,7 +71,7 @@ def make_tf_dataset(
     ds = (
         ds.window(total_seq_length, shift=1, drop_remainder=True)
         .flat_map(lambda w: w.batch(total_seq_length, drop_remainder=True))
-        .map(lambda w: (w[:-output_seq_length], w[-output_seq_length:]))
+        .map(lambda w: (w[:input_seq_length], w[input_seq_length:]))
         .batch(batch_size, drop_remainder=True)
         .prefetch(tf.data.AUTOTUNE)
     )
