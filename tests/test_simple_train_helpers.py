@@ -72,7 +72,10 @@ class Test_make_tf_dataset:
     def test_input_seq_length_equals_len_input_array_inference_use(self):
         """Inputs are as they will be in a single-step inference environment:
         output_seq_length = 0, batch_size = 1, and input_seq_length is
-        equal to the length of the input dataset.
+        equal to len(array) - the length of the input dataset.
+
+        No need to test if input_seq_length < len(array) since this is default
+        behaviour and tested above.
         """
         input_seq_length = 200
         output_seq_length = 0
