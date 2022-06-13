@@ -41,7 +41,7 @@ def make_tf_dataset(
     output_seq_length : int
         Number of elements to forecast in output sequence
     batch_size : int
-        Number of elements for each batch
+        Number of input/output sequences to include in each batch
 
     Returns
     -------
