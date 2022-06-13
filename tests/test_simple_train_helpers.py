@@ -2,18 +2,21 @@ from simple_price_predictor.constants import HISTORICAL_BITCOIN_CSV_FILEPATH
 from simple_price_predictor.train_helpers import (
     load_raw_bitcoin_df,
     make_tf_dataset,
+    get_optimizer,
 )
 import os
 import tensorflow as tf
 import numpy as np
+from tensorflow.keras.optimizers import Adam, RMSprop
+
 import pytest
-from pytest_cases import parametrize_with_cases
+from pytest_cases import parametrize_with_cases, fixture
 
 
 DATASET_SIZE = 1000000
 
 
-@pytest.fixture
+@fixture
 def input_array_2D():
     return np.arange(DATASET_SIZE).reshape(-1, 1)
 
@@ -92,3 +95,52 @@ class Test_make_tf_dataset:
 
         with pytest.raises(ValueError) as exec_info:
             assert make_tf_dataset(not_a_numpy_array)
+
+
+class Test_get_optimizer:
+    def test_adam_runs(self):
+        choice = "adam"
+        lr = 1e-4
+        opt = get_optimizer(optimizer=choice, learning_rate=lr)
+
+        assert opt.learning_rate.numpy() == np.float32(lr)
+        assert isinstance(opt, Adam)
+
+    def test_rmsprop_runs(self):
+        choice = "rmsprop"
+        lr = 1e-4
+        opt = get_optimizer(optimizer=choice, learning_rate=lr)
+
+        assert opt.learning_rate.numpy() == np.float32(lr)
+        assert isinstance(opt, RMSprop)
+
+    def test_only_support_adam_and_rmsprop(self):
+        choice = "not adam or rmsprop"
+
+        with pytest.raises(ValueError):
+            assert get_optimizer(optimizer=choice)
+
+    class MixedCases:
+        def mixed_case_ADaM(self):
+            return "ADaM"
+
+        def mixed_case_RMsProP(self):
+            return "RMsProP"
+
+    @parametrize_with_cases("choice", cases=MixedCases, prefix="mixed_case_")
+    def test_case_insensitive(self, choice):
+        opt = get_optimizer(optimizer=choice)
+
+        opt_dict = {
+            "adam": Adam,
+            "rmsprop": RMSprop,
+        }
+
+        expected_opt = opt_dict[choice.lower()]
+
+        assert isinstance(opt, expected_opt)
+
+
+class Test_build_LSTM_training:
+    def test_runs(self):
+        pass
