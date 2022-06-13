@@ -57,8 +57,8 @@ def make_tf_dataset(
     """
     if len(array.shape) != 2:
         raise ValueError(
-            f"`array` must be 2D array. Received:"
-            f"{len(array.shape)}D array with array.shape={array.shape}"
+            f"`array` must be 2D array. Received: "
+            f"{len(array.shape)}D array with shape={array.shape}"
         )
 
     total_seq_length = input_seq_length + output_seq_length
