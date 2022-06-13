@@ -23,6 +23,7 @@ dependencies:
   - plotly
   - git
   - pytest
+  - pytest-cases
   - mypy
   - pydantic
   - hypothesis
