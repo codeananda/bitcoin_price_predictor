@@ -7,13 +7,15 @@ from sklearn.preprocessing import MinMaxScaler
 from simple_price_predictor.train_helpers import load_raw_bitcoin_df, make_tf_dataset
 
 
-# Processing steps to take
+# Processing steps
 # 1. Split
 # 2. Scale - scale_train_val - log_and_range_0_1 the best
 # 3. Transform to Keras input - timeseries_to_keras_input
 
-# Use tf.keras.utils.timeseries_dataset_from_array ?
-# Helpful article https://www.tensorflow.org/tutorials/structured_data/time_series
+# Model fit + building steps
+# 1. Build training model
+# 2. Get callbacks
+# 3. Fit model
 
 
 def main():
@@ -44,6 +46,12 @@ def main():
     test_ds = make_tf_dataset(
         test, input_seq_length=200, output_seq_length=1, batch_size=1
     )
+
+    # model = build_LSTM_training()
+
+    # callbacks = get_callbacks()
+
+    # history = model.fit()
 
 
 if __name__ == "__main__":
