@@ -24,11 +24,15 @@ class TestLoadRawBitcoinDF:
 
 
 class Test_make_tf_dataset:
-    def test_runs(self):
+    def test_single_batch_input(self):
         pass
 
     def test_array_greater_than_2D(self):
-        pass
+        array_3D = np.arange(100)
+        array_3D = array_3D.reshape(-1, 10, 5)
+
+        with pytest.raises(ValueError) as exec_info:
+            make_tf_dataset(array_3D, 5, 5, 5)
 
     def test_array_less_than_2D(self):
         array_1D = np.arange(100)
