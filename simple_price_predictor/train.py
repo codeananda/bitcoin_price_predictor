@@ -45,15 +45,6 @@ def main():
         test, input_seq_length=200, output_seq_length=1, batch_size=1
     )
 
-    return test_ds
-
-    # print("train")
-    # print(train_ds)
-    # print("Val")
-    # print(val_ds)
-    # print("Test")
-    # print(test_ds)
-
 
 if __name__ == "__main__":
     main()
