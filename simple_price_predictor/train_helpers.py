@@ -55,7 +55,8 @@ def make_tf_dataset(
     Raises
     ------
     ValueError
-        If array is not 2D
+        - If array is not np.ndarray
+        - If array is not 2D
 
     """
     if not isinstance(array, np.ndarray):
