@@ -58,6 +58,9 @@ def make_tf_dataset(
         If array is not 2D
 
     """
+    if not isinstance(array, np.ndarray):
+        raise ValueError(f"`array` must be a numpy array. Received: " f"{type(array)}")
+
     if len(array.shape) != 2:
         raise ValueError(
             f"`array` must be 2D array. Received: "

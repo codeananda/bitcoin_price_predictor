@@ -69,7 +69,7 @@ class Test_make_tf_dataset:
             input_array_2D, input_seq_length, output_seq_length, batch_size
         )
 
-    def test_input_seq_length_equals_len_input_array_inference_use(self):
+    def test_input_seq_length_equals_len_input_array(self):
         """Inputs are as they will be in a single-step inference environment:
         output_seq_length = 0, batch_size = 1, and input_seq_length is
         equal to len(array) - the length of the input dataset.
@@ -86,3 +86,9 @@ class Test_make_tf_dataset:
         self.compare_feature_and_target_shapes(
             array_single_batch, input_seq_length, output_seq_length, batch_size
         )
+
+    def test_input_is_numpy(self, input_array_2D):
+        not_a_numpy_array = list(input_array_2D)
+
+        with pytest.raises(ValueError) as exec_info:
+            assert make_tf_dataset(not_a_numpy_array)
