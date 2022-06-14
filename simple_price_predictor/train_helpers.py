@@ -90,6 +90,33 @@ def make_tf_dataset(
     return ds
 
 
+def get_optimizer(optimizer="adam", learning_rate=1e-4):
+    """Given an optimizer and a learning rate, return the optimizer
+    object with the learning rate set.
+
+    Parameters
+    ----------
+    optimizer : str, optional {'adam', 'rmsprop'}
+        The Keras optimizer you would like to use (case insensitive input)
+    learning_rate : float, optional, default 1e-4
+        The learning rate
+
+    Returns
+    -------
+    optimizer: tf.keras.optimizer object
+        Optimizer object with the given learning rate
+    """
+    if optimizer.lower() == "adam":
+        optimizer = Adam(learning_rate=learning_rate)
+    elif optimizer.lower() == "rmsprop":
+        optimizer = RMSprop(learning_rate=learning_rate)
+    else:
+        raise ValueError(
+            f"Supported optimizers are: Adam and RMSprop. Received: {optimizer}"
+        )
+    return optimizer
+
+
 def build_LSTM_training(
     optimizer="adam",
     learning_rate=1e-4,
@@ -157,30 +184,3 @@ def build_LSTM_training(
         loss=loss, optimizer=optimizer_object, metrics=[RootMeanSquaredError()]
     )
     return model
-
-
-def get_optimizer(optimizer="adam", learning_rate=1e-4):
-    """Given an optimizer and a learning rate, return the optimizer
-    object with the learning rate set.
-
-    Parameters
-    ----------
-    optimizer : str, optional {'adam', 'rmsprop'}
-        The Keras optimizer you would like to use (case insensitive input)
-    learning_rate : float, optional, default 1e-4
-        The learning rate
-
-    Returns
-    -------
-    optimizer: tf.keras.optimizer object
-        Optimizer object with the given learning rate
-    """
-    if optimizer.lower() == "adam":
-        optimizer = Adam(learning_rate=learning_rate)
-    elif optimizer.lower() == "rmsprop":
-        optimizer = RMSprop(learning_rate=learning_rate)
-    else:
-        raise ValueError(
-            f"Supported optimizers are: Adam and RMSprop. Received: {optimizer}"
-        )
-    return optimizer
