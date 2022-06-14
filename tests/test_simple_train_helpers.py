@@ -98,38 +98,36 @@ class Test_make_tf_dataset:
 
 
 class Test_get_optimizer:
-    def test_adam_runs(self):
-        choice = "adam"
-        lr = 1e-4
-        opt = get_optimizer(optimizer=choice, learning_rate=lr)
+    class OptCases:
+        def case_adam(self):
+            return "adam"
 
-        assert opt.learning_rate.numpy() == np.float32(lr)
-        assert isinstance(opt, Adam)
+        def case_rmsprop(self):
+            return "rmsprop"
 
-    def test_rmsprop_runs(self):
-        choice = "rmsprop"
-        lr = 1e-4
-        opt = get_optimizer(optimizer=choice, learning_rate=lr)
-
-        assert opt.learning_rate.numpy() == np.float32(lr)
-        assert isinstance(opt, RMSprop)
-
-    def test_only_support_adam_and_rmsprop(self):
-        choice = "not adam or rmsprop"
-
-        with pytest.raises(ValueError):
-            assert get_optimizer(optimizer=choice)
-
-    class MixedCases:
-        def mixed_case_ADaM(self):
+        def case_case_insensitive_ADaM(self):
             return "ADaM"
 
-        def mixed_case_RMsProP(self):
+        def case_case_insensitive_RMsProP(self):
             return "RMsProP"
 
-    @parametrize_with_cases("choice", cases=MixedCases, prefix="mixed_case_")
-    def test_case_insensitive(self, choice):
-        opt = get_optimizer(optimizer=choice)
+    class LRCases:
+        def case_default_lr(self):
+            return 1e-4
+
+        def case_small_lr(self):
+            return 1e-10
+
+        def case_big_lr(self):
+            return 100
+
+        def case_very_big_lr(self):
+            return 1e10
+
+    @parametrize_with_cases("choice", cases=OptCases)
+    @parametrize_with_cases("lr", cases=LRCases)
+    def test_runs(self, choice, lr):
+        opt = get_optimizer(optimizer=choice, learning_rate=lr)
 
         opt_dict = {
             "adam": Adam,
@@ -139,6 +137,13 @@ class Test_get_optimizer:
         expected_opt = opt_dict[choice.lower()]
 
         assert isinstance(opt, expected_opt)
+        assert opt.learning_rate.numpy() == np.float32(lr)
+
+    def test_only_support_adam_and_rmsprop(self):
+        choice = "not adam or rmsprop"
+
+        with pytest.raises(ValueError):
+            assert get_optimizer(optimizer=choice)
 
 
 class Test_build_LSTM_training:
