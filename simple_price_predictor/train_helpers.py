@@ -10,6 +10,9 @@ from tensorflow.keras.metrics import RootMeanSquaredError
 from tensorflow.keras.optimizers import Adam, RMSprop
 from tensorflow.keras.callbacks import EarlyStopping, LearningRateScheduler
 
+import wandb
+from wandb.keras import WandbCallback
+
 
 def load_raw_bitcoin_df():
     """Load the downloads/price.csv dataset of historical BTC data from 2010-2021
@@ -76,6 +79,23 @@ def make_tf_dataset(
             f"{len(array.shape)}D array with shape={array.shape}"
         )
 
+    num_possible_batches = (
+        len(array) - input_seq_length - output_seq_length
+    ) / batch_size
+
+    if num_possible_batches < 1:
+        raise ValueError(
+            f"Cannot make a single batch with these inputs. "
+            f"Either use more data or decrease `input_seq_length` or `batch_size`. "
+            f" Quickest results come from decreasing `batch_size`."
+        )
+
+    if input_seq_length > len(array):
+        raise ValueError(
+            f"`input_seq_length` is bigger than len(array) so it's not possible "
+            f"to create any batches of data."
+        )
+
     total_seq_length = input_seq_length + output_seq_length
 
     ds = tf.data.Dataset.from_tensor_slices(array)
@@ -87,6 +107,7 @@ def make_tf_dataset(
         .batch(batch_size, drop_remainder=True)
         .prefetch(tf.data.AUTOTUNE)
     )
+
     return ds
 
 
