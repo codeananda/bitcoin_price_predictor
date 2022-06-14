@@ -34,3 +34,4 @@ dist/
 *.egg
 
 ploomber-mlflow/
+.hypothesis/
