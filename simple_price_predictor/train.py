@@ -45,8 +45,6 @@ def main():
     val = min_max.transform(val)
     test = min_max.transform(test)
 
-    tf_dataset_params = dict()
-
     train_ds = make_tf_dataset(
         train,
         input_seq_length=INPUT_SEQ_LENGTH,
@@ -73,7 +71,12 @@ def main():
     callbacks = [early_stop_cb]
 
     history = model.fit(
-        train_ds, epochs=10, shuffle=False, validation_data=val_ds, callbacks=callbacks,
+        train_ds,
+        epochs=10,
+        shuffle=False,
+        validation_data=val_ds,
+        callbacks=callbacks,
+        batch_size=BATCH_SIZE,
     )
 
     return history
