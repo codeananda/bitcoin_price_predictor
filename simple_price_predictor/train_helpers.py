@@ -152,6 +152,12 @@ def build_LSTM_training(
     model
         Built and compiled LSTM model with the given params.
     """
+    if not isinstance(num_layers, int):
+        raise TypeError(f"`num_layers` must be an int but receieved {type(num_layers)}")
+    if num_layers < 1:
+        raise ValueError(
+            f"You must pass at least 1 `num_layers`. Received: {num_layers}"
+        )
     ## BUILD LSTM
     # Add (num_layers - 1) layers that return sequences
     lstm_list = [
