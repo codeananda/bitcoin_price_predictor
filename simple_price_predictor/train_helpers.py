@@ -121,9 +121,9 @@ def build_LSTM_training(
     optimizer="adam",
     learning_rate=1e-4,
     loss="mse",
-    num_nodes=50,
+    units=50,
     batch_size=9,
-    timesteps=168,
+    timesteps=200,
     num_layers=2,
 ):
     """Build, compile and return an LSTM model of with the given params
@@ -137,7 +137,7 @@ def build_LSTM_training(
         The learning rate, by default 1e-4
     loss : str, optional {all keras losses are accepted}
         Keras loss to use, by default 'mse'
-    num_nodes : int, optional
+    units : int, optional
         The number of nodes in each LSTM layer, by default 50
     batch_size : int, optional
         The number of sequences fed into the LSTM on each batch, by default 9
@@ -156,7 +156,7 @@ def build_LSTM_training(
     # Add (num_layers - 1) layers that return sequences
     lstm_list = [
         LSTM(
-            num_nodes,
+            units,
             return_sequences=True,
             stateful=True,
             batch_input_shape=(batch_size, timesteps, 1),
@@ -166,7 +166,7 @@ def build_LSTM_training(
     # Add a final layer that does not return sequences
     lstm_list.append(
         LSTM(
-            num_nodes,
+            units,
             return_sequences=False,
             stateful=True,
             batch_input_shape=(batch_size, timesteps, 1),
@@ -175,8 +175,6 @@ def build_LSTM_training(
     # Single node output layer
     lstm_list.append(Dense(1))
     model = Sequential(lstm_list)
-
-    optimizers = {"adam": Adam()}
 
     ## COMPILE LSTM
     optimizer_object = get_optimizer(optimizer=optimizer, learning_rate=learning_rate)
