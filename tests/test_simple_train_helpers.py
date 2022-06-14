@@ -280,25 +280,3 @@ class Test_build_LSTM_training:
     def test_num_layers_type_error(self, num_layers):
         with pytest.raises(TypeError):
             model = build_LSTM_training(num_layers=num_layers)
-
-    # def test_runs(self):
-    #     model = build_LSTM_training(
-    #         optimizer=optimizer,
-    #         learning_rate=lr,
-    #         loss=loss,
-    #         num_nodes=num_nodes,
-    #         batch_size=batch_size,
-    #         timesteps=timesteps,
-    #         num_layers=num_layers,
-    #     )
-
-    #     opt_dict = {
-    #         "adam": Adam,
-    #         "rmsprop": RMSprop,
-    #     }
-
-    # assert isinstance(model.optimizer, opt_dict[optimizer.lower()])
-    # assert model.optimizer.learning_rate.numpy() == np.float32(lr)
-    # assert model.loss == loss
-
-    # assert len(model.layers) == num_layers + 1
