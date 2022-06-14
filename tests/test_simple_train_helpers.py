@@ -3,6 +3,7 @@ from simple_price_predictor.train_helpers import (
     load_raw_bitcoin_df,
     make_tf_dataset,
     get_optimizer,
+    build_LSTM_training,
 )
 import os
 import tensorflow as tf
@@ -97,34 +98,70 @@ class Test_make_tf_dataset:
             assert make_tf_dataset(not_a_numpy_array)
 
 
+class OptimizerCases:
+    def case_adam(self):
+        return "adam"
+
+    def case_rmsprop(self):
+        return "rmsprop"
+
+    def case_AdAM(self):
+        return "AdAM"
+
+    def case_RMSPRoP(self):
+        return "RMSPRoP"
+
+
+class LRCases:
+    def case_default_lr(self):
+        return 1e-4
+
+    def case_small_lr(self):
+        return 1e-10
+
+    def case_big_lr(self):
+        return 100
+
+    def case_very_big_lr(self):
+        return 1e10
+
+
+class LossCases:
+    # Keras will not throw an error when compiling the model
+    # Only when you try to fit will you get an error if you've passed
+    # incompatible loss
+    def case_mse(self):
+        return "mse"
+
+    def case_mean_squared_error(self):
+        return "mean_squared_error"
+
+    def case_mae(self):
+        return "mae"
+
+
+class NumericCases:
+    def fail_value_0(self):
+        return 0
+
+    def fail_value_negative(self):
+        return -5
+
+    def fail_type_decimal(self):
+        return 4.5
+
+    def pass_1(self):
+        return 1
+
+    def pass_2(self):
+        return 2
+
+    def pass_10(self):
+        return 10
+
+
 class Test_get_optimizer:
-    class OptCases:
-        def case_adam(self):
-            return "adam"
-
-        def case_rmsprop(self):
-            return "rmsprop"
-
-        def case_case_insensitive_ADaM(self):
-            return "ADaM"
-
-        def case_case_insensitive_RMsProP(self):
-            return "RMsProP"
-
-    class LRCases:
-        def case_default_lr(self):
-            return 1e-4
-
-        def case_small_lr(self):
-            return 1e-10
-
-        def case_big_lr(self):
-            return 100
-
-        def case_very_big_lr(self):
-            return 1e10
-
-    @parametrize_with_cases("choice", cases=OptCases)
+    @parametrize_with_cases("choice", cases=OptimizerCases)
     @parametrize_with_cases("lr", cases=LRCases)
     def test_runs(self, choice, lr):
         opt = get_optimizer(optimizer=choice, learning_rate=lr)
@@ -147,5 +184,121 @@ class Test_get_optimizer:
 
 
 class Test_build_LSTM_training:
-    def test_runs(self):
-        pass
+    @parametrize_with_cases("optimizer", cases=OptimizerCases)
+    def test_optimizer(self, optimizer):
+        model = build_LSTM_training(optimizer=optimizer)
+
+        opt_dict = {
+            "adam": Adam,
+            "rmsprop": RMSprop,
+        }
+
+        expected_opt = opt_dict[optimizer.lower()]
+        assert isinstance(model.optimizer, expected_opt)
+
+    @parametrize_with_cases("learning_rate", cases=LRCases)
+    def test_learning_rate(self, learning_rate):
+        model = build_LSTM_training(learning_rate=learning_rate)
+
+        assert model.optimizer.learning_rate.numpy() == np.float32(learning_rate)
+
+    @parametrize_with_cases("loss", cases=LossCases)
+    def test_loss(self, loss):
+        model = build_LSTM_training(loss=loss)
+
+        assert model.loss == loss
+
+    @parametrize_with_cases("units", cases=NumericCases, prefix="pass_")
+    def test_units_pass(self, units):
+        model = build_LSTM_training(units=units)
+
+        # Iterate over all layers apart from output
+        for layer in model.layers[:-1]:
+            assert layer.units == units
+
+    @parametrize_with_cases("units", cases=NumericCases, prefix="fail_value_")
+    def test_units_fail_value(self, units):
+        with pytest.raises(ValueError):
+            model = build_LSTM_training(units=units)
+
+    @parametrize_with_cases("units", cases=NumericCases, prefix="fail_type_")
+    def test_units_fail_type(self, units):
+        with pytest.raises(TypeError):
+            model = build_LSTM_training(units=units)
+
+    @parametrize_with_cases("batch_size", cases=NumericCases, prefix="pass_")
+    def test_batch_size_pass(self, batch_size):
+        model = build_LSTM_training(batch_size=batch_size)
+
+        # Iterate over all layers apart from output
+        for layer in model.layers[:-1]:
+            actual_batch_size = layer.get_config()["batch_input_shape"][0]
+            assert actual_batch_size == batch_size
+
+    @parametrize_with_cases("batch_size", cases=NumericCases, prefix="fail_value_")
+    def test_batch_size_fail_value(self, batch_size):
+        with pytest.raises(ValueError):
+            model = build_LSTM_training(batch_size=batch_size)
+
+    @parametrize_with_cases("batch_size", cases=NumericCases, prefix="fail_type_")
+    def test_batch_size_fail_type(self, batch_size):
+        with pytest.raises(TypeError):
+            model = build_LSTM_training(batch_size=batch_size)
+
+    @parametrize_with_cases("timesteps", cases=NumericCases, prefix="pass_")
+    def test_timesteps_pass(self, timesteps):
+        model = build_LSTM_training(timesteps=timesteps)
+
+        # Iterate over all layers apart from output
+        for layer in model.layers[:-1]:
+            actual_timesteps = layer.get_config()["batch_input_shape"][1]
+            assert actual_timesteps == timesteps
+
+    @parametrize_with_cases("timesteps", cases=NumericCases, prefix="fail_value_")
+    def test_timesteps_fail_value(self, timesteps):
+        with pytest.raises(ValueError):
+            model = build_LSTM_training(timesteps=timesteps)
+
+    @parametrize_with_cases("timesteps", cases=NumericCases, prefix="fail_type_")
+    def test_timesteps_fail_type(self, timesteps):
+        with pytest.raises(TypeError):
+            model = build_LSTM_training(timesteps=timesteps)
+
+    @parametrize_with_cases("num_layers", cases=NumericCases, prefix="pass_")
+    def test_num_layers_pass(self, num_layers):
+        model = build_LSTM_training(num_layers=num_layers)
+
+        # num_layers is all the LSTM layers you add (not including the output layer)
+        assert len(model.layers) == num_layers + 1
+
+    @parametrize_with_cases("num_layers", cases=NumericCases, prefix="fail_value_")
+    def test_num_layers_value_error(self, num_layers):
+        with pytest.raises(ValueError):
+            model = build_LSTM_training(num_layers=num_layers)
+
+    @parametrize_with_cases("num_layers", cases=NumericCases, prefix="fail_type_")
+    def test_num_layers_type_error(self, num_layers):
+        with pytest.raises(TypeError):
+            model = build_LSTM_training(num_layers=num_layers)
+
+    # def test_runs(self):
+    #     model = build_LSTM_training(
+    #         optimizer=optimizer,
+    #         learning_rate=lr,
+    #         loss=loss,
+    #         num_nodes=num_nodes,
+    #         batch_size=batch_size,
+    #         timesteps=timesteps,
+    #         num_layers=num_layers,
+    #     )
+
+    #     opt_dict = {
+    #         "adam": Adam,
+    #         "rmsprop": RMSprop,
+    #     }
+
+    # assert isinstance(model.optimizer, opt_dict[optimizer.lower()])
+    # assert model.optimizer.learning_rate.numpy() == np.float32(lr)
+    # assert model.loss == loss
+
+    # assert len(model.layers) == num_layers + 1
