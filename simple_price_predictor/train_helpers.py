@@ -158,6 +158,8 @@ def build_LSTM_training(
         raise ValueError(
             f"You must pass at least 1 `num_layers`. Received: {num_layers}"
         )
+    if units == 0:
+        raise ValueError(f"`units` must be greater than 0. Received: {units}")
     ## BUILD LSTM
     # Add (num_layers - 1) layers that return sequences
     lstm_list = [
