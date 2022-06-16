@@ -23,7 +23,7 @@ from tensorflow.keras.callbacks import EarlyStopping
 # 2. Get callbacks
 # 3. Fit model
 
-BATCH_SIZE = 20
+BATCH_SIZE = 50
 OUTPUT_SEQ_LENGTH = 1
 INPUT_SEQ_LENGTH = 200
 
@@ -32,7 +32,7 @@ def main():
     bitcoin = load_raw_bitcoin_df()
 
     # In total we have: ~70% training, 20% val, 10% test
-    train, test = temporal_train_test_split(bitcoin, train_size=0.01)
+    train, test = temporal_train_test_split(bitcoin, train_size=0.05)
     train, val = temporal_train_test_split(train, train_size=0.77)
 
     train = np.log(train)
@@ -79,7 +79,7 @@ def main():
         batch_size=BATCH_SIZE,
     )
 
-    return history
+    model.save("models/basic_LSTM.h5")
 
 
 if __name__ == "__main__":
