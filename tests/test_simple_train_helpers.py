@@ -39,6 +39,38 @@ class TestLoadRawBitcoinDF:
         assert len(bitcoin.columns) == 1
 
 
+class ZeroBatchCases:
+    """Cases for make_tf_dataset to test ValueErrors resulting in creating
+    datasets with no elements.
+
+    All return values are of form
+    (len_array, input_seq_length, output_seq_length, batch_size)
+    """
+
+    def pass_inference_setting_1(self):
+        """Ensures functions when creating exactly one batch of data.
+        """
+        return 100, 100, 0, 1
+
+    def pass_inference_setting_2(self):
+        """Ensures functions if want to create many single batches of data
+        for inference.
+        """
+        return 150, 100, 0, 1
+
+    def fail_single_output(self):
+        return 100, 100, 1, 1
+
+    def fail_zero_output(self):
+        return 100, 100, 0, 2
+
+    def fail_large_batch_size(self):
+        return 100, 20, 1, 100
+
+    def fail_input_seq_length_greater_than_len_array(self):
+        return 100, 150, 0, 1
+
+
 class Test_make_tf_dataset:
     def test_array_greater_than_2D(self):
         array_3D = np.arange(DATASET_SIZE)
@@ -99,6 +131,41 @@ class Test_make_tf_dataset:
 
         with pytest.raises(TypeError) as exec_info:
             assert make_tf_dataset(not_a_numpy_array)
+
+    @parametrize_with_cases(
+        "len_array, input_seq_length, output_seq_length, batch_size",
+        cases=ZeroBatchCases,
+        prefix="fail_",
+    )
+    def test_num_created_batches_is_0(
+        self, len_array, input_seq_length, output_seq_length, batch_size
+    ):
+        """Tests for the ValueError raised if num_created_batches == 0
+        """
+        with pytest.raises(ValueError):
+            make_tf_dataset(
+                np.arange(len_array).reshape(-1, 1),
+                input_seq_length,
+                output_seq_length,
+                batch_size,
+            )
+
+    @parametrize_with_cases(
+        "len_array, input_seq_length, output_seq_length, batch_size",
+        cases=ZeroBatchCases,
+        prefix="pass_",
+    )
+    def test_num_created_batches_is_not_0(
+        self, len_array, input_seq_length, output_seq_length, batch_size
+    ):
+        ds = make_tf_dataset(
+            np.arange(len_array).reshape(-1, 1),
+            input_seq_length,
+            output_seq_length,
+            batch_size,
+        )
+        num_created_batches = len(list(ds.as_numpy_iterator()))
+        assert num_created_batches > 0
 
 
 class OptimizerCases:
