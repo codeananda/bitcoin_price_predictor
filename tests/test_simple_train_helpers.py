@@ -8,7 +8,10 @@ from simple_price_predictor.train_helpers import (
 import os
 import tensorflow as tf
 import numpy as np
+from wandb.keras import WandbCallback
 from tensorflow.keras.optimizers import Adam, RMSprop
+from tensorflow.keras.callbacks import EarlyStopping
+
 
 import pytest
 from pytest_cases import parametrize_with_cases, fixture
@@ -94,7 +97,7 @@ class Test_make_tf_dataset:
     def test_input_is_numpy(self, input_array_2D):
         not_a_numpy_array = list(input_array_2D)
 
-        with pytest.raises(ValueError) as exec_info:
+        with pytest.raises(TypeError) as exec_info:
             assert make_tf_dataset(not_a_numpy_array)
 
 
