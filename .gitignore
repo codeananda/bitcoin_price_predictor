@@ -35,3 +35,4 @@ dist/
 
 ploomber-mlflow/
 .hypothesis/
+secrets.py
