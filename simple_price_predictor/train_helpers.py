@@ -71,23 +71,12 @@ def make_tf_dataset(
 
     """
     if not isinstance(array, np.ndarray):
-        raise ValueError(f"`array` must be a numpy array. Received: {type(array)}")
+        raise TypeError(f"`array` must be a numpy array. Received: {type(array)}")
 
     if len(array.shape) != 2:
         raise ValueError(
             f"`array` must be 2D array. Received: "
             f"{len(array.shape)}D array with shape={array.shape}"
-        )
-
-    num_possible_batches = (
-        len(array) - input_seq_length - output_seq_length
-    ) / batch_size
-
-    if num_possible_batches < 1:
-        raise ValueError(
-            f"Cannot make a single batch with these inputs. "
-            f"Either use more data or decrease `input_seq_length` or `batch_size`. "
-            f" Quickest results come from decreasing `batch_size`."
         )
 
     if input_seq_length > len(array):
@@ -107,6 +96,15 @@ def make_tf_dataset(
         .batch(batch_size, drop_remainder=True)
         .prefetch(tf.data.AUTOTUNE)
     )
+
+    num_created_batches = len(list(ds.as_numpy_iterator()))
+    if num_created_batches == 0:
+        raise ValueError(
+            f"Unable to make a single batch of data with these inputs. "
+            f"Either use a larger `array` or decrease the parameter values. "
+            f"Quickest results usually come from decreasing `input_seq_length` or "
+            f"`batch_size`. "
+        )
 
     return ds
 
