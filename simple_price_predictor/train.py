@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import tensorflow as tf
+import pickle
 from sktime.forecasting.model_selection import temporal_train_test_split
 from sklearn.preprocessing import MinMaxScaler
 
@@ -44,6 +45,9 @@ def main():
     train = min_max.fit_transform(train)
     val = min_max.transform(val)
     test = min_max.transform(test)
+
+    with open("models/basic_scaler.pkl", "wb") as f:
+        pickle.dump(min_max, f)
 
     train_ds = make_tf_dataset(
         train,
