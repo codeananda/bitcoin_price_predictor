@@ -1,7 +1,11 @@
+# Project specific
+ploomber-mlflow/
+secrets.py
+.gdoc
+
 # vs-code
 .vscode/
 
-.gdoc
 
 # OS generated files #
 ######################
@@ -33,6 +37,11 @@ dist/
 *.egg-info/
 *.egg
 
-ploomber-mlflow/
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+coverage.xml
 .hypothesis/
-secrets.py
