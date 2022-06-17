@@ -24,6 +24,9 @@ dependencies:
   - git
   - pytest
   - pytest-cases
+  - pytest-mock
+  - pytest-cov
+  - coverage[toml]
   - mypy
   - pydantic
   - hypothesis
