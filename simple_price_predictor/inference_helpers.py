@@ -47,7 +47,6 @@ def get_last_num_days_hourly_bitcoin_data(num_days):
     headers = {"Authorization": COINCAP_AUTH_HEADER}
     response = requests.request("GET", url, headers=headers, data=payload)
     response.raise_for_status()
-    response.status_code
 
     json_data = response.json()
     bitcoin_data = json_data["data"]
