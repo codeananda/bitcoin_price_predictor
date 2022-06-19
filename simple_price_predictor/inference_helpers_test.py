@@ -9,8 +9,51 @@ import time
 import requests
 
 from simple_price_predictor.inference_helpers import (
-    get_last_num_days_hourly_bitcoin_data,
+    # get_last_num_days_hourly_bitcoin_data,
+    get_raw_coincap_bitcoin_data,
 )
+
+
+class MockCoincapAPIResponse:
+    @staticmethod
+    def raise_for_status():
+        return True
+
+    @staticmethod
+    def json():
+        data = []
+        # Choose 1 full day of data for simplicity
+        for i in range(1, 25):
+            row = {
+                "priceUsd": f"{i * 10.}",  #  Must be float
+                "time": i,  # Dropped in preprocessing
+                "circulatingSupply": f"{i}",  # Dropped during processing
+                "date": f"2022-06-18T{i-1:0>2}:00:00.000Z",  # Must be datetime
+            }
+            data.append(row)
+        response = {
+            "data": data,
+            "timestamp": 42,  # Dropped in preprocessing
+        }
+        return response
+
+
+# monkeypatched requests.get moved to a fixture
+@pytest.fixture
+def mock_coincap_api_response(monkeypatch):
+    """requests.get() mocked to return MockCoincapAPIResponse().json()
+    """
+
+    def mock_get(*args, **kwargs):
+        return MockCoincapAPIResponse()
+
+    monkeypatch.setattr(requests, "get", mock_get)
+
+
+@pytest.mark.new
+def test_get_raw_coincap_bitcoin_data(mock_coincap_api_response):
+    result = get_raw_coincap_bitcoin_data(1)
+    assert result["timestamp"] == 42
 
 
 class NumDaysNumericCases:
