@@ -35,3 +35,4 @@ dependencies:
   - pystan
   - prophet
   - sktime-all-extras
+  - python-dotenv
