@@ -6,7 +6,6 @@ secrets.py
 # vs-code
 .vscode/
 
-
 # OS generated files #
 ######################
 .DS_Store
@@ -45,3 +44,6 @@ htmlcov/
 .coverage.*
 coverage.xml
 .hypothesis/
+
+# Environments
+.env
