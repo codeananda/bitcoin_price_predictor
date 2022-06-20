@@ -5,8 +5,9 @@ import os
 import pickle
 import time
 import requests
+from dotenv import load_dotenv
 
-from simple_price_predictor.secrets import COINCAP_AUTH_HEADER
+load_dotenv()
 
 
 def get_raw_coincap_bitcoin_data(num_days: int):
@@ -45,7 +46,7 @@ def get_raw_coincap_bitcoin_data(num_days: int):
     )
 
     payload = {}
-    headers = {"Authorization": COINCAP_AUTH_HEADER}
+    headers = {"Authorization": os.environ["COINCAP_AUTH_HEADER"]}
     response = requests.get(url, headers=headers, data=payload)
     response.raise_for_status()
 
