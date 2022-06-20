@@ -17,6 +17,7 @@ on:
     
 env:
   CACHE_NUMBER: 0  # increase to reset cache manually
+  COINCAP_AUTH_HEADER: ${{ secrets.COINCAP_AUTH_HEADER }} # allow interaction with Coincap API to get BTC data
 
 permissions:
   contents: read
