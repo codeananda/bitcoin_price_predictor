@@ -78,7 +78,7 @@ class NumDaysNumericCases:
         return "10"
 
 
-class Test_get_last_num_days_hourly_bitcoin_data:
+class Test_get_raw_coincap_bitcoin_data:
     @parametrize_with_cases("num_days", cases=NumDaysNumericCases, prefix="fail_value")
     def test_num_days_outside_accepted_range(self, num_days):
         with pytest.raises(ValueError):
