@@ -9,9 +9,11 @@ import time
 import requests
 
 from simple_price_predictor.inference_helpers import (
-    # get_last_num_days_hourly_bitcoin_data,
     get_raw_coincap_bitcoin_data,
+    process_coincap_response,
 )
+
+MOCK_TIMESTAMP = 42
 
 
 class MockCoincapAPIResponse:
@@ -33,7 +35,7 @@ class MockCoincapAPIResponse:
             data.append(row)
         response = {
             "data": data,
-            "timestamp": 42,  # Dropped in preprocessing
+            "timestamp": MOCK_TIMESTAMP,  # Dropped in preprocessing
         }
         return response
 
@@ -48,12 +50,6 @@ def mock_coincap_api_response(monkeypatch):
         return MockCoincapAPIResponse()
 
     monkeypatch.setattr(requests, "get", mock_get)
-
-
-@pytest.mark.new
-def test_get_raw_coincap_bitcoin_data(mock_coincap_api_response):
-    result = get_raw_coincap_bitcoin_data(1)
-    assert result["timestamp"] == 42
 
 
 class NumDaysNumericCases:
@@ -86,15 +82,14 @@ class Test_get_last_num_days_hourly_bitcoin_data:
     @parametrize_with_cases("num_days", cases=NumDaysNumericCases, prefix="fail_value")
     def test_num_days_outside_accepted_range(self, num_days):
         with pytest.raises(ValueError):
-            get_last_num_days_hourly_bitcoin_data(num_days)
+            get_raw_coincap_bitcoin_data(num_days)
 
     @parametrize_with_cases("num_days", cases=NumDaysNumericCases, prefix="pass_")
-    def test_num_days_within_accepted_range(self, num_days):
-        df = get_last_num_days_hourly_bitcoin_data(num_days)
-        #  Give a 2 hour leeway to account for slight API downtime
-        assert (num_days * 24 - 2) <= len(df) <= (num_days * 24)
+    def test_num_days_within_accepted_range(self, num_days, mock_coincap_api_response):
+        result = get_raw_coincap_bitcoin_data(num_days)
+        assert result["timestamp"] == MOCK_TIMESTAMP
 
     @parametrize_with_cases("num_days", cases=NumDaysNumericCases, prefix="fail_type")
     def test_num_days_not_int(self, num_days):
         with pytest.raises(TypeError):
-            get_last_num_days_hourly_bitcoin_data(num_days)
+            get_raw_coincap_bitcoin_data(num_days)
