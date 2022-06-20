@@ -8,16 +8,18 @@ import requests
 
 from simple_price_predictor.secrets import COINCAP_AUTH_HEADER
 
-# UPDATE DOCSTRINGS TO REFLECT RETURNING RAW JSON RESPONSE
+
 def get_raw_coincap_bitcoin_data(num_days: int):
-    """Call Coincap API and request last num_days of hourly Bitcoin USD data.
-    Return data in raw form as a list of dicts.
+    """Call Coincap API and request the last num_days of hourly Bitcoin USD data.
+    Return data in raw (json) form as a dict with keys 'data' and 'timestamp'.
 
 
     Returns
     -------
-    bitcoin_data : list of dicts
-        List of dicts with keys: priceUsd, time, circulatingSupply, date
+    bitcoin_data : dict with keys 'data' and 'timestamp'
+        - 'data' contains a list of dicts each representing one hour of BTC price
+          data.
+        - 'timestamp' is the time the request was sent
     """
     if not isinstance(num_days, int):
         raise TypeError(
@@ -49,21 +51,20 @@ def get_raw_coincap_bitcoin_data(num_days: int):
 
     bitcoin_json_data = response.json()
     return bitcoin_json_data
-    # bitcoin_data = json_data["data"]
-
-    # return bitcoin_data
 
 
-# UPDATE DOCSTRINGS TO REFLECT RETURNING RAW JSON RESPONSE
 def process_coincap_response(bitcoin_data: list):
-    """Given raw-form bitcoin_data from the Coincap API, collected with
+    """Given raw-form (json) bitcoin_data from the Coincap API, collected with
     get_raw_coincap_bitcoin_data(num_days), turn it into a DataFrame with 'date'
     and 'price' columns. Date column is in UTC.
 
     Parameters
     ----------
-    bitcoin_data : list of dicts
-        List of dicts with keys: priceUsd, time, circulatingSupply, date
+    bitcoin_data : dict with keys 'data' and 'timestamp'
+        - 'data' contains a list of dicts each representing one hour of BTC price
+          data.
+        - 'timestamp' is the time the request was sent (and is not necesary for
+          this function)
 
     Returns
     -------
@@ -72,7 +73,7 @@ def process_coincap_response(bitcoin_data: list):
         Price is rounded to 2 decimal places. Last row contains most recent
         price, first contains price num days ago.
     """
-    bitcoin_data = json_data["data"]
+    bitcoin_data = bitcoin_data["data"]
     df = pd.DataFrame(bitcoin_data)
     df = df.loc[:, ["date", "priceUsd"]]
     df.rename(mapper={"priceUsd": "price"}, inplace=True, axis=1)
