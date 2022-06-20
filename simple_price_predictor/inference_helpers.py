@@ -53,7 +53,7 @@ def get_raw_coincap_bitcoin_data(num_days: int):
     return bitcoin_json_data
 
 
-def process_coincap_response(bitcoin_data: list):
+def process_coincap_response(bitcoin_data: dict):
     """Given raw-form (json) bitcoin_data from the Coincap API, collected with
     get_raw_coincap_bitcoin_data(num_days), turn it into a DataFrame with 'date'
     and 'price' columns. Date column is in UTC.
@@ -73,6 +73,10 @@ def process_coincap_response(bitcoin_data: list):
         Price is rounded to 2 decimal places. Last row contains most recent
         price, first contains price num days ago.
     """
+    if not isinstance(bitcoin_data, dict):
+        raise TypeError(
+            f"`bitcoin_data` should be a dict. Received {type(bitcoin_data)}"
+        )
     bitcoin_data = bitcoin_data["data"]
     df = pd.DataFrame(bitcoin_data)
     df = df.loc[:, ["date", "priceUsd"]]
