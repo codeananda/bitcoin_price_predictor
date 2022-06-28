@@ -31,7 +31,7 @@ from tensorflow.keras.callbacks import EarlyStopping
 # 3. Fit model
 
 
-def main():
+def train_model():
     bitcoin = load_raw_bitcoin_df()
 
     # In total we have: ~70% training, 20% val, 10% test
@@ -91,4 +91,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    train_model()

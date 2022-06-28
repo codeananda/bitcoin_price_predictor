@@ -18,7 +18,7 @@ from simple_price_predictor.inference_helpers import (
 )
 
 
-def main():
+def make_predictions():
 
     num_days = 9
     bitcoin = get_last_num_days_hourly_bitcoin_data(num_days)
@@ -50,4 +50,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    make_predictions()
