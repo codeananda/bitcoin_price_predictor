@@ -4,6 +4,8 @@ import tensorflow as tf
 import pickle
 from sktime.forecasting.model_selection import temporal_train_test_split
 from sklearn.preprocessing import MinMaxScaler
+import argparse
+from pathlib import Path
 
 from simple_price_predictor.train_helpers import (
     load_raw_bitcoin_df,
@@ -31,7 +33,19 @@ from tensorflow.keras.callbacks import EarlyStopping
 # 3. Fit model
 
 
-def train_model():
+def train_model(output_model_name):
+    if not output_model_name.endswith(".h5"):
+        raise ValueError(
+            f"You must pass a model name with a .h5 extension at the end. "
+            f"Received: {output_model_name}"
+        )
+
+    output_dir = Path("models")
+    if not output_dir.exists():
+        output_dir.mkdir()
+
+    # Remove .h5 at the end
+    output_model_name = output_model_name[:-3]
     bitcoin = load_raw_bitcoin_df()
 
     # In total we have: ~70% training, 20% val, 10% test
@@ -48,7 +62,7 @@ def train_model():
     val = min_max.transform(val)
     test = min_max.transform(test)
 
-    with open("models/basic_scaler.pkl", "wb") as f:
+    with open(output_dir / f"{output_model_name}_scaler.pkl", "wb") as f:
         pickle.dump(min_max, f)
 
     train_ds = make_tf_dataset(
@@ -87,8 +101,18 @@ def train_model():
         batch_size=BATCH_SIZE_TRAINING,
     )
 
-    model.save("models/basic_LSTM.h5")
+    model.save(output_dir / f"{output_model_name}")
+    model.save_weights(output_dir / f"{output_model_name}_weights.h5")
 
 
 if __name__ == "__main__":
-    train_model()
+    ap = argparse.ArgumentParser()
+    ap.add_argument(
+        "-o",
+        "--output-model",
+        required=True,
+        help="path to output model file (.h5 extension)",
+    )
+    args = vars(ap.parse_args())
+
+    train_model(args["output_model"])
