@@ -73,5 +73,5 @@ jobs:
         shell: bash -l {0}
         run: |
           conda activate bitcoin
-          pip install --use-feature=in-tree-build . 
+          pip install . 
           pytest
