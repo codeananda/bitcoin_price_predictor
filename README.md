@@ -1,4 +1,4 @@
-# Let's Predict the Price of Bitcoin - Tensorflow/Keras 📈
+# 📈 Let's Predict the Price of Bitcoin - Tensorflow/Keras
 
 > The financial markets generally are unpredictable… The idea that you can actually predict what's going to happen contradicts my way of looking at the market. - George Soros
 
@@ -18,7 +18,7 @@ I completed the project much to my mentor's satisfaction (and then we completed 
 
 Note: I spent more than 8 hours on this but asked to bill it hourly to increase the number of hours billed on my [Upwork profile](https://www.upwork.com/freelancers/~01153ca9fd0099730e).
 
-# This Repo is a Work-in-Progress 🏗
+# 🏗 This Repo is a Work-in-Progress
 
 I finished this project in June 2021 and am in the process of tidying everything up so it can be presented to the world in a nice manner. You are one of the lucky souls who gets to see the repo in its raw form. But this means that not everything is as clean or orderly as it should be.
 
