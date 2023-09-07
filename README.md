@@ -55,7 +55,7 @@ The vast majority of the code I used is in [`price_predictor/helpers.py`](https:
 All model tuning for this project took place with [Weights & Biases](https://wandb.ai/site) (wandb). You can see the results of all 540+ runs on the [bitcoin_price_predictor wandb page](https://wandb.ai/theadammurphy/bitcoin_price_predictor?workspace=user-theadammurphy). As such, the notebooks themselves are not that interesting - I just used them to run wandb experiments and saved everything to the cloud. 
 
 
-# Improvements
+# 💪 Improvements
 
 ### Using Classes
 
