@@ -6,7 +6,7 @@
 
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-## Introduction
+# 🎤 Introduction
 
 One of my mentors had a sequence classification project coming up with a client in a few weeks. He wanted me to demonstrate I could do time series/sequence classification in Tensorflow/Keras. I had never built such a model before, nor had I done a time series problem. Since we both have an interest in cryptocurrency, we thought it would be fun to build a model to predict the price of Bitcoin. 
 
@@ -18,11 +18,7 @@ I completed the project much to my mentor's satisfaction (and then we completed 
 
 Note: I spent more than 8 hours on this but asked to bill it hourly to increase the number of hours billed on my [Upwork profile](https://www.upwork.com/freelancers/~01153ca9fd0099730e).
 
-# 🏗 This Repo is a Work-in-Progress
-
-I finished this project in June 2021 and am in the process of tidying everything up so it can be presented to the world in a nice manner. You are one of the lucky souls who gets to see the repo in its raw form. But this means that not everything is as clean or orderly as it should be.
-
-# Results
+# 🔎 Results
 
 The best results were obtained by an LSTM with 5 layers each getting sequentially smaller. I ran multiple tests on wandb and got the lowest loss on the validation set to be 0.01816 RMSE.
 
@@ -75,8 +71,13 @@ I used Python and the following libraries:
 * TensorFlow (and Keras) 2.4 
 * Numpy
 * Pandas
-* Scikit-learn 
+* Scikit-learn
 * Wandb
 * Matplotlib
 * Seaborn
 * Tqdm
+
+
+# 🏗 This Repo is a Work-in-Progress
+
+I finished this project in June 2021 and am in the process of tidying everything up so it can be presented to the world in a nice manner. You are one of the lucky souls who gets to see the repo in its raw form. But this means that not everything is as clean or orderly as it should be.
