@@ -65,6 +65,11 @@ This was my first time building such a model with TensorFlow/Keras. Since then I
 
 Since the Bitcoin price never stops, it's easy to re-train the model and see how it performs on brand new data. Because we only used the price of Bitcoin to make predictions, I doubt the model will perform well. But it would be great to get a measure of how it performs in production. 
 
+Some courses related to this that would not take long to implement are:
+
+* [Train and Deploy a Serverless API to predict crypto prices](https://github.com/Paulescu/hands-on-train-and-deploy-ml) by [Pau Labarta Bajo](https://www.linkedin.com/in/pau-labarta-bajo-4432074b/)
+* [The Real-World ML Tutorial](https://realworldmachinelearning.carrd.co/) by [Pau Labarta Bajo](https://www.linkedin.com/in/pau-labarta-bajo-4432074b/)
+
 ## Libraries Used
 
 I used Python and the following libraries:
