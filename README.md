@@ -48,7 +48,7 @@ Pretty-vortex-422 1-RMSE
 Pretty-vortex-422 X_val results - actuals vs. predictions - note the low RMSE of 0.01816 and how the red line tightly hugs the blue.
 
 
-# Notes
+# 📝 Notes
 
 ### Where is the Code?
 
