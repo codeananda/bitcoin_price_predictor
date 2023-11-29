@@ -25,6 +25,7 @@ matplotlib = "^3.8.2"
 seaborn = "^0.13.0"
 plotly = "^5.18.0"
 python-dotenv = "^1.0.0"
+alpaca-py = "^0.13.3"
 
 
 [build-system]
