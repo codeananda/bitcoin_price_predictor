@@ -6,7 +6,7 @@ import config
 
 
 def to_timestamp(s):
-    return np.int32(time.mktime(datetime.datetime.strptime(s, "%d/%m/%Y").timetuple()))
+    return np.int32(time.mktime(datetime.strptime(s, "%d/%m/%Y").timetuple()))
 
 
 def calculate_log_close_mean(df, lag):
@@ -46,14 +46,18 @@ def get_features(df, train=True):
     """
     Generates features for the given dataframe.
     """
+    # TODO - see if skipping train_flg does anything
+    # if train:
+    #     df = process_train_data(df)
+
     # Calculate log close mean and log return for each lag and add as columns
     for lag in config.LAGS:
         calculate_log_close_mean(df, lag)
         calculate_log_return(df, lag)
 
         # Calculate mean close and mean log returns
-        df[f"mean_close/mean_{lag}"] = np.mean(df[f"log_close/mean_{lag}"], axis=1)
-        df[f"mean_log_returns_{lag}"] = np.mean(df[f"log_return_{lag}"], axis=1)
+        df[f"mean_close/mean_{lag}"] = np.mean(df[f"log_close/mean_{lag}"])
+        df[f"mean_log_returns_{lag}"] = np.mean(df[f"log_return_{lag}"])
 
         # Additional calculations
         df[f"log_close/mean_{lag}-mean_close/mean_{lag}"] = (
@@ -63,9 +67,10 @@ def get_features(df, train=True):
             df[f"log_return_{lag}"] - df[f"mean_log_returns_{lag}"]
         )
 
+    # TODO - check later if this is necessary
     # Additional processing for training data
-    if train:
-        oldest_use_window = [to_timestamp("12/01/2019")]
-        df = df[df["timestamp"] >= oldest_use_window[0]]
+    # if train:
+    #     oldest_use_window = [to_timestamp("12/01/2019")]
+    #     df = df[df["timestamp"] >= oldest_use_window[0]]
 
     return df
