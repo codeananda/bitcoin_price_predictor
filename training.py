@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
+from sklearn.model_selection import TimeSeriesSplit
 
 import config
 
@@ -24,8 +25,7 @@ def corr_score(pred, valid):
     return corr
 
 
-# TODO - is this needed?
-# define the evaluation metric
+# Define evaluation metric for LightGBM
 def correlation(a, train_data):
     b = train_data.get_label()
 
@@ -68,41 +68,50 @@ def plot_importance(importances, features_names, plot_top_n=20, figsize=(10, 10)
     plt.show()
 
 
-# from: https://www.kaggle.com/code/nrcjea001/lgbm-embargocv-weightedpearson-lagtarget/
-def get_time_series_cross_val_splits(data, cv=config.N_FOLD, embargo=3750):
-    all_train_timestamps = data["timestamp"].unique()
-    len_split = len(all_train_timestamps) // cv
-    test_splits = [
-        all_train_timestamps[i * len_split : (i + 1) * len_split] for i in range(cv)
-    ]
-    # fix the last test split to have all the last timestamps, in case the number of timestamps wasn't divisible by cv
-    rem = len(all_train_timestamps) - len_split * cv
-    if rem > 0:
-        test_splits[-1] = np.append(test_splits[-1], all_train_timestamps[-rem:])
+def embargo_cv(df, n_splits=config.N_FOLD, embargo_period=336):
+    """
+    Perform embargo cross-validation on time series data.
 
-    train_splits = []
-    for test_split in test_splits:
-        test_split_max = int(np.max(test_split))
-        test_split_min = int(np.min(test_split))
-        # get all of the timestamps that aren't in the test split
-        train_split_not_embargoed = [
-            e
-            for e in all_train_timestamps
-            if not (test_split_min <= int(e) <= test_split_max)
-        ]
-        # embargo the train split so we have no leakage. Note timestamps are expressed in seconds, so multiply by 60
-        embargo_sec = 60 * embargo
-        train_split = [
-            e
-            for e in train_split_not_embargoed
-            if abs(int(e) - test_split_max) > embargo_sec
-            and abs(int(e) - test_split_min) > embargo_sec
-        ]
-        train_splits.append(train_split)
+    This function uses TimeSeriesSplit for creating cross-validation splits and
+    then applies an embargo period to ensure that the test set is separated from
+    the training set by a specified time gap.
 
-    # convenient way to iterate over train and test splits
-    train_test_zip = zip(train_splits, test_splits)
-    return train_test_zip
+    Parameters
+    ----------
+    df : pd.DataFrame
+        The DataFrame containing time series data.
+    n_splits : int
+        Number of splits for cross-validation.
+    embargo_period : int
+        The number of time units to embargo data after the training set.
+        Two weeks of hourly data (14 x 24 = 336) by default.
+
+    Yields
+    ------
+    train_index : np.array
+        Indices for training data in each split.
+    test_index : np.array
+        Indices for testing data in each split.
+
+    Example
+    -------
+    >>> df = pd.DataFrame(...)  # your time series DataFrame
+    >>> n_splits = 5  # number of splits for cross-validation
+    >>> embargo_period = 10  # embargo period in time units (e.g., days)
+    >>> for train_index, test_index in embargo_cv(df, n_splits, embargo_period):
+    ...     train_data = df.iloc[train_index]
+    ...     test_data = df.iloc[test_index]
+    ...     # Model training and evaluation goes here
+    """
+
+    tscv = TimeSeriesSplit(n_splits=n_splits)
+
+    for train_index, test_index in tscv.split(df):
+        # Apply the embargo period
+        max_train_index = train_index.max()
+        test_index = test_index[test_index > max_train_index + embargo_period]
+
+        yield train_index, test_index
 
 
 def get_Xy_and_model_for_asset(df_proc, asset_id, features_names, params):
