@@ -193,3 +193,49 @@ def train_and_evaluate_time_series_model(
     )
 
     return oof_pred, oof_valid
+
+
+class BaselinePreviousHour:
+    """Prediction = previous hour's close"""
+
+    def fit(self, X, y):
+        pass
+
+    def predict(self, X):
+        return X["close"].values
+
+    def run_embargo_cv(self, df_proc: pd.DataFrame):
+        """
+        Runs embargo cross-validation for the baseline model.
+
+        Parameters
+        ----------
+        df_proc : DataFrame
+            The preprocessed DataFrame.
+
+        Returns
+        -------
+        tuple of (list, list)
+            A tuple containing two lists:
+            - Out-of-fold predictions.
+            - Corresponding true values.
+        """
+        oof_pred = []
+        oof_valid = []
+
+        for fold, (train_split, test_split) in enumerate(
+            embargo_cv(df_proc, n_splits=config.N_FOLD, embargo_period=336)
+        ):
+            gc.collect()
+            print(f"\nProcessing split {fold + 1}/{config.N_FOLD}")
+
+            train_split_index = df_proc.index[train_split]
+            test_split_index = df_proc.index[test_split]
+
+            y_pred = self.predict(df_proc.loc[test_split_index])
+            y_val = df_proc.loc[test_split_index, "target"].values
+
+            oof_pred.extend(y_pred)
+            oof_valid.extend(y_val)
+
+        return oof_pred, oof_valid
