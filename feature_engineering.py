@@ -73,7 +73,8 @@ def get_features(df, train=True, n_lags=336):
 
     df["target"] = df["close"].shift(-1)
 
-    df = df.iloc[n_lags:]
+    # Drop NaNs created from lagging
+    df = df.iloc[n_lags:-1]
 
     # TODO - check later if this is necessary
     # Additional processing for training data
