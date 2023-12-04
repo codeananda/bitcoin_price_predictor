@@ -9,7 +9,7 @@ def to_timestamp(s):
     return np.int32(time.mktime(datetime.strptime(s, "%d/%m/%Y").timetuple()))
 
 
-def calculate_log_close_mean(df, lag):
+def calculate_log_close_mean_inplace(df, lag):
     """
     Calculates the log close mean for a given lag in-place.
     """
@@ -25,7 +25,7 @@ def calculate_log_close_mean(df, lag):
     )
 
 
-def calculate_log_return(df, lag):
+def calculate_log_return_inplace(df, lag):
     """
     Calculates the log return for a given lag in-place.
     """
@@ -52,8 +52,8 @@ def get_features(df, train=True):
 
     # Calculate log close mean and log return for each lag and add as columns
     for lag in config.LAGS:
-        calculate_log_close_mean(df, lag)
-        calculate_log_return(df, lag)
+        calculate_log_close_mean_inplace(df, lag)
+        calculate_log_return_inplace(df, lag)
 
         # Calculate mean close and mean log returns
         df[f"mean_close/mean_{lag}"] = np.mean(df[f"log_close/mean_{lag}"])
