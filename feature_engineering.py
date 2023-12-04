@@ -42,7 +42,7 @@ def process_train_data(df):
     return df[df.index >= oldest_use_window[0]]
 
 
-def get_features(df, train=True):
+def get_features(df, train=True, n_lags=336):
     """
     Generates features for the given dataframe.
     """
@@ -66,6 +66,14 @@ def get_features(df, train=True):
         df[f"log_return_{lag}-mean_log_returns_{lag}"] = (
             df[f"log_return_{lag}"] - df[f"mean_log_returns_{lag}"]
         )
+
+    # Add lagged features
+    for lag in range(1, n_lags + 1):
+        df[f"lag_{lag}"] = df["close"].shift(lag)
+
+    df["target"] = df["close"].shift(-1)
+
+    df = df.iloc[n_lags:]
 
     # TODO - check later if this is necessary
     # Additional processing for training data
