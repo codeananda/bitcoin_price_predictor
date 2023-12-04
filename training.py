@@ -116,65 +116,80 @@ def embargo_cv(df, n_splits=config.N_FOLD, embargo_period=336):
         yield train_index, test_index
 
 
-def get_Xy_and_model_for_asset(df_proc, asset_id, features_names, params):
-    df_proc = df_proc.loc[
-        (df_proc[f"Target_{asset_id}"] == df_proc[f"Target_{asset_id}"])
-    ]
+def train_and_evaluate_time_series_model(
+    df_proc: pd.DataFrame, feature_names: list[str], params: dict
+):
+    """
+    Trains a LightGBM model for a specified asset using time series cross-validation,
+    and returns out-of-fold predictions and true values.
 
-    # EmbargoCV
-    train_test_zip = get_time_series_cross_val_splits(
-        df_proc, cv=config.N_FOLD, embargo=3750
-    )
-    print("entering time series cross validation loop")
+    Parameters
+    ----------
+    df_proc : DataFrame
+        The preprocessed DataFrame.
+    feature_names : list of str
+        The names of the features used in the model.
+    params : dict
+        The parameters for the LightGBM model.
+
+    Returns
+    -------
+    tuple of (list, list)
+        A tuple containing two lists:
+        - Out-of-fold predictions.
+        - Corresponding true values.
+    """
+    print("Entering time series cross-validation loop")
+
     importances = []
     oof_pred = []
     oof_valid = []
 
-    for split, train_test_split in enumerate(train_test_zip):
+    for fold, (train_split, test_split) in enumerate(
+        embargo_cv(df_proc, n_splits=config.N_FOLD, embargo_period=336)
+    ):
         gc.collect()
+        print(f"\nProcessing split {fold + 1}/{config.N_FOLD}")
 
-        print(f"doing split {split+1} out of {config.N_FOLD}")
-        train_split, test_split = train_test_split
-        train_split_index = df_proc["timestamp"].isin(train_split)
-        test_split_index = df_proc["timestamp"].isin(test_split)
+        train_split_index = df_proc.index[train_split]
+        test_split_index = df_proc.index[test_split]
 
         train_dataset = lgb.Dataset(
-            df_proc.loc[train_split_index, features_names],
-            df_proc.loc[train_split_index, f"Target_{asset_id}"].values,
-            feature_name=features_names,
+            df_proc.loc[train_split_index, feature_names],
+            label=df_proc.loc[train_split_index, "target"].values,
+            feature_name=feature_names,
         )
         val_dataset = lgb.Dataset(
-            df_proc.loc[test_split_index, features_names],
-            df_proc.loc[test_split_index, f"Target_{asset_id}"].values,
-            feature_name=features_names,
+            df_proc.loc[test_split_index, feature_names],
+            label=df_proc.loc[test_split_index, "target"].values,
+            feature_name=feature_names,
         )
 
-        print(f"number of train data: {len(df_proc.loc[train_split_index])}")
-        print(f"number of val data:   {len(df_proc.loc[test_split_index])}")
+        print(f"Number of train data: {len(train_split_index)}")
+        print(f"Number of val data: {len(test_split_index)}")
 
         model = lgb.train(
             params=params,
             train_set=train_dataset,
             valid_sets=[train_dataset, val_dataset],
-            valid_names=["tr", "vl"],
+            valid_names=["train", "val"],
             num_boost_round=5000,
-            verbose_eval=100,
             feval=correlation,
         )
         importances.append(model.feature_importance(importance_type="gain"))
 
-        file = f"trained_model_id{asset_id}_fold{split}.pkl"
-        pickle.dump(model, open(file, "wb"))
-        print(
-            f"Trained model was saved to 'trained_model_id{asset_id}_fold{split}.pkl'"
-        )
-        print("")
+        file_name = f"trained_model_id_fold{fold}.pkl"
+        pickle.dump(model, open(file_name, "wb"))
+        print(f"Trained model saved to '{file_name}'")
 
-        oof_pred += list(model.predict(df_proc.loc[test_split_index, features_names]))
-        oof_valid += list(df_proc.loc[test_split_index, f"Target_{asset_id}"].values)
+        y_pred = model.predict(df_proc.loc[test_split_index, feature_names])
+        y_val = df_proc.loc[test_split_index, "target"].values
+
+        oof_pred.extend(y_pred)
+        oof_valid.extend(y_val)
 
     plot_importance(
-        np.array(importances), features_names, plot_top_n=20, figsize=(10, 5)
+        np.array(importances), feature_names, plot_top_n=20, figsize=(10, 5)
     )
 
     return oof_pred, oof_valid
