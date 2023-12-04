@@ -13,11 +13,13 @@ import config
 
 # For CV score calculation
 def corr_score(pred, valid):
+    pred = np.array(pred)
+    valid = np.array(valid)
     len_data = len(pred)
-    mean_pred = np.sum(pred) / len_data
-    mean_valid = np.sum(valid) / len_data
-    var_pred = np.sum(np.square(pred - mean_pred)) / len_data
-    var_valid = np.sum(np.square(valid - mean_valid)) / len_data
+    mean_pred = pred.mean()
+    mean_valid = valid.mean()
+    var_pred = pred.var(dtype=np.float32)
+    var_valid = valid.var(dtype=np.float32)
 
     cov = np.sum((pred * valid)) / len_data - mean_pred * mean_valid
     corr = cov / np.sqrt(var_pred * var_valid)
