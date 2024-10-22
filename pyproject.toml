@@ -8,6 +8,7 @@ description = "An end-to-end ML project to predict the price of bitcoin in the n
 authors = ["Adam Murphy"]
 license = "MIT"
 readme = "README.md"
+package-mode = false
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.11"
